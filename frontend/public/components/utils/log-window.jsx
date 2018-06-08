@@ -1,10 +1,16 @@
 import * as _ from 'lodash-es';
 import * as React from 'react';
 import * as PropTypes from 'prop-types';
+import Linkify from 'react-linkify';
 import { pluralize } from './';
 
 // Subtracted from log window height to prevent scroll bar from appearing when footer is shown.
 const FUDGE_FACTOR = 105;
+
+const linkProps = {
+  target: '_blank',
+  rel: 'noopener noreferrer'
+};
 
 export class LogWindow extends React.PureComponent {
   constructor(props) {
@@ -110,7 +116,6 @@ export class LogWindow extends React.PureComponent {
       linesBehind = this.props.buffer.totalLineCount - this.state.pausedAt;
     }
     const hasLinesBehind = linesBehind > 0;
-
     return <div className="log-window">
       <div className="log-window__header">
         { this.state.lineCount < this.props.buffer.maxSize ? pluralize(this.state.lineCount, 'line') : `last ${pluralize(this.props.buffer.maxSize, 'line')}` }
@@ -119,7 +124,9 @@ export class LogWindow extends React.PureComponent {
         <div className="log-window__scroll-pane" ref={this._setScrollPane}>
           <div className="log-window__contents" ref={this._setLogContents} style={{ height: this.state.height }}>
             <div className="log-window__contents__text">
-              {this.state.content}
+              <Linkify properties={linkProps}>
+                {this.state.content}
+              </Linkify>
             </div>
           </div>
         </div>
