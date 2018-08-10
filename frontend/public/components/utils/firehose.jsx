@@ -200,6 +200,10 @@ Firehose.contextTypes = {
   store: PropTypes.object,
 };
 
+Firehose.defaultProps = {
+  forceUpdate: false
+};
+
 Firehose.propTypes = {
   children: PropTypes.node,
   expand: PropTypes.bool,

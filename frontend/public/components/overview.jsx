@@ -3,8 +3,7 @@ import * as _ from 'lodash-es';
 import * as fuzzy from 'fuzzysearch';
 import * as PropTypes from 'prop-types';
 import * as classnames from 'classnames';
-
-import { Toolbar } from 'patternfly-react';
+import { Button, EmptyState, Icon, Toolbar } from 'patternfly-react';
 import { Helmet } from 'react-helmet';
 
 import { StartGuide } from './start-guide';
@@ -12,16 +11,27 @@ import { Dropdown, Firehose, NavTitle, StatusBox, ResourceSummary } from './util
 import { TextFilter } from './factory';
 import { ProjectOverview } from './project-overview';
 
-const getOwnedResources = (resources, uid) => {
-  return _.filter(resources, ({metadata:{ownerReferences}}) => {
+const LIST_VIEW = 'list';
+const GRAPH_VIEW = 'graph';
+
+// Stub for future topology graph
+const ApplicationTopology = () =>
+  <div className="co-m-pane__body">
+    <EmptyState>
+      <EmptyState.Title>This view is not yet implemented.</EmptyState.Title>
+    </EmptyState>
+  </div>;
+
+const getOwnedResources = (resources, uid) =>
+  _.filter(resources, ({metadata:{ownerReferences}}) => {
     return _.some(ownerReferences, {
       uid,
       controller: true
     });
   });
-};
 
-const OverviewToolbar = ({groupOptions, handleFilterChange, handleGroupChange, selectedGroup}) =>
+
+const OverviewToolbar = ({currentViewType, groupOptions, handleFilterChange, handleGroupChange, selectedGroup, setViewType}) =>
   <Toolbar className="overview-toolbar">
     <Toolbar.RightContent>
       {
@@ -46,6 +56,28 @@ const OverviewToolbar = ({groupOptions, handleFilterChange, handleGroupChange, s
           onChange={handleFilterChange}
         />
       </div>
+      <Toolbar.ViewSelector>
+        <Button
+          title="List View"
+          bsStyle="link"
+          className={{ active: currentViewType === LIST_VIEW }}
+          onClick={() => {
+            setViewType(LIST_VIEW);
+          }}
+        >
+          <Icon type="fa" name="th-list" />
+        </Button>
+        <Button
+          title="Topology View"
+          bsStyle="link"
+          className={{ active: currentViewType === GRAPH_VIEW }}
+          onClick={() => {
+            setViewType(GRAPH_VIEW);
+          }}
+        >
+          <Icon type="pf" name="topology" />
+        </Button>
+      </Toolbar.ViewSelector>
     </Toolbar.RightContent>
   </Toolbar>;
 
@@ -64,6 +96,7 @@ class OverviewDetails extends React.Component {
     this.handleFilterChange = this.handleFilterChange.bind(this);
     this.handleGroupChange = this.handleGroupChange.bind(this);
     this.clearFilter = this.clearFilter.bind(this);
+    this.setViewType = this.setViewType.bind(this);
 
     this.state = {
       filterValue: '',
@@ -71,7 +104,8 @@ class OverviewDetails extends React.Component {
       filteredItems: [],
       groupedItems: [],
       groupOptions: {},
-      selectedGroupLabel: ''
+      selectedGroupLabel: '',
+      viewType: LIST_VIEW
     };
   }
 
@@ -204,7 +238,7 @@ class OverviewDetails extends React.Component {
   }
 
   buildGraphForRootResources(rootResources, kind) {
-    const {replicationControllers, replicaSets} = this.props;
+    const {replicationControllers, replicaSets, routes, services} = this.props;
 
     return _.map(rootResources, rootResource => {
       const {uid: rootResourceUid} = rootResource.metadata;
@@ -215,12 +249,27 @@ class OverviewDetails extends React.Component {
       const orderedReplicaSets = this.sortRSByRevison(ownedReplicaSets, 'ReplicaSet', true);
       const currentController = _.head(orderedReplicationControllers) || _.head(orderedReplicaSets);
 
+      // Get the routes for this deployment config
+      const templateLabel = _.get(rootResource, `spec.template.metadata.labels.${kind.toLowerCase()}`);
+      const associatedRoutes = _.reduce(services.data, (accumulator, service) => {
+        const serviceSelector = _.get(service, `spec.selector.${kind.toLowerCase()}`);
+        const serviceName = _.get(service, 'metadata.name');
+        if (templateLabel && serviceSelector && (templateLabel === serviceSelector)) {
+          const routesForService = _.filter(routes.data, route => {
+            return serviceName === _.get(route, 'spec.to.name');
+          });
+          accumulator = [...accumulator, ...routesForService];
+        }
+        return accumulator;
+      }, []);
+
       return {
         ...rootResource,
         currentController,
         kind,
         replicaSets: orderedReplicaSets,
         replicationControllers: orderedReplicationControllers,
+        routes: associatedRoutes
       };
     });
   }
@@ -261,20 +310,27 @@ class OverviewDetails extends React.Component {
     this.setState({filterValue: ''});
   }
 
+  setViewType(viewType) {
+    this.setState({viewType});
+  }
+
   render() {
     const {currentSelection, loaded, loadError, title} = this.props;
-    const {filteredItems, filterValue, groupedItems, groupOptions, selectedGroupLabel} = this.state;
+    const {filteredItems, filterValue, groupedItems, groupOptions, selectedGroupLabel, viewType} = this.state;
+    const ViewComponent = viewType === LIST_VIEW ? ProjectOverview : ApplicationTopology;
+
     return <React.Fragment>
       {title && <NavTitle title={title} />}
       <div className="co-m-pane">
         <div className="co-m-pane__body">
           <OverviewToolbar
+            currentViewType={viewType}
             filterValue={filterValue}
             groupOptions={groupOptions}
             handleFilterChange={this.handleFilterChange}
             handleGroupChange={this.handleGroupChange}
             selectedGroup={selectedGroupLabel}
-            title={title}
+            setViewType={this.setViewType}
           />
           <StatusBox
             data={filteredItems}
@@ -282,7 +338,7 @@ class OverviewDetails extends React.Component {
             loadError={loadError}
             label="Resources"
           >
-            <ProjectOverview
+            <ViewComponent
               currentSelection={currentSelection}
               groups={groupedItems}
               onClickItem={this.props.selectItem}
@@ -360,6 +416,18 @@ export class Overview extends React.Component {
         kind: 'StatefulSet',
         namespace,
         prop: 'statefulSets'
+      },
+      {
+        isList: true,
+        kind: 'Route',
+        namespace,
+        prop: 'routes'
+      },
+      {
+        isList: true,
+        kind: 'Service',
+        namespace,
+        prop: 'services'
       }
     ];
 
