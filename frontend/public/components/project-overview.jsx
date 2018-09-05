@@ -1,16 +1,21 @@
 import * as React from 'react';
 import * as _ from 'lodash-es';
 import * as PropTypes from 'prop-types';
+import * as classnames from 'classnames';
 import { Link } from 'react-router-dom';
-import { ListView, ListViewItem } from 'patternfly-react';
+import { ListView, Icon } from 'patternfly-react';
 
-import { ResourceLink, resourcePath} from './utils';
+import { ResourceLink, resourcePath } from './utils';
+
 
 export const ComponentLabel = ({text}) => <div className="co-component-label">{text}</div>;
 
-const ProjectOverviewListItem = ({obj}) => {
+const ProjectOverviewListItem = ({obj, onClick, currentSelection}) => {
   const {currentController, kind, metadata} = obj;
   const {namespace, name, uid} = metadata;
+  const currentlySelectedUid = _.get(currentSelection, 'metadata.uid', '');
+  const isSelected = obj.metadata.uid === currentlySelectedUid;
+  const className = classnames('project-overview__item', {'project-overview__item--selected': isSelected});
   const heading = <h3 className="project-overview__item-heading">
     <ResourceLink
       className="co-resource-link-truncate"
@@ -40,10 +45,12 @@ const ProjectOverviewListItem = ({obj}) => {
     </div>
   </div>;
 
-  return <ListViewItem
-    className="project-overview__item"
+  return <ListView.Item
+    onClick={() => isSelected ? onClick({}) : onClick(obj)}
+    className={className}
     heading={heading}
     additionalInfo={[additionalInfo]}
+    actions={<Icon className="project-overview__item-chevron" type="fa" name="chevron-right" />}
   />;
 };
 
@@ -57,10 +64,20 @@ ProjectOverviewListItem.propTypes = {
   }).isRequired
 };
 
-const ProjectOverviewList = ({items}) =>
-  <ListView className="project-overview__list">
-    {_.map(items, (item) => <ProjectOverviewListItem key={item.metadata.uid} obj={item} />)}
+const ProjectOverviewList = ({items, onClickItem, currentSelection}) => {
+  const listItems = _.map(items, (item) =>
+    <ProjectOverviewListItem
+      key={item.metadata.uid}
+      obj={item}
+      onClick={onClickItem}
+      currentSelection={currentSelection}
+    />
+  );
+  return <ListView className="project-overview__list">
+    {listItems}
   </ListView>;
+};
+
 
 ProjectOverviewList.displayName = 'ProjectOverviewList';
 
@@ -68,35 +85,39 @@ ProjectOverviewList.propTypes = {
   items: PropTypes.array.isRequired
 };
 
-const ProjectOverviewGroup = ({heading, items}) =>
+const ProjectOverviewGroup = ({heading, items, onClickItem, currentSelection}) =>
   <div className="project-overview__group">
     {heading && <h2 className="project-overview__group-heading">{heading}</h2>}
-    <ProjectOverviewList items={items} />
+    <ProjectOverviewList items={items} onClickItem={onClickItem} currentSelection={currentSelection} />
   </div>;
 
 
 ProjectOverviewGroup.displayName = 'ProjectOverviewGroup';
 
 ProjectOverviewGroup.propTypes = {
-  heading: PropTypes.string.isRequired,
+  heading: PropTypes.string,
   items: PropTypes.array.isRequired
 };
 
-export const ProjectOverview = ({groups}) => {
-  return <div className="project-overview">
-    { groups.length === 1
-      ? <ProjectOverviewList items={groups[0].items} />
-      : _.map(groups, ({name, items}, index) => <ProjectOverviewGroup key={index} heading={name} items={items} />)
-    }
+export const ProjectOverview = ({currentSelection, groups, onClickItem}) =>
+  <div className="project-overview">
+    {_.map(groups, ({name, items}, index) =>
+      <ProjectOverviewGroup
+        key={index}
+        heading={name}
+        items={items}
+        onClickItem={onClickItem}
+        currentSelection={currentSelection}
+      />
+    )}
   </div>;
-};
 
 ProjectOverview.displayName = 'ProjectOverview';
 
 ProjectOverview.propTypes = {
   groups: PropTypes.arrayOf(
     PropTypes.shape({
-      name: PropTypes.string.isRequired,
+      name: PropTypes.string,
       items: PropTypes.array.isRequired
     })
   )

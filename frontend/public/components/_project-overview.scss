@@ -18,6 +18,24 @@
   margin-top: 0;
 }
 
+.project-overview__item {
+  cursor: pointer;
+}
+
+.project-overview__item--selected,
+.project-overview__item.project-overview__item--selected:hover, {
+  background-color: $color-pf-blue-100;
+}
+
+.project-overview__item .project-overview__item-chevron {
+  visibility: hidden;
+}
+
+.project-overview__item:hover .project-overview__item-chevron,
+.project-overview__item.project-overview__item--selected .project-overview__item-chevron {
+  visibility: visible;
+}
+
 .project-overview__item-heading {
   font-size: 16px;
   margin: 0;
@@ -62,5 +80,4 @@
   .project-overview__detail:last-child {
     margin-bottom: 0px;
   }
-
 }

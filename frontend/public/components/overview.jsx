@@ -2,12 +2,13 @@ import * as React from 'react';
 import * as _ from 'lodash-es';
 import * as fuzzy from 'fuzzysearch';
 import * as PropTypes from 'prop-types';
-import { default as Toolbar } from 'patternfly-react/dist/esm/components/Toolbar/Toolbar';
+import * as classnames from 'classnames';
+
+import { Toolbar } from 'patternfly-react';
 import { Helmet } from 'react-helmet';
 
 import { StartGuide } from './start-guide';
-import { FLAGS, connectToFlags, flagPending } from '../features';
-import { Dropdown, Firehose, NavTitle, StatusBox } from './utils';
+import { Dropdown, Firehose, NavTitle, StatusBox, ResourceSummary } from './utils';
 import { TextFilter } from './factory';
 import { ProjectOverview } from './project-overview';
 
@@ -19,7 +20,6 @@ const getOwnedResources = (resources, uid) => {
     });
   });
 };
-
 
 const OverviewToolbar = ({groupOptions, handleFilterChange, handleGroupChange, selectedGroup}) =>
   <Toolbar className="overview-toolbar">
@@ -52,10 +52,10 @@ const OverviewToolbar = ({groupOptions, handleFilterChange, handleGroupChange, s
 OverviewToolbar.displayName = 'OverviewToolbar';
 
 OverviewToolbar.propTypes = {
-  groupOptions: PropTypes.object.isRequired,
+  groupOptions: PropTypes.object,
   handleFilterChange: PropTypes.func.isRequired,
   handleGroupChange: PropTypes.func.isRequired,
-  selectedGroup: PropTypes.string.isRequired
+  selectedGroup: PropTypes.string
 };
 
 class OverviewDetails extends React.Component {
@@ -78,6 +78,7 @@ class OverviewDetails extends React.Component {
   componentDidUpdate(prevProps, prevState) {
     const {deployments, deploymentConfigs, namespace, pods, replicaSets, replicationControllers} = this.props;
     const {filterValue, selectedGroupLabel} = this.state;
+
     if (namespace !== prevProps.namespace
       || replicationControllers !== prevProps.replicationControllers
       || replicaSets !== prevProps.replicaSets
@@ -139,6 +140,7 @@ class OverviewDetails extends React.Component {
 
   filterItems(items) {
     const {filterValue} = this.state;
+    const {currentSelection} = this.props;
 
     if (!filterValue) {
       return items;
@@ -146,7 +148,7 @@ class OverviewDetails extends React.Component {
 
     const filterString = filterValue.toLowerCase();
     return _.filter(items, item => {
-      return fuzzy(filterString, _.get(item, 'metadata.name', ''));
+      return fuzzy(filterString, _.get(item, 'metadata.name', '')) || _.get(item, 'metadata.uid') === _.get(currentSelection, 'metadata.uid');
     });
   }
 
@@ -162,7 +164,7 @@ class OverviewDetails extends React.Component {
     };
 
     if (!label) {
-      return items;
+      return [{items}];
     }
 
     const groups = _.groupBy(items, item => _.get(item, ['metadata', 'labels', label], 'other'));
@@ -206,7 +208,7 @@ class OverviewDetails extends React.Component {
 
     return _.map(rootResources, rootResource => {
       const {uid: rootResourceUid} = rootResource.metadata;
-      // Determine the replication controllers associated with this DC
+      // Determine the replication controllers/replica sets associated with these resources
       const ownedReplicationControllers = this.buildGraphForReplicators(getOwnedResources(replicationControllers.data, rootResourceUid), 'ReplicationController');
       const ownedReplicaSets = this.buildGraphForReplicators(getOwnedResources(replicaSets.data, rootResourceUid), 'ReplicaSet');
       const orderedReplicationControllers = this.sortRCByRevision(ownedReplicationControllers, 'ReplicationController', true);
@@ -260,23 +262,35 @@ class OverviewDetails extends React.Component {
   }
 
   render() {
-    const {loaded, loadError} = this.props;
+    const {currentSelection, loaded, loadError, title} = this.props;
     const {filteredItems, filterValue, groupedItems, groupOptions, selectedGroupLabel} = this.state;
-
-    return <div className="co-m-pane">
-      <OverviewToolbar
-        filterValue={filterValue}
-        groupOptions={groupOptions}
-        handleFilterChange={this.handleFilterChange}
-        handleGroupChange={this.handleGroupChange}
-        selectedGroup={selectedGroupLabel}
-      />
-      <div className="co-m-pane__body">
-        <StatusBox data={filteredItems} loaded={loaded} loadError={loadError} label="Resources">
-          <ProjectOverview groups={groupedItems} />
-        </StatusBox>
+    return <React.Fragment>
+      {title && <NavTitle title={title} />}
+      <div className="co-m-pane">
+        <div className="co-m-pane__body">
+          <OverviewToolbar
+            filterValue={filterValue}
+            groupOptions={groupOptions}
+            handleFilterChange={this.handleFilterChange}
+            handleGroupChange={this.handleGroupChange}
+            selectedGroup={selectedGroupLabel}
+            title={title}
+          />
+          <StatusBox
+            data={filteredItems}
+            loaded={loaded}
+            loadError={loadError}
+            label="Resources"
+          >
+            <ProjectOverview
+              currentSelection={currentSelection}
+              groups={groupedItems}
+              onClickItem={this.props.selectItem}
+            />
+          </StatusBox>
+        </div>
       </div>
-    </div>;
+    </React.Fragment>;
   }
 }
 
@@ -293,88 +307,110 @@ OverviewDetails.propTypes = {
   statefulSets: PropTypes.object,
 };
 
-export const Overview = ({namespace}) => {
-  const resources = [
-    {
-      isList: true,
-      kind: 'Pod',
-      namespace,
-      prop: 'pods'
-    },
-    {
-      isList: true,
-      kind: 'ReplicationController',
-      namespace,
-      prop: 'replicationControllers'
-    },
-    {
-      isList: true,
-      kind: 'DeploymentConfig',
-      namespace,
-      prop: 'deploymentConfigs'
-    },
-    {
-      isList: true,
-      kind: 'Deployment',
-      namespace,
-      prop: 'deployments'
-    },
-    {
-      isList: true,
-      kind: 'ReplicaSet',
-      namespace,
-      prop: 'replicaSets'
-    },
-    {
-      isList: true,
-      kind: 'StatefulSet',
-      namespace,
-      prop: 'statefulSets'
-    }
-  ];
-  return <div className="overview">
-    <Firehose resources={resources}>
-      <OverviewDetails />
-    </Firehose>
-  </div>;
-};
+export class Overview extends React.Component {
+  constructor(props){
+    super(props);
+    this.selectItem = this.selectItem.bind(this);
+    this.state = {
+      currentSelection: {}
+    };
+  }
+
+  selectItem(currentSelection){
+    this.setState({currentSelection});
+  }
+
+  render() {
+    const {namespace, title} = this.props;
+    const {currentSelection} = this.state;
+    const className = classnames('overview', {'overview--sidebar-shown': !_.isEmpty(currentSelection)});
+    const resources = [
+      {
+        isList: true,
+        kind: 'Pod',
+        namespace,
+        prop: 'pods'
+      },
+      {
+        isList: true,
+        kind: 'ReplicationController',
+        namespace,
+        prop: 'replicationControllers'
+      },
+      {
+        isList: true,
+        kind: 'DeploymentConfig',
+        namespace,
+        prop: 'deploymentConfigs'
+      },
+      {
+        isList: true,
+        kind: 'Deployment',
+        namespace,
+        prop: 'deployments'
+      },
+      {
+        isList: true,
+        kind: 'ReplicaSet',
+        namespace,
+        prop: 'replicaSets'
+      },
+      {
+        isList: true,
+        kind: 'StatefulSet',
+        namespace,
+        prop: 'statefulSets'
+      }
+    ];
+
+    return <div className={className}>
+      <div className="overview__body">
+        <Firehose resources={resources} forceUpdate={true}>
+          <OverviewDetails
+            title={title}
+            currentSelection={currentSelection}
+            selectItem={this.selectItem}
+          />
+        </Firehose>
+      </div>
+      { !_.isEmpty(currentSelection) &&
+        <div className="overview__sidebar">
+          <NavTitle
+            title={_.get(currentSelection, 'metadata.name')}
+            kind={currentSelection.kind}
+          />
+          <div className="co-m-pane">
+            <div className="co-m-pane__body">
+              <ResourceSummary resource={currentSelection} />
+            </div>
+          </div>
+        </div>
+      }
+    </div>;
+  }
+}
 
 Overview.displayName = 'Overview';
 
 Overview.propTypes = {
   namespace: PropTypes.string.isRequired,
+  title: PropTypes.string
 };
 
 
-class OverviewPage_ extends React.PureComponent {
-  render() {
-    const {match, flags} = this.props;
-    const namespace = _.get(match, 'params.ns');
-    const fake = flags.OPENSHIFT && !flags.PROJECTS_AVAILABLE;
-
-    if (flagPending(flags.OPENSHIFT) || flagPending(flags.PROJECTS_AVAILABLE)) {
-      return null;
-    }
-
-    return <React.Fragment>
-      <StartGuide dismissible={true} style={{margin: 15}} />
-      <Helmet>
-        <title>Project Overview</title>
-      </Helmet>
-      <NavTitle title="Project Overview" />
-      <Overview
-        fake={fake} //TODO implement first time user experience using this prop as a flag
-        namespace={namespace}
-      />
-    </React.Fragment>;
-  }
-}
-
-OverviewPage_.displayName = 'OverviewPage';
-
-OverviewPage_.propTypes = {
-  match: PropTypes.object.isRequired,
-  flags: PropTypes.object.isRequired
+export const OverviewPage = ({match}) => {
+  const namespace = _.get(match, 'params.ns');
+  return <React.Fragment>
+    <Helmet>
+      <title>Project Overview</title>
+    </Helmet>
+    <StartGuide dismissible={true} style={{margin: 15}} />
+    <Overview title="Project Overview" namespace={namespace} />
+  </React.Fragment>;
 };
 
-export const OverviewPage = connectToFlags(FLAGS.OPENSHIFT, FLAGS.PROJECTS_AVAILABLE)(OverviewPage_);
+OverviewPage.displayName = 'OverviewPage';
+
+OverviewPage.propTypes = {
+  match: PropTypes.object.isRequired
+};

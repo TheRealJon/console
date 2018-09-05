@@ -5,3 +5,27 @@
 .overview-toolbar__dropdown {
   display: inline-block;
 }
+
+.overview {
+  width: 100%;
+  display: flex;
+
+  .overview__body {
+    flex-grow: 1;
+  }
+
+  .overview__sidebar {
+    display: none;
+  }
+}
+
+.overview.overview--sidebar-shown {
+  .overview__body {
+    width: 60%;
+  }
+
+  .overview__sidebar {
+    display: block;
+    width: 40%;
+  }
+}
