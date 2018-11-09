@@ -20,10 +20,7 @@ import { Nav, NavExpandable, NavItem, NavList, PageSidebar } from '@patternfly/r
 
 const stripNS = href => {
   href = stripBasePath(href);
-  return href
-    .replace(/^\/?k8s\//, '')
-    .replace(/^\/?(cluster|all-namespaces|ns\/[^/]*)/, '')
-    .replace(/^\//, '');
+  return href.replace(/^\/?k8s\//, '').replace(/^\/?(cluster|all-namespaces|ns\/[^/]*)/, '').replace(/^\//, '');
 };
 
 class NavLink extends React.PureComponent {
@@ -40,14 +37,17 @@ class NavLink extends React.PureComponent {
   }
 
   render() {
-    const { isActive, isExternal, id, name, target } = this.props;
+    const { isActive, isExternal, id, name, target, onClick } = this.props;
 
+    //onClick is now handled globally by the Nav's onSelect,
+    //however onClick can still be passed if desired in certain cases
     return (
       <NavItem isActive={isActive}>
         <Link
           id={id}
           to={this.to}
           target={target}
+          onClick={onClick}
           className={classNames({
             'pf4-co-external-link': isExternal,
           })}
@@ -70,12 +70,12 @@ NavLink.propTypes = {
 };
 
 class ResourceNSLink extends NavLink {
-  static isActive(props, resourcePath, activeNamespace) {
+  static isActive (props, resourcePath, activeNamespace) {
     const href = stripNS(formatNamespacedRouteForResource(props.resource, activeNamespace));
     return matchesPath(resourcePath, href) || matchesModel(resourcePath, props.model);
   }
 
-  get to() {
+  get to () {
     const { resource, activeNamespace } = this.props;
     return formatNamespacedRouteForResource(resource, activeNamespace);
   }
@@ -90,11 +90,11 @@ ResourceNSLink.propTypes = {
 };
 
 class ResourceClusterLink extends NavLink {
-  static isActive(props, resourcePath) {
+  static isActive (props, resourcePath) {
     return resourcePath === props.resource || _.startsWith(resourcePath, `${props.resource}/`);
   }
 
-  get to() {
+  get to () {
     return `/k8s/cluster/${this.props.resource}`;
   }
 }
@@ -106,12 +106,12 @@ ResourceClusterLink.propTypes = {
 };
 
 class HrefLink extends NavLink {
-  static isActive(props, resourcePath) {
+  static isActive (props, resourcePath) {
     const noNSHref = stripNS(props.href);
     return resourcePath === noNSHref || _.startsWith(resourcePath, `${noNSHref}/`);
   }
 
-  get to() {
+  get to () {
     return this.props.href;
   }
 }
@@ -122,13 +122,12 @@ HrefLink.propTypes = {
   href: PropTypes.string.isRequired,
 };
 
-const navSectionStateToProps = (state, { required }) => {
+const navSectionStateToProps = (state, {required}) => {
   const flags = state[featureReducerName];
   const canRender = required ? flags.get(required) : true;
 
   return {
-    flags,
-    canRender,
+    flags, canRender,
     activeNamespace: state.UI.get('activeNamespace'),
     location: state.UI.get('location'),
   };
@@ -136,7 +135,7 @@ const navSectionStateToProps = (state, { required }) => {
 
 const NavSection = connect(navSectionStateToProps)(
   class NavSection extends React.Component {
-    constructor(props) {
+    constructor (props) {
       super(props);
       this.toggle = e => this.toggle_(e);
       this.open = () => this.open_();
@@ -149,7 +148,7 @@ const NavSection = connect(navSectionStateToProps)(
       }
     }
 
-    shouldComponentUpdate(nextProps, nextState) {
+    shouldComponentUpdate (nextProps, nextState) {
       const { isOpen } = this.state;
 
       if (isOpen !== nextProps.isOpen) {
@@ -163,7 +162,7 @@ const NavSection = connect(navSectionStateToProps)(
       return nextProps.location !== this.props.location || nextProps.flags !== this.props.flags;
     }
 
-    getActiveChild() {
+    getActiveChild () {
       const { activeNamespace, location, children } = this.props;
 
       if (!children) {
@@ -172,18 +171,16 @@ const NavSection = connect(navSectionStateToProps)(
 
       const resourcePath = location ? stripNS(location) : '';
 
-      //bug - we should be checking if children is a single item or .filter is undefined
-      return children
-        .filter(c => {
-          if (!c) {
-            return false;
-          }
-          if (c.props.startsWith) {
-            return c.type.startsWith(resourcePath, c.props.startsWith);
-          }
-          return c.type.isActive && c.type.isActive(c.props, resourcePath, activeNamespace);
-        })
-        .map(c => c.props.name)[0];
+      //current bug? - we should be checking if children is a single item or .filter is undefined
+      return children.filter(c => {
+        if (!c) {
+          return false;
+        }
+        if (c.props.startsWith) {
+          return c.type.startsWith(resourcePath, c.props.startsWith);
+        }
+        return c.type.isActive && c.type.isActive(c.props, resourcePath, activeNamespace);
+      }).map(c => c.props.name)[0];
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -192,15 +189,15 @@ const NavSection = connect(navSectionStateToProps)(
       }
 
       const activeChild = this.getActiveChild();
-      const state = { activeChild };
+      const state = {activeChild};
       if (activeChild && !prevState.activeChild) {
         state.isOpen = true;
       }
       this.setState(state);
     }
 
-    open_() {
-      this.setState({ isOpen: true });
+    open_ () {
+      this.setState({isOpen: true});
     }
 
     toggle_(e) {
@@ -215,10 +212,10 @@ const NavSection = connect(navSectionStateToProps)(
         onClick();
       }
 
-      this.setState({ isOpen: !this.state.isOpen });
+      this.setState({isOpen: !this.state.isOpen});
     }
 
-    render() {
+    render () {
       if (!this.props.canRender) {
         return null;
       }
@@ -231,7 +228,7 @@ const NavSection = connect(navSectionStateToProps)(
         if (!c) {
           return null;
         }
-        const { name, required, disallowed } = c.props;
+        const {name, required, disallowed} = c.props;
         if (required && (flagPending(flags.get(required)) || !flags.get(required))) {
           return null;
         }
@@ -281,14 +278,13 @@ const AppNav = ({ isNavOpen, onNavSelect }) => {
     <Nav aria-label="Nav" onSelect={onNavSelect}>
       <NavList>
         <NavSection title="Home">
-          <ResourceClusterLink resource="projects" name="Projects" onClick={this.close} required={FLAGS.OPENSHIFT} />
-          <HrefLink href="/status" name="Status" activePath="/status/" onClick={this.close} />
+          <ResourceClusterLink resource="projects" name="Projects" required={FLAGS.OPENSHIFT} />
           {
             // Show different status pages based on OpenShift vs native Kubernetes.
             // TODO: Make Overview work on native Kubernetes. It currently assumes OpenShift resources.
           }
-          <HrefLink href="/overview" name="Status" activePath="/overview/" onClick={this.close} required={FLAGS.OPENSHIFT} />
-          <HrefLink href="/status" name="Status" activePath="/status/" onClick={this.close} disallowed={FLAGS.OPENSHIFT} />
+          <HrefLink href="/overview" name="Status" activePath="/overview/" required={FLAGS.OPENSHIFT} />
+          <HrefLink href="/status" name="Status" activePath="/status/" disallowed={FLAGS.OPENSHIFT} />
           <HrefLink href="/catalog" name="Catalog" activePath="/catalog/" />
           <HrefLink href="/search" name="Search" startsWith={searchStartsWith} />
           <ResourceNSLink resource="events" name="Events" />
@@ -348,7 +344,6 @@ const AppNav = ({ isNavOpen, onNavSelect }) => {
         <MonitoringNavSection />
 
         <NavSection title="Administration">
-          <ResourceClusterLink resource="projects" name="Projects" required={FLAGS.OPENSHIFT} />
           <ResourceClusterLink resource="namespaces" name="Namespaces" required={FLAGS.CAN_LIST_NS} />
           <ResourceClusterLink resource="nodes" name="Nodes" required={FLAGS.CAN_LIST_NODE} />
           <HrefLink href="/settings/cluster" name="Cluster Settings" startsWith={clusterSettingsStartsWith} disallowed={FLAGS.OPENSHIFT} />
