@@ -19,7 +19,7 @@ class AppToolbar extends React.Component {
       isDropdownOpen: false,
       isKebabDropdownOpen: false,
       username: null,
-      showAboutModal: false
+      showAboutModal: false,
     };
 
     this._updateUser = this._updateUser.bind(this);
@@ -64,37 +64,37 @@ class AppToolbar extends React.Component {
 
   _onDropdownToggle(isDropdownOpen) {
     this.setState({
-      isDropdownOpen
+      isDropdownOpen,
     });
   }
 
   _onDropdownSelect() {
     this.setState({
-      isDropdownOpen: !this.state.isDropdownOpen
+      isDropdownOpen: !this.state.isDropdownOpen,
     });
   }
 
   _onKebabDropdownToggle(isKebabDropdownOpen) {
     this.setState({
-      isKebabDropdownOpen
+      isKebabDropdownOpen,
     });
   }
 
   _onKebabDropdownSelect() {
     this.setState({
-      isKebabDropdownOpen: !this.state.isKebabDropdownOpen
+      isKebabDropdownOpen: !this.state.isKebabDropdownOpen,
     });
   }
 
   _onSettingsDropdownSelect() {
     this.setState({
-      isSettingsDropdownOpen: !this.state.isSettingsDropdownOpen
+      isSettingsDropdownOpen: !this.state.isSettingsDropdownOpen,
     });
   }
 
   _onSettingsDropdownToggle(isSettingsDropdownOpen) {
     this.setState({
-      isSettingsDropdownOpen
+      isSettingsDropdownOpen,
     });
   }
 
@@ -185,18 +185,18 @@ class AppToolbar extends React.Component {
       };
       actions.push({
         label: 'Logout',
-        callback: logout
+        callback: logout,
       });
     }
 
     if (mobile) {
       actions.push({
         label: 'Documentation',
-        callback: this._onDocumentation
+        callback: this._onDocumentation,
       });
       actions.push({
         label: 'About',
-        callback: this._onAboutModal
+        callback: this._onAboutModal,
       });
     }
 
@@ -210,7 +210,7 @@ class AppToolbar extends React.Component {
     };
     actions.unshift({
       label: 'My Account',
-      callback: profile
+      callback: profile,
     });
     return this._renderMenuDropdown(actions, mobile);
   }
@@ -238,7 +238,7 @@ class AppToolbar extends React.Component {
                   </DropdownItem>,
                   <DropdownItem key="about" onClick={this._onAboutModal}>
                     About
-                  </DropdownItem>
+                  </DropdownItem>,
                 ]}
               />
             </ToolbarItem>
