@@ -9,7 +9,7 @@ $co-m-horizontal-nav__menu-item-link-padding-lr-mobile: 15px;
 .co-m-horizontal-nav__menu {
   border-bottom: 1px solid $color-grey-background-border;
   display: flex;
-  flex-wrap: wrap;
+  list-style: none;
   margin: 0;
   padding: 0;
   white-space: nowrap;
@@ -17,11 +17,6 @@ $co-m-horizontal-nav__menu-item-link-padding-lr-mobile: 15px;
     margin-left: (-$co-m-horizontal-nav__menu-item-link-padding-lr-desktop);
     padding: 0 30px;
   }
-}
-
-//pf4 specificity overrides
-ul.co-m-horizontal-nav__menu {
-  list-style: none;
 }
 
 .co-m-horizontal-nav__menu__primary {
@@ -56,6 +51,7 @@ ul.co-m-horizontal-nav__menu {
     &:hover,
     &:focus {
       color: #252525;
+      text-decoration: none;
       &::after {
         background: $color-pf-black-400;
       }
@@ -94,10 +90,6 @@ ul.co-m-horizontal-nav__menu {
       padding-left: $co-m-horizontal-nav__menu-item-link-padding-lr-desktop;
       padding-right: $co-m-horizontal-nav__menu-item-link-padding-lr-desktop;
     }
-  }
-  //pf4 specificity
-  a, a:hover{
-    text-decoration: none;
   }
 }
 
