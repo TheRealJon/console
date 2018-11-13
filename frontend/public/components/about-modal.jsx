@@ -18,7 +18,7 @@ class AboutModal extends React.Component {
     super(props);
     this.state = {
       openshiftVersion: null,
-      kubernetesVersion: null
+      kubernetesVersion: null,
     };
   }
 

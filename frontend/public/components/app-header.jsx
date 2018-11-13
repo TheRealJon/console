@@ -42,7 +42,7 @@ const AppHeader = ({ onNavToggle }) => {
 };
 
 AppHeader.propTypes = {
-  onNavToggle: PropTypes.func
+  onNavToggle: PropTypes.func,
 };
 
 export default AppHeader;
