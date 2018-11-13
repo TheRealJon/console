@@ -9,10 +9,6 @@ $color-bookmarker: #DDD;
   .co-m-resource-icon {
     margin-left: 2px;
   }
-  //pf4 - dropdown should be more specific than page layout ul styles
-  ul, ol {
-    padding-left: 0px;
-  }
 }
 
 .dropdown--full-width {
@@ -142,19 +138,22 @@ $color-bookmarker: #DDD;
 }
 
 .co-namespace-bar {
-  color: var(--pf-global--Color-100);
-  border-bottom: 1px solid var(--pf-global--BorderColor--light-200);
-  padding: var(--pf-global--spacer--xs) var(--pf-global--spacer--xl) var(--pf-global--spacer--xs) var(--pf-global--spacer--md);
-  background: var(--pf-global--BackgroundColor--100);
+  border-bottom: 1px solid $color-grey-background-border;
+  padding-right: 15px;
   white-space: nowrap;
+
+  @media (min-width: $grid-float-breakpoint) {
+    padding: 4px 30px 4px 15px;
+  }
 
   &__dropdowns {
     align-items: baseline;
     display: flex;
     justify-content: space-between;
   }
+
   & .fa-plus-circle {
-    margin-right: var(--pf-global--spacer--xs);
+    margin-right: 4px;
   }
 }
 

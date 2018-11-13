@@ -14,16 +14,20 @@ $contextselector-pf-dropdown-toggle-padding-top: 20px;
 $contextselector-pf-margin-left: 20px;
 // FontAwesome font path.
 $fa-font-path: $consoleWebFontPath;
-// PatternFly font path.
+// Use PatternFly 4 font family in PatternFly 3.
+$font-family-base: var(--pf-global--FontFamily--sans-serif);
+// PatternFly 3 font path.
 $font-path: '~patternfly/dist/fonts/';
-// PatternFly image path.
-$img-path: '~patternfly/dist/img/';
-// Patternfly defaults to 12px, which is too small in many cases.
+// Patternfly 3 defaults to 12px, which is too small in many cases.
 $font-size-base: 13px;
-// Patternfly defaults to 40px, which leaves a lot more whitespace than we're used to.
+// Patternfly 3 defaults to 40px, which leaves a lot more whitespace than we're used to.
 $grid-gutter-width: 30px;
 // Bootstrap font path.
 $icon-font-path: $consoleWebFontPath + '/';
+// Disable PatternFly 4 reset.
+$pf-global--enable-reset: false;
+// PatternFly 4 font path.
+$pf-global--font-path: '~@patternfly/patternfly-next/assets/fonts';
 $popover-max-width: 325px;
 $table-border-color: $color-pf-black-200;
 
