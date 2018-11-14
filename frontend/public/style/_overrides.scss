@@ -220,3 +220,8 @@ tags-input .autocomplete .suggestion-item em {
 .modal-title {
   font-size: $font-size-base;
 }
+
+// TODO:  remove once upstream bug is fixed
+.pf-c-brand {
+  margin-top: -10px;
+}
