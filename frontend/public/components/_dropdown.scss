@@ -38,7 +38,7 @@ $color-bookmarker: #DDD;
 .dropdown-menu__header {
   color: $color-pf-black-600;
   flex-grow: 1;
-  font-size: 11px;
+  font-size: ($font-size-base - 1);
   padding: 3px 10px;
   text-transform: uppercase;
 }
@@ -162,7 +162,7 @@ $color-bookmarker: #DDD;
   max-width: 80%;
 
   @media (min-width: $grid-float-breakpoint) {
-    font-size: ($font-size-base + 3);
+    font-size: ($font-size-base + 2);
   }
 
   .dropdown__not-btn {
