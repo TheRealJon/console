@@ -139,11 +139,12 @@ $color-bookmarker: #DDD;
 
 .co-namespace-bar {
   border-bottom: 1px solid $color-grey-background-border;
-  padding-right: 15px;
+  padding: 4px 15px 4px 0;
   white-space: nowrap;
 
   @media (min-width: $grid-float-breakpoint) {
-    padding: 4px 30px 4px 15px;
+    padding-left: 15px;
+    padding-right: 30px;
   }
 
   &__dropdowns {
