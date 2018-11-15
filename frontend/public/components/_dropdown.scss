@@ -1,8 +1,9 @@
-$co-namespace-selector-desktop: 44px;
-$co-namespace-selector-mobile: 27px;
+$co-namespace-selector-desktop: 47px;
+$co-namespace-selector-mobile: 35px;
 $color-dropdown-hover: rgba(0, 0, 0, .05);
 $color-bookmarker--hover: #AAA;
 $color-bookmarker: #DDD;
+$masthead-height: 60px;
 
 .dropdown {
   position: relative;
@@ -139,11 +140,11 @@ $color-bookmarker: #DDD;
 
 .co-namespace-bar {
   border-bottom: 1px solid $color-grey-background-border;
-  padding: 4px 15px 4px 0;
+  padding: 0 15px;
   white-space: nowrap;
 
   @media (min-width: $grid-float-breakpoint) {
-    padding-left: 15px;
+    padding-left: 30px;
     padding-right: 30px;
   }
 
@@ -151,10 +152,15 @@ $color-bookmarker: #DDD;
     align-items: baseline;
     display: flex;
     justify-content: space-between;
-  }
 
-  & .fa-plus-circle {
-    margin-right: 4px;
+    .dropdown__not-btn {
+      padding: 6px 0;
+
+      @media (min-width: $grid-float-breakpoint) {
+        padding-bottom: 12px;
+        padding-top: 13px;
+      }
+    }
   }
 }
 
@@ -169,10 +175,11 @@ $color-bookmarker: #DDD;
   .dropdown__not-btn {
     align-items: baseline;
     display: flex;
-    padding: 2px 15px;
+    padding: 6px 0;
 
     @media (min-width: $grid-float-breakpoint) {
-      padding: 7px 15px;
+      padding-bottom: 11px;
+      padding-top: 11px;
     }
 
     &__title {
@@ -186,15 +193,13 @@ $color-bookmarker: #DDD;
 }
 
 .co-namespace-selector__menu.dropdown-menu {
-  left: 15px;
-  margin-top: 0;
-  max-height: calc(100vh - (#{$masthead-height-mobile} + #{$co-namespace-selector-mobile}));
+  max-height: calc(100vh - (#{$masthead-height} + #{$co-namespace-selector-mobile}));
   max-width: 100%;
   min-width: 210px;
   overflow-y: auto;
 
   @media (min-width: $grid-float-breakpoint) {
-    max-height: calc(100vh - (#{$masthead-height-desktop} + #{$co-namespace-selector-desktop}));
+    max-height: calc(100vh - (#{$masthead-height} + #{$co-namespace-selector-desktop}));
     min-width: 250px;
   }
 
