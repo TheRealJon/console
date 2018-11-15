@@ -197,6 +197,7 @@ $masthead-height: 60px;
   max-width: 100%;
   min-width: 210px;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 
   @media (min-width: $grid-float-breakpoint) {
     max-height: calc(100vh - (#{$masthead-height} + #{$co-namespace-selector-desktop}));
