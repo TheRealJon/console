@@ -290,7 +290,7 @@ export class Dropdown extends DropdownMixin {
 
   render() {
     const {active, autocompleteText, selectedKey, items, title, bookmarks, keyboardHoverKey, favoriteKey} = this.state;
-    const {autocompleteFilter, autocompletePlaceholder, className, buttonClassName, menuClassName, storageKey, canFavorite, dropDownClassName, titlePrefix, describedBy, noCaret} = this.props;
+    const {autocompleteFilter, autocompletePlaceholder, className, buttonClassName, menuClassName, storageKey, canFavorite, dropDownClassName, titlePrefix, describedBy} = this.props;
 
     const spacerBefore = this.props.spacerBefore || new Set();
     const headerBefore = this.props.headerBefore || {};
@@ -326,7 +326,7 @@ export class Dropdown extends DropdownMixin {
               {titlePrefix && <span className="btn-link__titlePrefix">{titlePrefix}: </span>}
               {title}
             </span>
-            {noCaret ? null : <Caret />}
+            <Caret />
           </div>
         </button>
         {
@@ -376,7 +376,7 @@ Dropdown.propTypes = {
 };
 
 export const ActionsMenu = (props) => {
-  const {actions, title = undefined, menuClassName = undefined, buttonClassName = undefined, noCaret = false} = props;
+  const {actions, title = undefined, menuClassName = undefined, buttonClassName = undefined} = props;
   const shownActions = _.reject(actions, o => _.get(o, 'hidden', false));
   const items = _.fromPairs(_.map(shownActions, (v, k) => [k, v.label]));
   const btnTitle = title || <span id="action-dropdown">Actions</span>;
@@ -396,8 +396,7 @@ export const ActionsMenu = (props) => {
     items={items}
     title={btnTitle}
     onChange={onChange}
-    noSelection={true}
-    noCaret={noCaret} />;
+    noSelection={true} />;
 };
 
 ActionsMenu.propTypes = {
@@ -409,7 +408,6 @@ ActionsMenu.propTypes = {
     })).isRequired,
   menuClassName: PropTypes.string,
   title: PropTypes.node,
-  noCaret: PropTypes.bool,
 };
 
 const containerLabel = (container) =>
