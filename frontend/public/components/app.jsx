@@ -117,6 +117,8 @@ class App extends React.PureComponent {
     this._onNavToggle = this._onNavToggle.bind(this);
     this._onNavSelect = this._onNavSelect.bind(this);
     this._isDesktop = this._isDesktop.bind(this);
+    this._getRef = this._getRef.bind(this);
+    this.contentScrollable = React.createRef();
 
     this.state = {
       isNavOpen: this._isDesktop(),
@@ -159,6 +161,10 @@ class App extends React.PureComponent {
     }
   }
 
+  _getRef() {
+    return this.contentScrollable;
+  }
+
   render() {
     const bgImages = {
       [BackgroundImageSrc.lg]: pfBg1200,
@@ -194,8 +200,10 @@ class App extends React.PureComponent {
         />
         <BackgroundImage src={bgImages} />
         <Page
+          getRef={this._getRef}
           header={<AppHeader onNavToggle={this._onNavToggle} />}
           sidebar={<AppNav isNavOpen={isNavOpen} onNavSelect={this._onNavSelect} />}
+          useCondensed
         >
           <PageSection
             variant={PageSectionVariants.light}
@@ -204,7 +212,7 @@ class App extends React.PureComponent {
             <div id="content">
               <GlobalNotifications />
               <Route path={namespacedRoutes} component={NamespaceBar} />
-              <div id="content-scrollable">
+              <div id="content-scrollable" ref={this.contentScrollable}>
                 <Switch>
                   <Route path={['/all-namespaces', '/ns/:ns']} component={RedirectComponent} />
 
