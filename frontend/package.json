@@ -53,8 +53,8 @@
     ]
   },
   "dependencies": {
-    "@patternfly/react-core": "^1.32.2",
-    "@patternfly/patternfly-next": "^1.0.66",
+    "@patternfly/react-core": "^1.36.0",
+    "@patternfly/patternfly-next": "^1.0.78",
     "brace": "0.11.x",
     "classnames": "2.x",
     "core-js": "2.x",
