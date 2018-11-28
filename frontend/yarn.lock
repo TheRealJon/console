@@ -86,24 +86,27 @@
   version "0.8.2"
   resolved "https://registry.yarnpkg.com/@emotion/utils/-/utils-0.8.2.tgz#576ff7fb1230185b619a75d258cbc98f0867a8dc"
 
-"@patternfly/patternfly-next@^1.0.66":
-  version "1.0.69"
-  resolved "https://registry.yarnpkg.com/@patternfly/patternfly-next/-/patternfly-next-1.0.69.tgz#58184574f6f884bf3d5270a3a7474c0fe6057ddb"
+"@patternfly/patternfly-next@^1.0.84":
+  version "1.0.84"
+  resolved "https://registry.yarnpkg.com/@patternfly/patternfly-next/-/patternfly-next-1.0.84.tgz#03f877875f739e3b294e7d476465830d41ffaf99"
+  integrity sha512-sIRfo/tk4NSnaRwHIHLUf4XoqzNNa4MMa8ZWivzzSfdZ5pCbgvZtyEUqKnQAEH6zuaCM9S8HyhxcNXnm/xaYaQ==
 
-"@patternfly/react-core@^1.32.2":
-  version "1.32.2"
-  resolved "https://registry.yarnpkg.com/@patternfly/react-core/-/react-core-1.32.2.tgz#f9143335474c106eebd016d3bc1b2e316cb9fb56"
+"@patternfly/react-core@^1.38.1":
+  version "1.38.1"
+  resolved "https://registry.yarnpkg.com/@patternfly/react-core/-/react-core-1.38.1.tgz#b688601ceac2e37aa0fd2ac3ac7a70fee35ccf0b"
+  integrity sha512-TmJSp+hEK+hENP04cx1pLigOoEhC77vt7NhmzzugLdEDef9siB44Cg4tPjuhZO9US3htr9+M/Y3CgR/AugTm5g==
   dependencies:
-    "@patternfly/react-icons" "^2.7.1"
+    "@patternfly/react-icons" "^2.9.2"
     "@patternfly/react-styles" "^2.3.0"
     exenv "^1.2.2"
     focus-trap-react "^4.0.1"
   optionalDependencies:
     "@patternfly/react-tokens" "^1.0.0"
 
-"@patternfly/react-icons@^2.7.1":
-  version "2.7.1"
-  resolved "https://registry.yarnpkg.com/@patternfly/react-icons/-/react-icons-2.7.1.tgz#6ae562e914a7f0485c35302647f0000050895752"
+"@patternfly/react-icons@^2.9.2":
+  version "2.9.2"
+  resolved "https://registry.yarnpkg.com/@patternfly/react-icons/-/react-icons-2.9.2.tgz#c0ce843bc813df8ae6653d1b2693ce13377be0b2"
+  integrity sha512-CP+99MyfDWPg1dW8seUpWmMOTJ4+fvBkQLhlhmpUutUFP7OLVQRZA/xoqaNsqANHXM7IYMYF/2FFSoblpX7Mrw==
 
 "@patternfly/react-styles@^2.3.0":
   version "2.3.0"
