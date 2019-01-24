@@ -363,13 +363,14 @@ class OverviewHeading_ extends React.Component<OverviewHeadingProps> {
     return <div className={classnames('co-m-nav-title co-m-nav-title--overview', { 'overview-filter-group': selectedView === OverviewViewOption.RESOURCES })}>
       {
         title &&
-        <h1 className="co-m-pane__heading co-m-pane__heading--overview">
+        <h1 data-cy="page-heading" className="co-m-pane__heading co-m-pane__heading--overview">
           <div className="co-m-pane__name co-m-pane__name--overview">{title}</div>
         </h1>
       }
       {!_.isEmpty(project) && <div className={classnames('overview-view-selector', {'selected-view__resources': selectedView === OverviewViewOption.RESOURCES })}>
         <div className="form-group btn-group">
           <button
+            data-cy="resources-button"
             type="button"
             className={classnames('btn btn-default', { 'btn-primary': selectedView === OverviewViewOption.RESOURCES })}
             aria-label="Resources"
@@ -381,6 +382,7 @@ class OverviewHeading_ extends React.Component<OverviewHeadingProps> {
             Resources
           </button>
           <button
+            data-cy="dashboard-button"
             type="button"
             className={classnames('btn btn-default', { 'btn-primary': selectedView === OverviewViewOption.DASHBOARD })}
             aria-label="Dashboard"

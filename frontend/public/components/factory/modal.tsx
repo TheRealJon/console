@@ -64,8 +64,8 @@ export const ModalSubmitFooter: React.SFC<ModalSubmitFooterProps> = ({message, e
   };
 
   return <ModalFooter inProgress={inProgress} errorMessage={errorMessage} message={message}>
-    <button type="button" onClick={onCancelClick} className="btn btn-default">{cancelText || 'Cancel'}</button>
-    <button type="submit" className={classNames('btn', submitButtonClass)} disabled={submitDisabled} id="confirm-action">{submitText}</button>
+    <button data-cy="cancel-action" type="button" onClick={onCancelClick} className="btn btn-default">{cancelText || 'Cancel'}</button>
+    <button data-cy="confirm-action" type="submit" className={classNames('btn', submitButtonClass)} disabled={submitDisabled} id="confirm-action">{submitText}</button>
   </ModalFooter>;
 };
 

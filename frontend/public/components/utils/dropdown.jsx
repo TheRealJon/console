@@ -381,7 +381,7 @@ Dropdown.propTypes = {
 
 class ActionsMenuDropdown extends DropdownMixin {
   render() {
-    const {actions, title = undefined, buttonClassName = 'btn-default'} = this.props;
+    const {actions, title = 'Actions', buttonClassName = 'btn-default'} = this.props;
     const onClick = (event, option) => {
       event.preventDefault();
 
@@ -396,10 +396,10 @@ class ActionsMenuDropdown extends DropdownMixin {
       this.hide();
     };
     return <div ref={this.dropdownElement} className="co-actions-menu dropdown">
-      <button type="button" aria-haspopup="true" className={classNames('btn btn-dropdown btn-dropdown-toggle', buttonClassName)} onClick={this.toggle} data-test-id="actions-menu-button">
+      <button type="button" aria-haspopup="true" className={classNames('btn btn-dropdown btn-dropdown-toggle', buttonClassName)} onClick={this.toggle} data-cy={`actions-menu-button ${title}`}>
         <div className="btn-dropdown__content-wrap">
           <span className="btn-dropdown__item">
-            {title || 'Actions'}
+            {title}
           </span>
           <Caret />
         </div>

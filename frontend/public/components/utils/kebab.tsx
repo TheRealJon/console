@@ -16,7 +16,7 @@ import { impersonateStateToProps } from '../../reducers/ui';
 import { connectToModel } from '../../kinds';
 
 const KebabItemEnabled: React.FC<KebabItemProps> = ({option, onClick}) => {
-  return <a href="#" onClick={(e) => onClick(e, option)} data-test-action={option.label}>{option.label}</a>;
+  return <a href="#" onClick={(e) => onClick(e, option)} data-cy={option.label}>{option.label}</a>;
 };
 
 const KebabItemDisabled: React.FC<{option: KebabOption}> = ({option}) => {

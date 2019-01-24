@@ -10,7 +10,11 @@
     "plugin:import/warnings",
     "plugin:react/recommended",
   ],
-  "parser": "@typescript-eslint/parser",
+  "globals": {
+    "cy": true,
+    "Cypress": true
+  },
+  "parser": "typescript-eslint-parser",
   "parserOptions": {
     "project": "./tsconfig.json",
     "comment": true,

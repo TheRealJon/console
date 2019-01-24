@@ -201,15 +201,15 @@ export const FireMan_ = connect(null, {filterList})(
       if (canCreate) {
         if (createProps.to) {
           createLink = <Link className="co-m-primary-action" {...createProps}>
-            <button className="btn btn-primary" id="yaml-create">{createButtonText}</button>
+            <button className="btn btn-primary" data-cy="yaml-create" id="yaml-create">{createButtonText}</button>
           </Link>;
         } else if (createProps.items) {
           createLink = <div className="co-m-primary-action">
-            <Dropdown buttonClassName="btn-primary" id="item-create" title={createButtonText} noSelection={true} items={createProps.items} onChange={(name) => history.push(createProps.createLink(name))} />
+            <Dropdown buttonClassName="btn-primary" data-cy="item-create" id="item-create" title={createButtonText} noSelection={true} items={createProps.items} onChange={(name) => history.push(createProps.createLink(name))} />
           </div>;
         } else {
           createLink = <div className="co-m-primary-action">
-            <button className="btn btn-primary" id="yaml-create" {...createProps}>{createButtonText}</button>
+            <button className="btn btn-primary" data-cy="yaml-create" id="yaml-create" {...createProps}>{createButtonText}</button>
           </div>;
         }
         if (!_.isEmpty(createAccessReview)) {
