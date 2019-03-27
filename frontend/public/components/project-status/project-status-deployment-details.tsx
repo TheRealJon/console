@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars, no-undef */
 import * as React from 'react';
 
 import { DeploymentModel } from '../../models';
@@ -12,17 +13,16 @@ import {
   WorkloadPausedAlert,
 } from '../utils';
 
-import { OverviewDetailsResourcesTab } from './resource-overview-page';
-import { OverviewItem } from '.';
-import { ResourceOverviewDetails } from './resource-overview-details';
+import { ProjectStatusItem } from '.';
+import { ProjectStatusItemDetailsDefaultResourcesTab, ProjectStatusItemDetails } from './project-status-item-details';
 
-const DeploymentOverviewDetails: React.SFC<DeploymentOverviewDetailsProps> = ({item}) => {
-  return <div className="overview__sidebar-pane-body resource-overview__body">
+const OverviewTab: React.SFC<OverviewTabProps> = ({item}) => {
+  return <div className="project-status__sidebar-pane-body project-status-item-details__overview">
     {item.obj.spec.paused && <WorkloadPausedAlert obj={item.obj} model={DeploymentModel} />}
-    <div className="resource-overview__pod-counts">
+    <div className="project-status-item-details__pod-counts">
       <DeploymentPodCounts resource={item.obj} resourceKind={DeploymentModel} />
     </div>
-    <div className="resource-overview__summary">
+    <div className="project-status-item-details__common">
       <ResourceSummary resource={item.obj} showPodSelector showNodeSelector>
         <dt>Status</dt>
         <dd>
@@ -36,7 +36,7 @@ const DeploymentOverviewDetails: React.SFC<DeploymentOverviewDetailsProps> = ({i
         </dd>
       </ResourceSummary>
     </div>
-    <div className="resource-overview__details">
+    <div className="project-status-item-details__distinctive">
       <DeploymentDetailsList deployment={item.obj} />
     </div>
   </div>;
@@ -45,28 +45,26 @@ const DeploymentOverviewDetails: React.SFC<DeploymentOverviewDetailsProps> = ({i
 const tabs = [
   {
     name: 'Overview',
-    component: DeploymentOverviewDetails,
+    component: OverviewTab,
   },
   {
     name: 'Resources',
-    component: OverviewDetailsResourcesTab,
+    component: ProjectStatusItemDetailsDefaultResourcesTab,
   },
 ];
 
-export const DeploymentOverviewPage: React.SFC<DeploymentOverviewProps> = ({item}) =>
-  <ResourceOverviewDetails
+export const ProjectStatusDeploymentDetails: React.SFC<ProjectStatusDeploymentDetailsProps> = ({item}) =>
+  <ProjectStatusItemDetails
     item={item}
     kindObj={DeploymentModel}
     menuActions={menuActions}
     tabs={tabs}
   />;
 
-/* eslint-disable no-unused-vars, no-undef */
-type DeploymentOverviewDetailsProps = {
-  item: OverviewItem;
+type OverviewTabProps = {
+  item: ProjectStatusItem;
 };
 
-type DeploymentOverviewProps = {
-  item: OverviewItem;
+type ProjectStatusDeploymentDetailsProps = {
+  item: ProjectStatusItem;
 };
-/* eslint-enable no-unused-vars, no-undef */

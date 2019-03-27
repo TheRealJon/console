@@ -17,10 +17,10 @@ import {
 } from '../utils';
 
 import {
-  OverviewGroup,
-  OverviewItem,
-  OverviewMetrics,
-  PodControllerOverviewItem,
+  ProjectStatusGroup,
+  ProjectStatusItem,
+  ProjectStatusMetrics,
+  ProjectStatusPodControllerItem,
 } from '.';
 
 const formatToFractionalDigits = (value: number, digits: number): string => Intl.NumberFormat(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(value);
@@ -32,7 +32,7 @@ const formatBytesAsMiB = (bytes: number): string => {
 
 const formatCores = (cores: number): string => formatToFractionalDigits(cores, 3);
 
-const overviewTooltipStyles = Object.freeze({
+const projectStatusTooltipStyles = Object.freeze({
   content: {
     maxWidth: '225px',
   },
@@ -66,9 +66,9 @@ const MetricsTooltip: React.SFC<MetricsTooltipProps> = ({metricLabel, byPod, chi
   const content: any[] = _.isEmpty(sortedMetrics)
     ? [<React.Fragment key="no-metrics">No {metricLabel} metrics available.</React.Fragment>]
     : _.concat(<div key="#title">{metricLabel} Usage by Pod</div>, sortedMetrics.map(({name, formattedValue}) => (
-      <div key={name} className="project-overview__metric-tooltip">
-        <div className="project-overview__metric-tooltip-name">{truncateMiddle(name)}</div>
-        <div className="project-overview__metric-tooltip-value">{formattedValue}</div>
+      <div key={name} className="project-status-list__metric-tooltip">
+        <div className="project-status-list__metric-tooltip-name">{truncateMiddle(name)}</div>
+        <div className="project-status-list__metric-tooltip-value">{formattedValue}</div>
       </div>
     )));
 
@@ -82,7 +82,7 @@ const MetricsTooltip: React.SFC<MetricsTooltipProps> = ({metricLabel, byPod, chi
 
   // Disable the tooltip on mobile since a touch also opens the sidebar, which
   // immediately covers the tooltip content.
-  return <Tooltip content={content} styles={overviewTooltipStyles} disableOnMobile>{children}</Tooltip>;
+  return <Tooltip content={content} styles={projectStatusTooltipStyles} disableOnMobile>{children}</Tooltip>;
 };
 
 
@@ -126,18 +126,18 @@ const Metrics: React.SFC<MetricsProps> = ({metrics, item}) => {
   const formattedMiB = formatBytesAsMiB(totalBytes);
   const formattedCores = formatCores(totalCores);
   return <React.Fragment>
-    <div className="project-overview__detail project-overview__detail--memory">
+    <div className="project-status-list__detail project-status-list__detail--memory">
       <MetricsTooltip metricLabel="Memory" byPod={memoryByPod}>
-        <span className="project-overview__metric-value">{formattedMiB}</span>
+        <span className="project-status-list__metric-value">{formattedMiB}</span>
         &nbsp;
-        <span className="project-overview__metric-unit">MiB</span>
+        <span className="project-status-list__metric-unit">MiB</span>
       </MetricsTooltip>
     </div>
-    <div className="project-overview__detail project-overview__detail--cpu">
+    <div className="project-status-list__detail project-status-list__detail--cpu">
       <MetricsTooltip metricLabel="CPU" byPod={cpuByPod}>
-        <span className="project-overview__metric-value">{formattedCores}</span>
+        <span className="project-status-list__metric-value">{formattedCores}</span>
         &nbsp;
-        <span className="project-overview__metric-unit">cores</span>
+        <span className="project-status-list__metric-unit">cores</span>
       </MetricsTooltip>
     </div>
   </React.Fragment>;
@@ -145,7 +145,7 @@ const Metrics: React.SFC<MetricsProps> = ({metrics, item}) => {
 
 const Status: React.SFC<StatusProps> = ({item}) => {
   const {status} = item;
-  return status ? <div className="project-overview__detail project-overview__detail--status">
+  return status ? <div className="project-status-list__detail project-status-list__detail--status">
     {status}
   </div> : null;
 };
@@ -171,7 +171,7 @@ const AlertTooltip = ({alerts, severity}) => {
 
   // Disable the tooltip on mobile since a touch also opens the sidebar, which
   // immediately covers the tooltip content.
-  return <Tooltip content={content} styles={overviewTooltipStyles} disableOnMobile>
+  return <Tooltip content={content} styles={projectStatusTooltipStyles} disableOnMobile>
     <i className={iconClass} aria-hidden="true" /> {pluralize(count, label)}
   </Tooltip>;
 };
@@ -190,33 +190,33 @@ const Alerts: React.SFC<AlertsProps> = ({item}) => {
   }
 
   const { error, warning, info } = _.groupBy(alerts, 'severity');
-  return <div className="project-overview__detail project-overview__detail--alert">
+  return <div className="project-status-list__detail project-status-list__detail--alert">
     {error && <AlertTooltip severity="error" alerts={error} />}
     {warning && <AlertTooltip severity="warning" alerts={warning} />}
     {info && <AlertTooltip severity="info" alerts={info} />}
   </div>;
 };
 
-const projectOverviewListItemStateToProps = ({UI}): ProjectOverviewListItemPropsFromState => ({
-  metrics: UI.getIn(['overview', 'metrics']),
-  selectedUID: UI.getIn(['overview', 'selectedUID']),
+const itemStateToProps = ({UI}): ItemPropsFromState => ({
+  metrics: UI.getIn(['ProjectStatus', 'metrics']),
+  selectedUID: UI.getIn(['ProjectStatus', 'selectedUID']),
 });
 
-const projectOverviewListItemDispatchToProps = (dispatch): ProjectOverviewListItemPropsFromDispatch => ({
-  selectItem: (uid) => dispatch(UIActions.selectOverviewItem(uid)),
-  dismissDetails: () => dispatch(UIActions.dismissOverviewDetails()),
+const itemDispatchToProps = (dispatch): ItemPropsFromDispatch => ({
+  selectItem: (uid) => dispatch(UIActions.selectProjectStatusItem(uid)),
+  dismissDetails: () => dispatch(UIActions.dismissProjectStatusDetails()),
 });
 
-const ProjectOverviewListItem = connect<ProjectOverviewListItemPropsFromState, ProjectOverviewListItemPropsFromDispatch, ProjectOverviewListItemOwnProps>(projectOverviewListItemStateToProps, projectOverviewListItemDispatchToProps)(
-  ({dismissDetails, item, metrics, selectItem, selectedUID}: ProjectOverviewListItemProps) => {
+const Item = connect<ItemPropsFromState, ItemPropsFromDispatch, ItemOwnProps>(itemStateToProps, itemDispatchToProps)(
+  ({dismissDetails, item, metrics, selectItem, selectedUID}: ItemProps) => {
     const {current, obj} = item;
     const {namespace, name, uid} = obj.metadata;
     const {kind} = obj;
     // Hide metrics when a selection is active.
     const hasSelection = !!selectedUID;
     const isSelected = uid === selectedUID;
-    const className = classnames(`project-overview__item project-overview__item--${kind}`, {'project-overview__item--selected': isSelected});
-    const heading = <h3 className="project-overview__item-heading">
+    const className = classnames(`project-status-list__item project-status-list__item--${kind}`, {'project-status-list__item--selected': isSelected});
+    const heading = <h3 className="project-status-list__item-heading">
       <span className="co-resource-link co-resource-link-truncate">
         <ResourceIcon kind={kind} />
         <Link to={resourcePath(kind, name, namespace)} className="co-resource-link__resource-name">
@@ -226,7 +226,7 @@ const ProjectOverviewListItem = connect<ProjectOverviewListItemPropsFromState, P
       </span>
     </h3>;
 
-    const additionalInfo = <div key={uid} className="project-overview__additional-info">
+    const additionalInfo = <div key={uid} className="project-status-list__additional-info">
       <Alerts item={item} />
       {!hasSelection && <Metrics item={item} metrics={metrics} />}
       <Status item={item} />
@@ -251,34 +251,37 @@ const ProjectOverviewListItem = connect<ProjectOverviewListItemPropsFromState, P
       className={className}
       heading={heading}
       additionalInfo={[additionalInfo]}
+      data-name={name}
+      data-kind={kind}
+      data-test-selector="project-status-list-item"
     />;
   }
 );
 
-const ProjectOverviewList: React.SFC<ProjectOverviewListProps> = ({items}) => {
+const List: React.SFC<ListProps> = ({items}) => {
   const listItems = _.map(items, (item) =>
-    <ProjectOverviewListItem
+    <Item
       item={item}
       key={item.obj.metadata.uid}
     />
   );
-  return <ListView className="project-overview__list">
+  return <ListView className="project-status-list__grouped-list">
     {listItems}
   </ListView>;
 };
 
-const ProjectOverviewGroup: React.SFC<ProjectOverviewGroupProps> = ({heading, items}) =>
-  <div className="project-overview__group">
-    <h2 className="project-overview__group-heading">{heading}</h2>
-    <ProjectOverviewList
+const Group: React.SFC<GroupProps> = ({heading, items}) =>
+  <div className="project-status-list__group">
+    <h2 className="project-status-list__group-heading">{heading}</h2>
+    <List
       items={items}
     />
   </div>;
 
-export const ProjectOverview: React.SFC<ProjectOverviewProps> = ({groups}) =>
-  <div className="project-overview">
+export const ProjectStatusList: React.SFC<ProjectStatusListProps> = ({groups}) =>
+  <div className="project-status-list" data-test-selector="project-status-list">
     {_.map(groups, ({name, items}, index) =>
-      <ProjectOverviewGroup
+      <Group
         key={name || `_${index}`}
         heading={name}
         items={items}
@@ -287,7 +290,7 @@ export const ProjectOverview: React.SFC<ProjectOverviewProps> = ({groups}) =>
   </div>;
 
 type ControllerLinkProps = {
-  controller: PodControllerOverviewItem;
+  controller: ProjectStatusPodControllerItem;
 };
 
 type ComponentLabelProps = {
@@ -305,42 +308,42 @@ type MetricsTooltipProps = {
 
 type MetricsProps = {
   metrics: any;
-  item: OverviewItem;
+  item: ProjectStatusItem;
 };
 
 type StatusProps = {
-  item: OverviewItem;
+  item: ProjectStatusItem;
 };
 
 type AlertsProps = {
-  item: OverviewItem;
+  item: ProjectStatusItem;
 };
 
-type ProjectOverviewListItemPropsFromState = {
-  metrics: OverviewMetrics;
+type ItemPropsFromState = {
+  metrics: ProjectStatusMetrics;
   selectedUID: string;
 };
 
-type ProjectOverviewListItemPropsFromDispatch = {
+type ItemPropsFromDispatch = {
   selectItem: (uid: string) => void;
   dismissDetails: () => void;
 };
 
-type ProjectOverviewListItemOwnProps= {
-  item: OverviewItem;
+type ItemOwnProps= {
+  item: ProjectStatusItem;
 };
 
-type ProjectOverviewListItemProps = ProjectOverviewListItemOwnProps & ProjectOverviewListItemPropsFromDispatch & ProjectOverviewListItemPropsFromState;
+type ItemProps = ItemOwnProps & ItemPropsFromDispatch & ItemPropsFromState;
 
-type ProjectOverviewListProps = {
-  items: OverviewItem[];
+type ListProps = {
+  items: ProjectStatusItem[];
 };
 
-type ProjectOverviewGroupProps = {
+type GroupProps = {
   heading: string;
-  items: OverviewItem[];
+  items: ProjectStatusItem[];
 };
 
-type ProjectOverviewProps = {
-  groups: OverviewGroup[];
+type ProjectStatusListProps = {
+  groups: ProjectStatusGroup[];
 };

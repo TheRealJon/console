@@ -120,7 +120,7 @@ export const config: Config = {
     newApp: [
       'tests/login.scenario.ts',
       'tests/base.scenario.ts',
-      'tests/overview/overview.scenario.ts',
+      'tests/proejct-status/project-status.scenario.ts',
       'tests/source-to-image.scenario.ts',
       'tests/deploy-image.scenario.ts',
     ],
@@ -166,10 +166,10 @@ export const config: Config = {
       'tests/service-catalog/service-binding.scenario.ts',
       'tests/developer-catalog.scenario.ts',
     ],
-    overview: [
+    projectStatus: [
       'tests/login.scenario.ts',
       'tests/base.scenario.ts',
-      'tests/overview/overview.scenario.ts',
+      'tests/project-status/project-status.scenario.ts',
     ],
     e2e: [
       'tests/login.scenario.ts',
@@ -179,7 +179,7 @@ export const config: Config = {
       'tests/filter.scenario.ts',
       'tests/modal-annotations.scenario.ts',
       'tests/environment.scenario.ts',
-      'tests/overview/overview.scenario.ts',
+      'tests/project-status/project-status.scenario.ts',
       'tests/source-to-image.scenario.ts',
       'tests/deploy-image.scenario.ts',
       'tests/performance.scenario.ts',
@@ -188,7 +188,7 @@ export const config: Config = {
       'tests/login.scenario.ts',
       'tests/base.scenario.ts',
       'tests/crud.scenario.ts',
-      'tests/overview/overview.scenareio.ts',
+      'tests/project-status/project-status.scenareio.ts',
       'tests/secrets.scenario.ts',
       'tests/olm/**/*.scenario.ts',
       'tests/service-catalog/**/*.scenario.ts',

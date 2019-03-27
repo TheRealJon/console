@@ -42,7 +42,7 @@
   overflow: hidden;
 }
 
-.cluster-overview-cell {
+.cluster-status-cell {
   @media(min-width: $screen-lg-min) {
     .col-lg-8 {
       padding-right: 0;
@@ -50,14 +50,14 @@
   }
 }
 
-.cluster-overview-cell__title {
+.cluster-status-cell__title {
   font-size: 16px;
   margin-top: 0;
   margin-bottom: 18px;
   line-height: 25px;
 }
 
-.cluster-overview-cell__info-row {
+.cluster-status-cell__info-row {
   border-bottom: solid 1px $color-grey-background-border;
   padding: 12px 0;
   line-height: 20px;
@@ -66,11 +66,11 @@
   }
 }
 
-.cluster-overview-cell__info-row__first-cell {
+.cluster-status-cell__info-row__first-cell {
   margin-left: -5px;
 }
 
-.cluster-overview-cell__info-row__last-cell {
+.cluster-status-cell__info-row__last-cell {
   margin-right: -5px;
   text-align: right;
 }

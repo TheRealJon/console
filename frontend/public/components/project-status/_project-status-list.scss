@@ -1,6 +1,6 @@
 // Nesting increases specificity so that pf list styles are always overridden
-.project-overview {
-  .project-overview__additional-info {
+.project-status-list {
+  .project-status-list__additional-info {
     align-items: center;
     display: grid;
     grid-column-gap: 3%;
@@ -16,7 +16,7 @@
     }
   }
 
-  .project-overview__detail--alert {
+  .project-status-list__detail--alert {
     min-width: 0; // To enable text-overflow: ellipsis within a css-grid area
     @media (max-width: $screen-sm-max) {
       grid-row: 2;
@@ -26,45 +26,45 @@
     }
   }
 
-  .project-overview__detail--cpu {
+  .project-status-list__detail--cpu {
     min-width: 0; // To enable text-overflow: ellipsis within a css-grid area
     @media (min-width: $screen-md-min) {
       grid-area: cpu;
     }
   }
 
-  .project-overview__detail--memory {
+  .project-status-list__detail--memory {
     min-width: 0; // To enable text-overflow: ellipsis within a css-grid area
     @media (min-width: $screen-md-min) {
       grid-area: memory;
     }
   }
 
-  .project-overview__detail--status {
+  .project-status-list__detail--status {
     @media (min-width: $screen-md-min) {
       grid-area: status;
     }
   }
 
-  .project-overview__item {
+  .project-status-list__item {
     min-height: 71px;
   }
 
-  .project-overview__item--selected,
-  .project-overview__item.project-overview__item--selected:hover, {
+  .project-status-list__item--selected,
+  .project-status-list__item.project-status-list__item--selected:hover, {
     background-color: $color-pf-blue-100;
   }
 
-  .project-overview__item .project-overview__item-chevron {
+  .project-status-list__item .project-status-list__item-chevron {
     visibility: hidden;
   }
 
-  .project-overview__item:hover .project-overview__item-chevron,
-  .project-overview__item.project-overview__item--selected .project-overview__item-chevron {
+  .project-status-list__item:hover .project-status-list__item-chevron,
+  .project-status-list__item.project-status-list__item--selected .project-status-list__item-chevron {
     visibility: visible;
   }
 
-  .project-overview__item-heading {
+  .project-status-list__item-heading {
     font-size: 16px;
     margin: 0;
     @media(max-width: $screen-sm-max) {
@@ -72,11 +72,11 @@
     }
   }
 
-  .project-overview__group {
+  .project-status-list__group {
     margin-bottom: 40px;
   }
 
-  .project-overview__group-heading {
+  .project-status-list__group-heading {
     font-size: 18px;
     line-height: normal;
     margin: 0;
@@ -86,7 +86,7 @@
     white-space: nowrap;
   }
 
-  .project-overview__item.list-group-item {
+  .project-status-list__item.list-group-item {
     background-clip: initial;
     border-bottom: 1px solid $color-pf-black-200;
     border-left: 0;
@@ -115,19 +115,19 @@
     }
   }
 
-  .project-overview__list {
+  .project-status-list__grouped-list {
     margin-top: 0;
   }
 
-  .project-overview__metric-value {
+  .project-status-list__metric-value {
     font-size: 18px;
   }
 
-  .project-overview__metric-tooltip {
+  .project-status-list__metric-tooltip {
     display: flex;
   }
 
-  .project-overview__metric-tooltip-name {
+  .project-status-list__metric-tooltip-name {
     flex: 2;
     overflow: hidden;
     text-align: left;
@@ -135,12 +135,12 @@
     white-space: nowrap;
   }
 
-  .project-overview__metric-tooltip-value {
+  .project-status-list__metric-tooltip-value {
     flex: 1;
     text-align: right;
   }
 
-  .project-overview__metric-unit {
+  .project-status-list__metric-unit {
     color: $color-text-muted;
     font-size: ($font-size-base - 1);
     margin-left: 3px;
@@ -158,12 +158,12 @@
       width: 40%;
     }
 
-    .project-overview__detail--cpu,
-    .project-overview__detail--memory {
+    .project-status-list__detail--cpu,
+    .project-status-list__detail--memory {
       text-align: right;
     }
 
-    .project-overview__detail--status {
+    .project-status-list__detail--status {
       // Give enough margin for the chevron.
       margin-right: 40px;
       text-align: right;
@@ -173,7 +173,7 @@
 
 @media (min-width: $screen-md-min) {
   // Metrics are hidden when the sidebar is open. Adjust list row styles.
-  .overview--sidebar-shown .project-overview {
+  .project-status--sidebar-shown .project-status-list {
     .list-view-pf-additional-info {
       width: 50%;
     }
@@ -183,11 +183,11 @@
       width: 50%;
     }
 
-    .project-overview__additional-info {
+    .project-status-list__additional-info {
       grid-column-gap: 5%;
       grid-template-columns: 35% 55%;
     }
-    .project-overview__detail--status {
+    .project-status-list__detail--status {
       grid-column: 2;
     }
   }

@@ -1,11 +1,11 @@
-.co-m-nav-title--overview {
+.co-m-nav-title--project-status {
   display: flex;
   flex-direction: column;
   flex-wrap: wrap;
   justify-content: space-between;
 }
 
-.overview-toolbar {
+.project-status-toolbar {
   margin: 0 0 ($grid-gutter-width / 2) 0;
   min-width: 0;
   padding: 0;
@@ -28,7 +28,7 @@
 
     @media (min-width: $screen-sm-min) and (max-width: $screen-md-max) {
       // switch to stacked fields when side open but still at desktop widths
-      .overview--sidebar-shown & {
+      .project-status--sidebar-shown & {
         align-items: initial;
         display: flex;
         flex-direction: column;
@@ -40,7 +40,7 @@
   }
 }
 
-.overview-toolbar__dropdown {
+.project-status-toolbar__dropdown {
   display: inline-block;
   max-width: 100%; // enable text-overflow: ellipsis
 
@@ -48,7 +48,7 @@
     min-width: 100%;
   }
 
-  .overview--sidebar-shown & {
+  .project-status--sidebar-shown & {
     @media (max-width: $screen-md-max) {
       min-width: 100%; // stack selections
     }
@@ -69,7 +69,7 @@
   }
 }
 
-.overview-toolbar__form-group {
+.project-status-toolbar__form-group {
   flex: 1 1 auto;
   min-width: 0; // enable truncation
 
@@ -84,23 +84,23 @@
     padding-right: 10px;
 
     @media (max-width: $screen-md-max) {
-      .overview--sidebar-shown & {
+      .project-status--sidebar-shown & {
         padding-right: 0;
       }
     }
 
     @media (min-width: $screen-lg-min) and (max-width: ($screen-lg-min + 200)) {
-      .overview--sidebar-shown & {
+      .project-status--sidebar-shown & {
         max-width: 200px; // prevents group by select from pushing filter input behind the sidebar
       }
     }
   }
 
-  + .overview-toolbar__form-group {
+  + .project-status-toolbar__form-group {
     border-left: 1px solid $color-pf-black-300;
     padding-left: 10px;
 
-    .overview--sidebar-shown & {
+    .project-status--sidebar-shown & {
       @media (max-width: $screen-md-max) {
         border: 0;
         padding-left: 0;
@@ -115,16 +115,16 @@
   }
 }
 
-.co-m-pane__heading--overview {
+.co-m-pane__heading--project-status {
   justify-content: flex-start;
   margin: 0 20px ($grid-gutter-width / 2) 0;
 }
 
-.co-m-pane__name--overview {
+.co-m-pane__name--project-status {
   flex: 0 1 auto;
 }
 
-.overview-toolbar__label {
+.project-status-toolbar__label {
   margin: 0 10px 0 0;
   vertical-align: middle;
   white-space: nowrap;
@@ -134,16 +134,16 @@
   }
 }
 
-.overview-toolbar__text-filter .text-filter {
+.project-status-toolbar__text-filter .text-filter {
   min-width: 100%;
   width: 100%;
 
-  .overview--sidebar-shown & {
+  .project-status--sidebar-shown & {
     width: auto;
   }
 }
 
-.overview {
+.project-status {
   bottom: 0;
   display: flex;
   left: 0;
@@ -151,7 +151,7 @@
   right: 0;
   top: 0;
 
-  .overview__main-column {
+  .project-status__main-column {
     height: 100%;
     overflow-x: hidden;
     overflow-y: auto;
@@ -159,7 +159,7 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  .overview__sidebar {
+  .project-status__sidebar {
     background: #fff;
     bottom: 0;
     box-shadow: var(--pf-global--BoxShadow--md);
@@ -175,12 +175,12 @@
     z-index: 5;
   }
 
-  .overview__sidebar-appear {
+  .project-status__sidebar-appear {
     opacity: 0;
     transform: translateX(10%);
   }
 
-  .overview__sidebar-appear-active {
+  .project-status__sidebar-appear-active {
     opacity: 1;
     transform: translateX(0);
     transition:
@@ -188,14 +188,14 @@
       transform 225ms ease-out;
   }
 
-  &.overview--sidebar-shown {
-    .overview__sidebar {
+  &.project-status--sidebar-shown {
+    .project-status__sidebar {
       display: flex;
       flex-direction: column;
     }
 
     @media(min-width: $screen-lg-min) {
-      .overview__main-column {
+      .project-status__main-column {
         width: calc(100% - 535px);
 
         .co-m-pane__body {
@@ -203,14 +203,14 @@
         }
       }
 
-      .overview__sidebar {
+      .project-status__sidebar {
         min-height: 0;
         overflow: hidden;
       }
     }
   }
 
-  .overview__sidebar-dismiss {
+  .project-status__sidebar-dismiss {
     padding: 0 5px;
 
     .close {
@@ -229,12 +229,12 @@
   }
 }
 
-.overview__sidebar-pane-body {
+.project-status__sidebar-pane-body {
   margin: $grid-gutter-width 0 0;
   padding: 0 20px;
 }
 
-.overview__sidebar-pane-head {
+.project-status__sidebar-pane-head {
   border-bottom: 1px solid $color-grey-background-border;
   padding-top: 5px;
 
@@ -247,13 +247,13 @@
   }
 }
 
-.overview-view-selector {
+.project-status-view-selector {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
 
   @media (max-width: $screen-md-max) {
-    .overview--sidebar-shown & {
+    .project-status--sidebar-shown & {
       flex-direction: column;
     }
   }
@@ -266,32 +266,6 @@
       margin-right: 6px;
     }
   }
-}
-
-.resource-overview {
-  height: 100%;
-  min-height: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-.resource-overview__body {
-  display: flex;
-  flex-wrap: wrap;
-}
-
-.resource-overview__details {
-  width: 50%;
-}
-
-.resource-overview__pod-counts {
-  width: 100%;
-}
-
-.resource-overview__summary {
-  padding-right: 10px;
-  width: 50%;
 }
 
 .sidebar__section-heading {

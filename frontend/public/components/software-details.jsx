@@ -33,7 +33,7 @@ export const StatusIcon = ({state, text}) => {
 export const SubHeaderRow = ({header, children}) => {
   return <div className="row">
     <div className="col-xs-12">
-      <h4 className="cluster-overview-cell__title">
+      <h4 className="cluster-status-cell__title">
         {header}
       </h4>
       {children}
@@ -42,7 +42,7 @@ export const SubHeaderRow = ({header, children}) => {
 };
 
 const SoftwareDetailRow = ({title, detail, text, children}) => {
-  return <div className="row cluster-overview-cell__info-row">
+  return <div className="row cluster-status-cell__info-row">
     <div className="col-xs-6">
       {title}
     </div>

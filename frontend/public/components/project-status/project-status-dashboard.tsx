@@ -16,9 +16,9 @@ const editRoleBindings = (kind, obj) => ({
   href: resourceListPathFromModel(RoleBindingModel, obj.metadata.name),
 });
 
-export const overviewMenuActions = [editRoleBindings, deleteModal];
+export const projectStatusMenuActions = [editRoleBindings, deleteModal];
 
-const OverviewHealth = requirePrometheus(({ns}) => <div className="group">
+const ProjectStatusDashboardHealth = requirePrometheus(({ns}) => <div className="group">
   <div className="group__title">
     <h2 className="h3">Health</h2>
   </div>
@@ -27,7 +27,7 @@ const OverviewHealth = requirePrometheus(({ns}) => <div className="group">
   </div>
 </div>);
 
-const OverviewResourceUsage = requirePrometheus(({ns}) => <div className="group">
+const ProjectStatusDashboardResourceUsage = requirePrometheus(({ns}) => <div className="group">
   <div className="group__title">
     <h2 className="h3">Resource Usage</h2>
   </div>
@@ -37,7 +37,7 @@ const OverviewResourceUsage = requirePrometheus(({ns}) => <div className="group"
   </div>
 </div>);
 
-const OverviewNamespaceSummary = ({ns}) => <div className="group">
+const ProjectStatusDashboardNamespaceSummary = ({ns}) => <div className="group">
   <div className="group__title">
     <h2 className="h3">Details</h2>
   </div>
@@ -62,7 +62,7 @@ const ResourceQuotaCharts = ({quota, resourceTypes}) => {
   </div>;
 };
 
-const ResourceQuotas: React.SFC<QuotaBoxesProps> = ({resourceQuotas}) => {
+const ResourceQuotaList: React.SFC<QuotaBoxesProps> = ({resourceQuotas}) => {
   const { loaded, loadError, data: quotas } = resourceQuotas;
 
   if (!loaded) {
@@ -84,7 +84,7 @@ const ResourceQuotas: React.SFC<QuotaBoxesProps> = ({resourceQuotas}) => {
   </React.Fragment>;
 };
 
-const OverviewResourceQuotas = ({ns}) => {
+const ProjectStatusDashboardResourceQuotas = ({ns}) => {
   const quotaResources = [
     {
       kind: 'ResourceQuota',
@@ -94,15 +94,15 @@ const OverviewResourceQuotas = ({ns}) => {
     },
   ];
   return <Firehose forceUpdate resources={quotaResources}>
-    <ResourceQuotas />
+    <ResourceQuotaList />
   </Firehose>;
 };
 
-export const OverviewNamespaceDashboard = ({obj: ns}) => <React.Fragment>
-  <OverviewHealth ns={ns} />
-  <OverviewResourceQuotas ns={ns} />
-  <OverviewResourceUsage ns={ns} />
-  <OverviewNamespaceSummary ns={ns} />
+export const ProjectStatusDashboard = ({obj: ns}) => <React.Fragment>
+  <ProjectStatusDashboardHealth ns={ns} />
+  <ProjectStatusDashboardResourceQuotas ns={ns} />
+  <ProjectStatusDashboardResourceUsage ns={ns} />
+  <ProjectStatusDashboardNamespaceSummary ns={ns} />
 </React.Fragment>;
 
 export type QuotaBoxesProps = {

@@ -181,13 +181,13 @@ class App extends React.PureComponent {
                 <Switch>
                   <Route path={['/all-namespaces', '/ns/:ns']} component={RedirectComponent} />
 
-                  <LazyRoute path="/overview/all-namespaces" exact loader={() => import('./cluster-overview' /* webpackChunkName: "cluster-overview" */).then(m => m.ClusterOverviewPage)} />
-                  <LazyRoute path="/overview/ns/:ns" exact loader={() => import('./overview' /* webpackChunkName: "overview" */).then(m => m.OverviewPage)} />
-                  <Route path="/overview" exact component={NamespaceRedirect} />
-
-                  <LazyRoute path="/status/all-namespaces" exact loader={() => import('./cluster-overview' /* webpackChunkName: "cluster-overview" */).then(m => m.ClusterOverviewPage)} />
-                  <LazyRoute path="/status/ns/:ns" exact loader={() => import('./cluster-overview' /* webpackChunkName: "cluster-overview" */).then(m => m.ClusterOverviewPage)} />
+                  <LazyRoute path="/status/all-namespaces" exact loader={() => import('./cluster-status' /* webpackChunkName: "cluster-status" */).then(m => m.ClusterStatusPage)} />
+                  <LazyRoute path="/status/ns/:ns" exact loader={() => import('./project-status' /* webpackChunkName: "project-status" */).then(m => m.ProjectStatusPage)} />
                   <Route path="/status" exact component={NamespaceRedirect} />
+
+                  <LazyRoute path="/cluster-status/all-namespaces" exact loader={() => import('./cluster-status' /* webpackChunkName: "cluster-status" */).then(m => m.ClusterStatusPage)} />
+                  <LazyRoute path="/cluster-status/ns/:ns" exact loader={() => import('./cluster-status' /* webpackChunkName: "cluster-status" */).then(m => m.ClusterStatusPage)} />
+                  <Route path="/cluster-status" exact component={NamespaceRedirect} />
 
                   <LazyRoute path="/cluster-health" exact loader={() => import('./cluster-health' /* webpackChunkName: "cluster-health" */).then(m => m.ClusterHealth)} />
                   <LazyRoute path="/start-guide" exact loader={() => import('./start-guide' /* webpackChunkName: "start-guide" */).then(m => m.StartGuidePage)} />

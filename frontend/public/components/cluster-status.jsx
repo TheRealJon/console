@@ -183,15 +183,15 @@ const permissionedLoader = () => {
     );
 };
 
-export const ClusterOverviewPage = withStartGuide(({match, noProjectsAvailable}) => {
+export const ClusterStatusPage = withStartGuide(({match, noProjectsAvailable}) => {
   const namespace = _.get(match, 'params.ns');
   const title = namespace ? `Status of ${ namespace }` : 'Cluster Status';
   return <React.Fragment>
     <Helmet>
-      <title>{noProjectsAvailable ? 'Overview' : title}</title>
+      <title>{noProjectsAvailable ? 'Status' : title}</title>
     </Helmet>
-    <PageHeading title={noProjectsAvailable ? 'Overview' : title} />
-    <div className="cluster-overview-cell container-fluid">
+    <PageHeading title={noProjectsAvailable ? 'Status' : title} />
+    <div className="cluster-status-cell container-fluid">
       <AsyncComponent namespace={namespace} loader={permissionedLoader} mock={noProjectsAvailable} />
     </div>
   </React.Fragment>;

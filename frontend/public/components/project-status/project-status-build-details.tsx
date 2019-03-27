@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars, no-undef */
 import * as _ from 'lodash-es';
 import * as React from 'react';
 import { Button, ListGroup } from 'patternfly-react';
@@ -15,7 +16,7 @@ import {
   SidebarSectionHeading,
 } from '../utils';
 
-import { BuildConfigOverviewItem } from '.';
+import { ProjectStatusBuildConfigItem, ProjectStatusItem } from '.';
 
 const conjugateBuildPhase = (phase: BuildPhase): string => {
   switch (phase) {
@@ -34,23 +35,23 @@ const BuildStatus = ({build}) => {
   const {status:{logSnippet, message, phase}} = build;
   const unsuccessful = [BuildPhase.Error, BuildPhase.Failed].includes(phase);
   return unsuccessful
-    ? <div className="build-overview__item-reason">
-      <p className="build-overview__status-message">{message}</p>
+    ? <div className="project-status-build-details__item-reason">
+      <p className="project-status-build-details__status-message">{message}</p>
       {
-        logSnippet && <pre className="build-overview__log-snippet">{logSnippet}</pre>
+        logSnippet && <pre className="project-status-build-details__log-snippet">{logSnippet}</pre>
       }
     </div>
     : null;
 };
 
-const BuildOverviewItem: React.SFC<BuildOverviewListItemProps> = ({build}) => {
+const BuildListItem: React.SFC<BuildListItemProps> = ({build}) => {
   const {metadata: {creationTimestamp}, status: {completionTimestamp, startTimestamp, phase}} = build;
   const lastUpdated = completionTimestamp
     || startTimestamp
     || creationTimestamp;
 
-  return <li className="list-group-item build-overview__item">
-    <div className="build-overview__item-title">
+  return <li className="list-group-item project-status-build-details__item">
+    <div className="project-status-build-details__item-title">
       <div>
         <BuildPhaseIcon build={build} />
         &nbsp;
@@ -69,7 +70,7 @@ const BuildOverviewItem: React.SFC<BuildOverviewListItemProps> = ({build}) => {
   </li>;
 };
 
-const BuildOverviewList: React.SFC<BuildOverviewListProps> = ({buildConfig}) => {
+const BuildList: React.SFC<BuildListProps> = ({buildConfig}) => {
   const {metadata: {name, namespace}, builds} = buildConfig;
   const onClick = () => {
     startBuild(buildConfig).catch(err => {
@@ -77,9 +78,9 @@ const BuildOverviewList: React.SFC<BuildOverviewListProps> = ({buildConfig}) => 
       errorModal({error});
     });
   };
-  return <ListGroup className="build-overview__list" componentClass="ul">
-    <li className="list-group-item build-overview__item">
-      <div className="build-overview__item-title">
+  return <ListGroup className="project-status-build-details__list" componentClass="ul">
+    <li className="list-group-item project-status-build-details__item">
+      <div className="project-status-build-details__item-title">
         <div>
           <ResourceLink
             inline
@@ -96,30 +97,28 @@ const BuildOverviewList: React.SFC<BuildOverviewListProps> = ({buildConfig}) => 
     {
       _.isEmpty(builds)
         ? <li className="list-group-item"><span className="text-muted">No Builds found for this Build Config.</span></li>
-        : _.map(builds, build => <BuildOverviewItem key={build.metadata.uid} build={build} />)
+        : _.map(builds, build => <BuildListItem key={build.metadata.uid} build={build} />)
     }
   </ListGroup>;
 };
 
-export const BuildOverview: React.SFC<BuildConfigsOverviewProps> = ({buildConfigs}) => <div className="build-overview">
+export const ProjectStatusBuildDetails: React.SFC<ProjectStatusBuildDetailsProps> = ({item}) => <div className="project-status-build-details">
   <SidebarSectionHeading text="Builds" />
   {
-    _.isEmpty(buildConfigs)
+    _.isEmpty(item.buildConfigs)
       ? <span className="text-muted">No Build Configs found for this resource.</span>
-      : _.map(buildConfigs, buildConfig => <BuildOverviewList key={buildConfig.metadata.uid} buildConfig={buildConfig} />)
+      : _.map(item.buildConfigs, buildConfig => <BuildList key={buildConfig.metadata.uid} buildConfig={buildConfig} />)
   }
 </div>;
 
-/* eslint-disable no-unused-vars, no-undef */
-type BuildOverviewListItemProps = {
+type BuildListItemProps = {
   build: K8sResourceKind;
 };
 
-type BuildOverviewListProps = {
-  buildConfig: BuildConfigOverviewItem;
+type BuildListProps = {
+  buildConfig: ProjectStatusBuildConfigItem;
 };
 
-type BuildConfigsOverviewProps = {
-  buildConfigs: BuildConfigOverviewItem[];
+type ProjectStatusBuildDetailsProps = {
+  item: ProjectStatusItem;
 };
-/* eslint-enable no-unused-vars, no-undef */

@@ -83,8 +83,8 @@ const CreateNamespaceModal = connect(null, mapDispatchToProps)(class CreateNames
     this.handlePromise(promise).then(obj => {
       close();
       if (createProject) {
-        // Redirect to the overview instead of the project details page.
-        history.push(`/overview/ns/${obj.metadata.name}`);
+        // Redirect to the project status instead of the project details page.
+        history.push(`/status/ns/${obj.metadata.name}`);
       } else {
         history.push(resourceObjPath(obj, referenceFor(obj)));
       }

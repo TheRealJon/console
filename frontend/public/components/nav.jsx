@@ -315,10 +315,10 @@ export const Navigation = ({ isNavOpen, onNavSelect }) => {
           <ResourceClusterLink resource="projects" name="Projects" required={FLAGS.OPENSHIFT} />
           {
             // Show different status pages based on OpenShift vs native Kubernetes.
-            // TODO: Make Overview work on native Kubernetes. It currently assumes OpenShift resources.
+            // TODO: Make Status work on native Kubernetes. It currently assumes OpenShift resources.
           }
-          <HrefLink href="/overview" name="Status" activePath="/overview/" required={FLAGS.OPENSHIFT} />
-          <HrefLink href="/status" name="Status" activePath="/status/" disallowed={FLAGS.OPENSHIFT} />
+          <HrefLink href="/status" name="Status" activePath="/status/" required={FLAGS.OPENSHIFT} />
+          <HrefLink href="/cluster-status" name="Status" activePath="/cluster-status/" disallowed={FLAGS.OPENSHIFT} />
           <HrefLink href="/search" name="Search" startsWith={searchStartsWith} />
           <ResourceNSLink resource="events" name="Events" />
         </NavSection>

@@ -67,10 +67,10 @@ export const formatNamespaceRoute = (activeNamespace, originalPath, location) =>
 };
 
 export const types = {
-  dismissOverviewDetails: 'dismissOverviewDetails',
-  selectOverviewDetailsTab: 'selectOverviewDetailsTab',
-  selectOverviewItem: 'selectOverviewItem',
-  selectOverviewView: 'selectOverviewView',
+  dismissProjectStatusSidebar: 'dismissProjectStatusSidebar',
+  selectProjectStatusSidebarTab: 'selectProjectStatusSidebarTab',
+  selectProjectStatusItem: 'selectProjectStatusItem',
+  selectProjectStatusView: 'selectProjectStatusView',
   setActiveNamespace: 'setActiveNamespace',
   setCreateProjectMessage: 'setCreateProjectMessage',
   setClusterID: 'setClusterID',
@@ -80,8 +80,8 @@ export const types = {
   sortList: 'sortList',
   startImpersonate: 'startImpersonate',
   stopImpersonate: 'stopImpersonate',
-  updateOverviewMetrics: 'updateOverviewMetrics',
-  updateOverviewResources: 'updateOverviewResources',
+  updateProjectStatusMetrics: 'updateProjectStatusMetrics',
+  updateProjectStatusItems: 'updateProjectStatusItems',
 };
 
 /** @type {{[key: string]: function}} */
@@ -171,17 +171,17 @@ export const UIActions = {
 
   [types.setUser]: user => ({type: types.setUser, user}),
 
-  [types.selectOverviewView]: view => ({type: types.selectOverviewView, view}),
+  [types.selectProjectStatusView]: view => ({type: types.selectProjectStatusView, view}),
 
-  [types.selectOverviewItem]: uid => ({type: types.selectOverviewItem, uid}),
+  [types.selectProjectStatusItem]: uid => ({type: types.selectProjectStatusItem, uid}),
 
-  [types.selectOverviewDetailsTab]: tab => ({type: types.selectOverviewDetailsTab, tab}),
+  [types.selectProjectStatusSidebarTab]: tab => ({type: types.selectProjectStatusSidebarTab, tab}),
 
-  [types.updateOverviewMetrics]: metrics => ({type: types.updateOverviewMetrics, metrics}),
+  [types.updateProjectStatusMetrics]: metrics => ({type: types.updateProjectStatusMetrics, metrics}),
 
-  [types.updateOverviewResources]: resources => ({type: types.updateOverviewResources, resources}),
+  [types.updateProjectStatusItems]: items => ({type: types.updateProjectStatusItems, items}),
 
-  [types.dismissOverviewDetails]: () => ({type: types.dismissOverviewDetails}),
+  [types.dismissProjectStatusSidebar]: () => ({type: types.dismissProjectStatusSidebar}),
 
   monitoringLoading: key => ({type: types.setMonitoringData, key, data: {loaded: false, loadError: null, data: null}}),
 

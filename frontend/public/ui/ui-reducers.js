@@ -25,10 +25,10 @@ export default (state, action) => {
       location: pathname,
       activeNamespace: activeNamespace || 'default',
       createProjectMessage: '',
-      overview: new ImmutableMap({
+      projectStatus: new ImmutableMap({
         metrics: {},
-        resources: new ImmutableMap({}),
-        selectedDetailsTab: '',
+        items: new ImmutableMap({}),
+        selectedSidebarTab: '',
         selectedUID: '',
         selectedView: 'resources',
       }),
@@ -98,24 +98,24 @@ export default (state, action) => {
       });
       return state.setIn(['monitoring', 'silences'], silences);
     }
-    case types.selectOverviewView:
-      return state.setIn(['overview', 'selectedView'], action.view);
+    case types.selectProjectStatusView:
+      return state.setIn(['projectStatus', 'selectedView'], action.view);
 
-    case types.selectOverviewItem:
-      return state.setIn(['overview', 'selectedUID'], action.uid);
+    case types.selectProjectStatusItem:
+      return state.setIn(['projectStatus', 'selectedUID'], action.uid);
 
-    case types.selectOverviewDetailsTab:
-      return state.setIn(['overview', 'selectedDetailsTab'], action.tab);
+    case types.selectProjectStatusSidebarTab:
+      return state.setIn(['projectStatus', 'selectedSidebarTab'], action.tab);
 
-    case types.dismissOverviewDetails:
-      return state.mergeIn(['overview'], {selectedUID: '', selectedDetailsTab: ''});
+    case types.dismissProjectStatusSidebar:
+      return state.mergeIn(['projectStatus'], {selectedUID: '', selectedDetailsTab: ''});
 
-    case types.updateOverviewMetrics:
-      return state.setIn(['overview', 'metrics'], action.metrics);
+    case types.updateProjectStatusMetrics:
+      return state.setIn(['projectStatus', 'metrics'], action.metrics);
 
-    case types.updateOverviewResources: {
-      const newResources = new ImmutableMap(_.keyBy(action.resources, 'obj.metadata.uid'));
-      return state.setIn(['overview', 'resources'], newResources);
+    case types.updateProjectStatusItems: {
+      const newItems = new ImmutableMap(_.keyBy(action.items, 'obj.metadata.uid'));
+      return state.setIn(['projectStatus', 'items'], newItems);
     }
 
     default:

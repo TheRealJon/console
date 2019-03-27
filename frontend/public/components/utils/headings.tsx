@@ -3,7 +3,7 @@ import * as classNames from 'classnames';
 import * as _ from 'lodash-es';
 import { Link } from 'react-router-dom';
 
-import { ActionsMenu, ResourceIcon, KebabAction, resourcePath } from './index';
+import { ActionsMenu, ResourceIcon } from './index';
 import { ClusterServiceVersionLogo } from '../operator-lifecycle-manager';
 import { connectToModel } from '../../kinds';
 import { ClusterServiceVersionModel } from '../../models';
@@ -70,20 +70,6 @@ export const SectionHeading: React.SFC<SectionHeadingProps> = ({text, children, 
 
 export const SidebarSectionHeading: React.SFC<SidebarSectionHeadingProps> = ({text, children, style}) => <h2 className="sidebar__section-heading" style={style}>{text}{children}</h2>;
 
-export const ResourceOverviewHeading: React.SFC<ResourceOverviewHeadingProps> = ({kindObj, actions, resource}) => <div className="overview__sidebar-pane-head resource-overview__heading">
-  <h1 className="co-m-pane__heading">
-    <div className="co-m-pane__name">
-      <ResourceIcon className="co-m-resource-icon--lg" kind={kindObj.kind} />
-      <Link to={resourcePath(resource.kind, resource.metadata.name, resource.metadata.namespace)} className="co-resource-link__resource-name">
-        {resource.metadata.name}
-      </Link>
-    </div>
-    <div className="co-actions">
-      <ActionsMenu actions={actions.map(a => a(kindObj, resource))} />
-    </div>
-  </h1>
-</div>;
-
 /* eslint-disable no-undef */
 export type ActionButtonsProps = {
   actionButtons: any[];
@@ -107,12 +93,6 @@ export type PageHeadingProps = {
   titleFunc?: (obj: K8sResourceKind) => string | JSX.Element;
 };
 
-export type ResourceOverviewHeadingProps = {
-  actions: KebabAction[];
-  kindObj: K8sKind;
-  resource: K8sResourceKind;
-};
-
 export type SectionHeadingProps = {
   children?: any;
   style?: any;
@@ -128,6 +108,5 @@ export type SidebarSectionHeadingProps = {
 
 BreadCrumbs.displayName = 'BreadCrumbs';
 PageHeading.displayName = 'PageHeading';
-ResourceOverviewHeading.displayName = 'ResourceOverviewHeading';
 SectionHeading.displayName = 'SectionHeading';
 SidebarSectionHeading.displayName = 'SidebarSectionHeading';

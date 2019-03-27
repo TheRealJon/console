@@ -1,0 +1,25 @@
+.project-status-item-details {
+  height: 100%;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.project-status-item-details__overview {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.project-status-item-details__pod-counts {
+  width: 100%;
+}
+
+.project-status-item-details__common {
+  padding-right: 10px;
+  width: 50%;
+}
+
+.project-status-item-details__distinctive {
+  width: 50%;
+}
