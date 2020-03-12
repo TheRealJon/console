@@ -1,5 +1,3 @@
-import { safeDump, safeLoad } from 'js-yaml';
-import { Button } from '@patternfly/react-core';
 import {
   K8sKind,
   K8sResourceKind,
@@ -10,106 +8,23 @@ import {
   nameForModel,
   CustomResourceDefinitionKind,
 } from '@console/internal/module/k8s';
-import { SwaggerDefinition, definitionFor } from '@console/internal/module/k8s/swagger';
+import { JSONSchema6 } from 'json-schema';
+import { definitionFor } from '@console/internal/module/k8s/swagger';
 import { CustomResourceDefinitionModel } from '@console/internal/models';
 import { Firehose } from '@console/internal/components/utils/firehose';
-import {
-  StatusBox,
-  BreadCrumbs,
-  resourcePathFromModel,
-  FirehoseResult,
-} from '@console/internal/components/utils';
+import { StatusBox, FirehoseResult } from '@console/internal/components/utils';
 import { RootState } from '@console/internal/redux';
-import { CreateYAML } from '@console/internal/components/create-yaml';
 import * as _ from 'lodash';
 import { Helmet } from 'react-helmet';
 import { match as RouterMatch } from 'react-router';
 import { connect } from 'react-redux';
 import * as React from 'react';
-import { ClusterServiceVersionModel } from '../models';
-import { ClusterServiceVersionKind, CRDDescription, APIServiceDefinition } from '../types';
-import { CreateOperandForm, OperandField } from './create-operand-form';
-import { providedAPIsFor, referenceForProvidedAPI } from '.';
+import { ClusterServiceVersionModel } from '../../models';
+import { ClusterServiceVersionKind, CRDDescription, APIServiceDefinition } from '../../types';
+import { OperandForm } from './operand-form';
+import { OperandYAML } from './operand-yaml';
+import { providedAPIsFor, referenceForProvidedAPI } from '../';
 import { getActivePerspective } from '@console/internal/reducers/ui';
-
-/**
- * Component which wraps the YAML editor to ensure the templates are added from the `ClusterServiceVersion` annotations.
- */
-export const CreateOperandYAML: React.FC<CreateOperandYAMLProps> = ({
-  buffer,
-  clusterServiceVersion,
-  match,
-  operandModel,
-  activePerspective,
-  onToggleEditMethod = _.noop,
-}) => {
-  const template = React.useMemo(() => _.attempt(() => safeDump(buffer)), [buffer]);
-  if (_.isError(template)) {
-    // eslint-disable-next-line no-console
-    console.error('Error parsing example JSON from annotation. Falling back to default.');
-  }
-
-  const [parsedYAML, setParsedYAML] = React.useState(buffer);
-
-  const onYAMLChanged = (newYAML) => {
-    const newParsedYAML = _.attempt(() => safeLoad(newYAML));
-    setParsedYAML((currentParsedYAML) =>
-      !_.isError(newParsedYAML) ? newParsedYAML : currentParsedYAML,
-    );
-  };
-
-  const resourceObjPath = () =>
-    activePerspective === 'dev'
-      ? '/topology'
-      : `${resourcePathFromModel(
-          ClusterServiceVersionModel,
-          match.params.appName,
-          match.params.ns,
-        )}/${match.params.plural}`;
-
-  const onSwitchToForm = React.useCallback(() => {
-    onToggleEditMethod(parsedYAML);
-  }, [onToggleEditMethod, parsedYAML]);
-
-  return (
-    <>
-      <div className="co-create-operand__header">
-        <div className="co-create-operand__header-buttons">
-          <BreadCrumbs
-            breadcrumbs={[
-              {
-                name: clusterServiceVersion.spec.displayName,
-                path: resourcePathFromModel(
-                  ClusterServiceVersionModel,
-                  clusterServiceVersion.metadata.name,
-                  clusterServiceVersion.metadata.namespace,
-                ),
-              },
-              { name: `Create ${operandModel.label}`, path: window.location.pathname },
-            ]}
-          />
-          <div style={{ marginLeft: 'auto' }}>
-            <Button variant="link" onClick={onSwitchToForm}>
-              Edit Form
-            </Button>
-          </div>
-        </div>
-        <h1 className="co-create-operand__header-text">{`Create ${operandModel.label}`}</h1>
-        <p className="help-block">
-          Create by manually entering YAML or JSON definitions, or by dragging and dropping a file
-          into the editor.
-        </p>
-      </div>
-      <CreateYAML
-        template={_.isError(template) ? null : template}
-        match={match}
-        resourceObjPath={resourceObjPath}
-        hideHeader
-        onChange={onYAMLChanged}
-      />
-    </>
-  );
-};
 
 export const CreateOperand: React.FC<CreateOperandProps> = ({
   clusterServiceVersion,
@@ -132,12 +47,8 @@ export const CreateOperand: React.FC<CreateOperandProps> = ({
 
   const openAPI = React.useMemo(
     () =>
-      (_.get(customResourceDefinition, [
-        'data',
-        'spec',
-        'validation',
-        'openAPIV3Schema',
-      ]) as SwaggerDefinition) || definitionFor(operandModel),
+      customResourceDefinition?.data?.spec?.validation?.openAPIV3Schema ||
+      (definitionFor(operandModel) as JSONSchema6),
     [customResourceDefinition, operandModel],
   );
 
@@ -149,11 +60,16 @@ export const CreateOperand: React.FC<CreateOperandProps> = ({
     [operandModelReference, csvAnnotations],
   );
 
-  const [buffer, setBuffer] = React.useState<K8sResourceKind>();
+  const [data, setData] = React.useState<K8sResourceKind>(defaultSample);
 
-  const onToggleEditMethod = React.useCallback((newBuffer) => {
-    setBuffer(newBuffer);
-    setMethod((currentMethod) => (currentMethod === 'yaml' ? 'form' : 'yaml'));
+  const onChange = (newData) => {
+    setData((currentData) => {
+      return _.isEqual(currentData, newData) ? currentData : newData;
+    });
+  };
+
+  const onChangeEditMethod = React.useCallback((newMethod) => {
+    setMethod(newMethod);
   }, []);
 
   const editor = React.useMemo(() => {
@@ -161,35 +77,37 @@ export const CreateOperand: React.FC<CreateOperandProps> = ({
       return null;
     }
     return method === 'yaml' ? (
-      <CreateOperandYAML
+      <OperandYAML
         activePerspective={activePerspective}
         match={match}
-        buffer={buffer || defaultSample}
+        data={data}
         operandModel={operandModel}
         providedAPI={providedAPI}
         clusterServiceVersion={clusterServiceVersion.data}
-        onToggleEditMethod={onToggleEditMethod}
+        onChangeEditMethod={onChangeEditMethod}
+        onChange={onChange}
       />
     ) : (
-      <CreateOperandForm
+      <OperandForm
         activePerspective={activePerspective}
         namespace={match.params.ns}
         operandModel={operandModel}
         providedAPI={providedAPI}
-        buffer={buffer || defaultSample}
+        data={data}
         clusterServiceVersion={clusterServiceVersion.data}
         openAPI={openAPI}
-        onToggleEditMethod={onToggleEditMethod}
+        onChangeEditMethod={onChangeEditMethod}
+        onChange={onChange}
       />
     );
   }, [
-    buffer,
+    data,
     clusterServiceVersion.data,
     defaultSample,
     loaded,
     match,
     method,
-    onToggleEditMethod,
+    onChangeEditMethod,
     openAPI,
     operandModel,
     providedAPI,
@@ -239,7 +157,7 @@ export const CreateOperandPage = connect(stateToProps)((props: CreateOperandPage
   </>
 ));
 
-type ProvidedAPI = CRDDescription | APIServiceDefinition;
+export type ProvidedAPI = CRDDescription | APIServiceDefinition;
 
 export type CreateOperandProps = {
   match: RouterMatch<{ appName: string; ns: string; plural: K8sResourceKindReference }>;
@@ -255,29 +173,14 @@ export type CreateOperandFormProps = {
   onToggleEditMethod?: (newBuffer?: K8sResourceKind) => void;
   operandModel: K8sKind;
   providedAPI: ProvidedAPI;
-  openAPI?: SwaggerDefinition;
+  openAPI?: JSONSchema6;
   clusterServiceVersion: ClusterServiceVersionKind;
   buffer?: K8sResourceKind;
   namespace: string;
   activePerspective: string;
 };
 
-export type CreateOperandYAMLProps = {
-  onToggleEditMethod?: (newBuffer?: K8sResourceKind) => void;
-  operandModel: K8sKind;
-  providedAPI: ProvidedAPI;
-  clusterServiceVersion: ClusterServiceVersionKind;
-  buffer?: K8sResourceKind;
-  match: RouterMatch<{ appName: string; ns: string; plural: K8sResourceKindReference }>;
-  activePerspective: string;
-};
-
 export type CreateOperandPageProps = {
   match: RouterMatch<{ appName: string; ns: string; plural: K8sResourceKindReference }>;
   operandModel: K8sKind;
-};
-
-export type SpecDescriptorInputProps = {
-  field: OperandField;
-  sample?: K8sResourceKind;
 };

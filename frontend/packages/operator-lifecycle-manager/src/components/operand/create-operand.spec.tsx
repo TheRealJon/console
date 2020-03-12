@@ -7,18 +7,17 @@ import * as k8s from '@console/internal/module/k8s';
 import { CustomResourceDefinitionModel } from '@console/internal/models';
 import { CreateYAML } from '@console/internal/components/create-yaml';
 import { BreadCrumbs } from '@console/internal/components/utils';
-import { testClusterServiceVersion, testResourceInstance, testModel, testCRD } from '../../mocks';
-import { ClusterServiceVersionModel } from '../models';
-import { CreateOperandForm } from './create-operand-form';
 import {
-  CreateOperandFormProps,
-  CreateOperandPage,
-  CreateOperandYAML,
-  CreateOperandYAMLProps,
-  CreateOperand,
-  CreateOperandProps,
-} from './create-operand';
-import { referenceForProvidedAPI } from '.';
+  testClusterServiceVersion,
+  testResourceInstance,
+  testModel,
+  testCRD,
+} from '../../../mocks';
+import { ClusterServiceVersionModel } from '../../models';
+import { CreateOperandPage, CreateOperand, CreateOperandProps } from './create-operand';
+import { OperandYAML, OperandYAMLProps } from './operand-yaml';
+import { OperandForm, OperandFormProps } from './operand-form';
+import { referenceForProvidedAPI } from '../';
 
 import Spy = jasmine.Spy;
 
@@ -63,8 +62,8 @@ describe(CreateOperand.displayName, () => {
         .childAt(0)
         .text(),
     ).toEqual('Edit Form');
-    expect(wrapper.find(CreateOperandYAML).exists()).toBe(true);
-    expect(wrapper.find(CreateOperandForm).exists()).toBe(false);
+    expect(wrapper.find(OperandYAML).exists()).toBe(true);
+    expect(wrapper.find(OperandForm).exists()).toBe(false);
   });
 
   it('passes buffer object to YAML editor', () => {
@@ -72,7 +71,7 @@ describe(CreateOperand.displayName, () => {
     data.metadata.annotations = { 'alm-examples': JSON.stringify([testResourceInstance]) };
     wrapper = wrapper.setProps({ clusterServiceVersion: { data, loaded: true, loadError: null } });
 
-    expect(wrapper.find(CreateOperandYAML).props().buffer).toEqual(testResourceInstance);
+    expect(wrapper.find(OperandYAML).props().data).toEqual(testResourceInstance);
   });
 
   it('switches to form component when button is clicked', () => {
@@ -84,8 +83,8 @@ describe(CreateOperand.displayName, () => {
         .childAt(0)
         .text(),
     ).toEqual('Edit YAML');
-    expect(wrapper.find(CreateOperandYAML).exists()).toBe(false);
-    expect(wrapper.find(CreateOperandForm).exists()).toBe(true);
+    expect(wrapper.find(OperandYAML).exists()).toBe(false);
+    expect(wrapper.find(OperandForm).exists()).toBe(true);
   });
 });
 
@@ -121,8 +120,8 @@ describe(CreateOperandPage.displayName, () => {
   });
 });
 
-describe(CreateOperandForm.displayName, () => {
-  let wrapper: ShallowWrapper<CreateOperandFormProps>;
+describe(OperandForm.displayName, () => {
+  let wrapper: ShallowWrapper<OperandFormProps>;
 
   const spyAndExpect = (spy: Spy) => (returnValue: any) =>
     new Promise((resolve) =>
@@ -134,13 +133,13 @@ describe(CreateOperandForm.displayName, () => {
 
   beforeEach(() => {
     wrapper = shallow(
-      <CreateOperandForm
+      <OperandForm
         activePerspective={activePerspective}
         namespace="default"
         operandModel={testModel}
         providedAPI={testClusterServiceVersion.spec.customresourcedefinitions.owned[0]}
         clusterServiceVersion={testClusterServiceVersion}
-        openAPI={testCRD.spec.validation.openAPIV3Schema as k8s.SwaggerDefinition}
+        openAPI={testCRD.spec.validation.openAPIV3Schema}
       />,
     );
   });
@@ -205,12 +204,12 @@ describe(CreateOperandForm.displayName, () => {
   });
 });
 
-describe(CreateOperandYAML.displayName, () => {
-  let wrapper: ShallowWrapper<CreateOperandYAMLProps>;
+describe(OperandYAML.displayName, () => {
+  let wrapper: ShallowWrapper<OperandYAMLProps>;
 
   beforeEach(() => {
     wrapper = shallow(
-      <CreateOperandYAML
+      <OperandYAML
         activePerspective={activePerspective}
         operandModel={testModel}
         providedAPI={testClusterServiceVersion.spec.customresourcedefinitions.owned[0]}

@@ -11,8 +11,8 @@ import {
   testClusterServiceVersion,
   testOwnedResourceInstance,
   testModel,
-} from '../../mocks';
-import { ClusterServiceVersionModel } from '../models';
+} from '../../../mocks';
+import { ClusterServiceVersionModel } from '../../models';
 import {
   OperandList,
   OperandListProps,
@@ -31,11 +31,11 @@ import {
   OperandStatusIconAndTextProps,
   OperatorStatusTypeText,
   OperatorStatusType,
-} from './operand';
-import { Resources } from './k8s-resource';
-import { StatusDescriptor } from './descriptors/status';
-import { SpecDescriptor } from './descriptors/spec';
-import { referenceForProvidedAPI, OperandLink } from '.';
+} from '.';
+import { Resources } from '../k8s-resource';
+import { StatusDescriptor } from '../descriptors/status';
+import { SpecDescriptor } from '../descriptors/spec';
+import { referenceForProvidedAPI, OperandLink } from '../';
 
 describe(OperandTableHeader.displayName, () => {
   it('returns column header definition for resource', () => {
