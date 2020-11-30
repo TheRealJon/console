@@ -17,9 +17,7 @@ type ExpandCollapseDescriptionProps = {
   children: React.ReactNode;
 };
 
-export const ExpandCollapseDescription: React.FC<ExpandCollapseDescriptionProps> = ({
-  children,
-}) => {
+const ExpandCollapseDescription: React.FC<ExpandCollapseDescriptionProps> = ({ children }) => {
   const { t } = useTranslation();
   const [expanded, setExpanded] = React.useState<boolean>(false);
   const toggle = (isExpanded) => {
