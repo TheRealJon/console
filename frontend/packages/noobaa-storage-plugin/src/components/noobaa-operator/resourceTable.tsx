@@ -15,7 +15,7 @@ import {
   TableData,
   TableRow,
   TableProps,
-  RowFunction,
+  RowComponentProps,
 } from '@console/internal/components/factory';
 import { sortable } from '@patternfly/react-table';
 import { RowFilter } from '@console/internal/components/filter-toolbar';
@@ -95,9 +95,14 @@ ResourceTableHeader.displayName = 'ResourceTableHeader';
 const getModelFromKind = (name: string) =>
   name === 'BucketClass' ? NooBaaBucketClassModel : NooBaaBackingStoreModel;
 
-const ResourceTableRow: RowFunction<K8sResourceKind> = ({ obj, index, key, style }) => {
+const ResourceTableRow: React.FC<RowComponentProps<K8sResourceKind>> = ({
+  obj,
+  index,
+  rowKey,
+  style,
+}) => {
   return (
-    <TableRow id={obj.metadata.uid} index={index} trKey={key} style={style}>
+    <TableRow id={obj.metadata.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses[0]}>
         <ResourceLink
           kind={referenceForModel(getModelFromKind(obj.kind))}

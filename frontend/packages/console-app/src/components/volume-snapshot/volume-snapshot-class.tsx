@@ -8,7 +8,7 @@ import {
   TableData,
   Table,
   ListPage,
-  RowFunction,
+  RowComponentProps,
 } from '@console/internal/components/factory';
 import { VolumeSnapshotClassModel } from '@console/internal/models';
 import { getAnnotations } from '@console/shared';
@@ -49,11 +49,16 @@ const Header = () => [
   },
 ];
 
-const Row: RowFunction<VolumeSnapshotClassKind> = ({ obj, index, style, key }) => {
+const Row: React.FC<RowComponentProps<VolumeSnapshotClassKind>> = ({
+  obj,
+  index,
+  style,
+  rowKey,
+}) => {
   const { name } = obj?.metadata || {};
   const { deletionPolicy, driver } = obj || {};
   return (
-    <TableRow id={obj?.metadata?.uid} index={index} trKey={key} style={style}>
+    <TableRow id={obj?.metadata?.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses[0]}>
         <ResourceLink name={name} kind={referenceForModel(VolumeSnapshotClassModel)}>
           {isDefaultSnapshotClass(obj) && (

@@ -3,7 +3,7 @@ import * as classNames from 'classnames';
 import { sortable } from '@patternfly/react-table';
 import '@patternfly/patternfly/patternfly-addons.css';
 import { useTranslation } from 'react-i18next';
-import { Table, TableRow, TableData, RowFunctionArgs } from '../factory';
+import { Table, TableRow, TableData, RowComponentProps } from '../factory';
 import {
   referenceForModel,
   ClusterOperator,
@@ -19,13 +19,19 @@ const tableColumnClasses = [
   '', // NS
 ];
 
-const Row: React.FC<RowFunctionArgs> = ({ obj, index, key, style, customData: { findModel } }) => {
+const Row: React.FC<RowComponentProps> = ({
+  obj,
+  index,
+  rowKey,
+  style,
+  customData: { findModel },
+}) => {
   const { name, resource, namespace, group } = obj;
   const model = findModel(group, resource);
 
   const gsv = model ? referenceForModel(model) : null;
   return (
-    <TableRow id={key} index={index} trKey={key} style={style}>
+    <TableRow id={rowKey} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses[0]}>
         {gsv ? <ResourceLink kind={gsv} name={name} namespace={namespace} /> : name}
       </TableData>

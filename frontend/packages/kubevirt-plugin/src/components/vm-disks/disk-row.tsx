@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { TableData, TableRow, RowFunction } from '@console/internal/components/factory';
+import { TableData, TableRow, RowComponentProps } from '@console/internal/components/factory';
 import {
   asAccessReview,
   Kebab,
@@ -154,7 +154,7 @@ export const DiskSimpleRow: React.FC<VMDiskSimpleRowProps> = ({
   );
 };
 
-export const DiskRow: RowFunction<StorageBundle, VMStorageRowCustomData> = ({
+export const DiskRow: React.FC<RowComponentProps<StorageBundle, VMStorageRowCustomData>> = ({
   obj: { disk, ...restData },
   customData: {
     isDisabled,

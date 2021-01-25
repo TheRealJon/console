@@ -4,7 +4,7 @@ import PodRingSet from '@console/shared/src/components/pod/PodRingSet';
 import { AddHealthChecks, EditHealthChecks } from '@console/app/src/actions/modify-health-checks';
 import { K8sResourceKind } from '../module/k8s';
 import { ResourceEventStream } from './events';
-import { DetailsPage, ListPage, Table, RowFunction } from './factory';
+import { DetailsPage, ListPage, Table, RowComponentProps } from './factory';
 
 import { WorkloadTableRow, WorkloadTableHeader } from './workload-table';
 
@@ -33,17 +33,8 @@ export const menuActions: KebabAction[] = [
 
 const kind = 'StatefulSet';
 
-const StatefulSetTableRow: RowFunction<K8sResourceKind> = ({ obj, index, key, style }) => {
-  return (
-    <WorkloadTableRow
-      obj={obj}
-      index={index}
-      rowKey={key}
-      style={style}
-      menuActions={menuActions}
-      kind={kind}
-    />
-  );
+const StatefulSetTableRow: React.FC<RowComponentProps<K8sResourceKind>> = (props) => {
+  return <WorkloadTableRow menuActions={menuActions} kind={kind} {...props} />;
 };
 
 const StatefulSetTableHeader = () => {

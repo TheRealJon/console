@@ -171,59 +171,58 @@ const tableColumnClasses = [
   classNames('col-lg-2', 'hidden-md', 'hidden-sm', 'hidden-xs'),
   Kebab.columnClass,
 ];
+const ReplicationControllerTableRow = ({ obj, index, rowKey, style }) => {
+  const { t } = useTranslation();
+  const phase = obj?.metadata?.annotations?.['openshift.io/deployment.phase'];
 
+  return (
+    <TableRow id={obj.metadata.uid} index={index} trKey={rowKey} style={style}>
+      <TableData className={tableColumnClasses[0]}>
+        <ResourceLink
+          kind={kind}
+          name={obj.metadata.name}
+          namespace={obj.metadata.namespace}
+          title={obj.metadata.uid}
+        />
+      </TableData>
+      <TableData
+        className={classNames(tableColumnClasses[1], 'co-break-word')}
+        columnID="namespace"
+      >
+        <ResourceLink
+          kind="Namespace"
+          name={obj.metadata.namespace}
+          title={obj.metadata.namespace}
+        />
+      </TableData>
+      <TableData className={tableColumnClasses[2]}>
+        <Link
+          to={`${resourcePath(kind, obj.metadata.name, obj.metadata.namespace)}/pods`}
+          title="pods"
+        >
+          {t('public~{{statusReplicas}} of {{specReplicas}} pods', {
+            statusReplicas: obj.status.replicas || 0,
+            specReplicas: obj.spec.replicas,
+          })}
+        </Link>
+      </TableData>
+      <TableData className={tableColumnClasses[3]}>
+        <Status status={phase} />
+      </TableData>
+      <TableData className={tableColumnClasses[4]}>
+        <OwnerReferences resource={obj} />
+      </TableData>
+      <TableData className={tableColumnClasses[5]}>
+        <Timestamp timestamp={obj.metadata.creationTimestamp} />
+      </TableData>
+      <TableData className={tableColumnClasses[6]}>
+        <ResourceKebab actions={menuActions} kind={kind} resource={obj} />
+      </TableData>
+    </TableRow>
+  );
+};
 export const ReplicationControllersList = (props) => {
   const { t } = useTranslation();
-  const ReplicationControllerTableRow = ({ obj, index, key, style }) => {
-    const phase = obj?.metadata?.annotations?.['openshift.io/deployment.phase'];
-
-    return (
-      <TableRow id={obj.metadata.uid} index={index} trKey={key} style={style}>
-        <TableData className={tableColumnClasses[0]}>
-          <ResourceLink
-            kind={kind}
-            name={obj.metadata.name}
-            namespace={obj.metadata.namespace}
-            title={obj.metadata.uid}
-          />
-        </TableData>
-        <TableData
-          className={classNames(tableColumnClasses[1], 'co-break-word')}
-          columnID="namespace"
-        >
-          <ResourceLink
-            kind="Namespace"
-            name={obj.metadata.namespace}
-            title={obj.metadata.namespace}
-          />
-        </TableData>
-        <TableData className={tableColumnClasses[2]}>
-          <Link
-            to={`${resourcePath(kind, obj.metadata.name, obj.metadata.namespace)}/pods`}
-            title="pods"
-          >
-            {t('public~{{statusReplicas}} of {{specReplicas}} pods', {
-              statusReplicas: obj.status.replicas || 0,
-              specReplicas: obj.spec.replicas,
-            })}
-          </Link>
-        </TableData>
-        <TableData className={tableColumnClasses[3]}>
-          <Status status={phase} />
-        </TableData>
-        <TableData className={tableColumnClasses[4]}>
-          <OwnerReferences resource={obj} />
-        </TableData>
-        <TableData className={tableColumnClasses[5]}>
-          <Timestamp timestamp={obj.metadata.creationTimestamp} />
-        </TableData>
-        <TableData className={tableColumnClasses[6]}>
-          <ResourceKebab actions={menuActions} kind={kind} resource={obj} />
-        </TableData>
-      </TableRow>
-    );
-  };
-
   const ReplicationControllerTableHeader = () => [
     {
       title: t('public~Name'),

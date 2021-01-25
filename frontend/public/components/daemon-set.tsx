@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { AddHealthChecks, EditHealthChecks } from '@console/app/src/actions/modify-health-checks';
 import { usePodsWatcher, PodRing } from '@console/shared';
 import { K8sResourceKind } from '../module/k8s';
-import { DetailsPage, ListPage, Table, TableRow, TableData, RowFunction } from './factory';
+import { DetailsPage, ListPage, Table, TableRow, TableData, RowComponentProps } from './factory';
 import {
   AsyncComponent,
   DetailsItem,
@@ -165,14 +165,14 @@ export const DaemonSets: React.FC = (props) => {
     },
   ];
 
-  const DaemonSetTableRow: RowFunction<K8sResourceKind> = ({
+  const DaemonSetTableRow: React.FC<RowComponentProps<K8sResourceKind>> = ({
     obj: daemonset,
     index,
-    key,
+    rowKey,
     style,
   }) => {
     return (
-      <TableRow id={daemonset.metadata.uid} index={index} trKey={key} style={style}>
+      <TableRow id={daemonset.metadata.uid} index={index} trKey={rowKey} style={style}>
         <TableData className={tableColumnClasses[0]}>
           <ResourceLink
             kind={kind}

@@ -22,9 +22,9 @@ const kind = 'ConfigMap';
 
 const tableColumnClasses = ['', '', 'hidden-xs', 'hidden-xs', Kebab.columnClass];
 
-const ConfigMapTableRow = ({ obj: configMap, index, key, style }) => {
+const ConfigMapTableRow = ({ obj: configMap, index, rowKey, style }) => {
   return (
-    <TableRow id={configMap.metadata.uid} index={index} trKey={key} style={style}>
+    <TableRow id={configMap.metadata.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses[0]}>
         <ResourceLink
           kind="ConfigMap"

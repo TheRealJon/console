@@ -240,7 +240,7 @@ export const AffinityModal = withHandlePromise<AffinityModalProps>(
                         onEdit: onAffinityClickEdit,
                         onDelete: onAffinityDelete,
                       }}
-                      row={AffinityRow}
+                      Row={AffinityRow}
                     />
                   </StackItem>
                   {(requiredNodeAffinities?.length > 0 || preferredNodeAffinities?.length > 0) && (

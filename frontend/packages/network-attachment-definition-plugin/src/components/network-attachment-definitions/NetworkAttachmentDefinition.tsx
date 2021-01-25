@@ -9,7 +9,7 @@ import {
   Table,
   TableData,
   TableRow,
-  RowFunction,
+  RowComponentProps,
 } from '@console/internal/components/factory';
 import { history, Kebab, ResourceKebab, ResourceLink } from '@console/internal/components/utils';
 import { NamespaceModel } from '@console/internal/models';
@@ -65,16 +65,16 @@ const NetworkAttachmentDefinitionsHeader = () =>
     tableColumnClasses,
   );
 
-const NetworkAttachmentDefinitionsRow: RowFunction<NetAttachDefBundle> = ({
+const NetworkAttachmentDefinitionsRow: React.FC<RowComponentProps<NetAttachDefBundle>> = ({
   obj: { name, namespace, type, metadata, netAttachDef },
   index,
-  key,
+  rowKey,
   style,
 }) => {
   const dimensify = dimensifyRow(tableColumnClasses);
 
   return (
-    <TableRow id={metadata.uid} index={index} trKey={key} style={style}>
+    <TableRow id={metadata.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={dimensify()}>
         <ResourceLink
           kind={referenceForModel(NetworkAttachmentDefinitionModel)}

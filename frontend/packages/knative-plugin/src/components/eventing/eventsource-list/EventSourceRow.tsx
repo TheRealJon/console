@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { TableRow, TableData, RowFunction } from '@console/internal/components/factory';
+import { TableRow, TableData, RowComponentProps } from '@console/internal/components/factory';
 import { Kebab, ResourceKebab, ResourceLink, Timestamp } from '@console/internal/components/utils';
 import { modelFor, referenceFor } from '@console/internal/module/k8s';
 import { NamespaceModel } from '@console/internal/models';
@@ -7,7 +7,12 @@ import { getDynamicEventSourceModel } from '../../../utils/fetch-dynamic-eventso
 import { EventSourceKind, EventSourceConditionTypes } from '../../../types';
 import { getCondition, getConditionString } from '../../../utils/condition-utils';
 
-const EventSourceRow: RowFunction<EventSourceKind> = ({ obj, index, key, style }) => {
+const EventSourceRow: React.FC<RowComponentProps<EventSourceKind>> = ({
+  obj,
+  index,
+  rowKey,
+  style,
+}) => {
   const {
     metadata: { name, namespace, creationTimestamp, uid },
   } = obj;
@@ -18,7 +23,7 @@ const EventSourceRow: RowFunction<EventSourceKind> = ({ obj, index, key, style }
     ? getCondition(obj.status.conditions, EventSourceConditionTypes.Ready)
     : null;
   return (
-    <TableRow id={uid} index={index} trKey={key} style={style}>
+    <TableRow id={uid} index={index} trKey={rowKey} style={style}>
       <TableData>
         <ResourceLink kind={objReference} name={name} namespace={namespace} title={uid} />
       </TableData>

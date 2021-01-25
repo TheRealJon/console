@@ -10,7 +10,7 @@ import {
   Table,
   TableRow,
   TableData,
-  RowFunction,
+  RowComponentProps,
   ListPageWrapper_ as ListPageWrapper,
 } from './factory';
 import { CronJobKind, K8sResourceKind } from '../module/k8s';
@@ -45,9 +45,14 @@ const tableColumnClasses = [
   Kebab.columnClass,
 ];
 
-const CronJobTableRow: RowFunction<CronJobKind> = ({ obj: cronjob, index, key, style }) => {
+const CronJobTableRow: React.FC<RowComponentProps<CronJobKind>> = ({
+  obj: cronjob,
+  index,
+  rowKey,
+  style,
+}) => {
   return (
-    <TableRow id={cronjob.metadata.uid} index={index} trKey={key} style={style}>
+    <TableRow id={cronjob.metadata.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses[0]}>
         <ResourceLink
           kind={kind}

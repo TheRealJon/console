@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as classNames from 'classnames';
 import { sortable } from '@patternfly/react-table';
-import { DetailsPage, ListPage, Table, TableRow, TableData, RowFunction } from './factory';
+import { DetailsPage, ListPage, Table, TableRow, TableData, RowComponentProps } from './factory';
 import { SectionHeading, detailsPage, navFactory, ResourceLink, ResourceSummary } from './utils';
 import { K8sResourceKind, referenceForModel, servicePlanDisplayName } from '../module/k8s';
 import {
@@ -41,14 +41,14 @@ const ClusterServicePlanTableHeader = () => {
 };
 ClusterServicePlanTableHeader.displayName = 'ClusterServicePlanTableHeader';
 
-const ClusterServicePlanTableRow: RowFunction<K8sResourceKind> = ({
+const ClusterServicePlanTableRow: React.FC<RowComponentProps<K8sResourceKind>> = ({
   obj: servicePlan,
   index,
-  key,
+  rowKey,
   style,
 }) => {
   return (
-    <TableRow id={servicePlan.metadata.uid} index={index} trKey={key} style={style}>
+    <TableRow id={servicePlan.metadata.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses[0]}>
         <ResourceLink
           kind={referenceForModel(ClusterServicePlanModel)}

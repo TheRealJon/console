@@ -13,7 +13,7 @@ import {
   TableData,
   DetailsPage,
   ListPage,
-  RowFunction,
+  RowComponentProps,
 } from '@console/internal/components/factory';
 import { EmptyStateResourceBadge, GreenCheckCircleIcon } from '@console/shared/';
 import { referenceForModel, PodKind, ContainerStatus } from '@console/internal/module/k8s';
@@ -198,15 +198,15 @@ const tableColumnClasses = [
   classNames('pf-m-hidden', 'pf-m-visible-on-xl'),
 ];
 
-export const ImageManifestVulnTableRow: RowFunction<ImageManifestVuln> = ({
+export const ImageManifestVulnTableRow: React.FC<RowComponentProps<ImageManifestVuln>> = ({
   obj,
   index,
-  key,
+  rowKey,
   style,
 }) => {
   const { name, namespace } = obj.metadata;
   return (
-    <TableRow id={obj.metadata.uid} index={index} trKey={key} style={style}>
+    <TableRow id={obj.metadata.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses[0]}>
         <ResourceLink
           kind={referenceForModel(ImageManifestVulnModel)}

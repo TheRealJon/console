@@ -9,7 +9,7 @@ import { QuestionCircleIcon } from '@patternfly/react-icons';
 
 import { K8sResourceKind, K8sResourceKindReference } from '../module/k8s';
 import { ImageStreamModel } from '../models';
-import { DetailsPage, ListPage, Table, TableRow, TableData, RowFunction } from './factory';
+import { DetailsPage, ListPage, Table, TableRow, TableData, RowComponentProps } from './factory';
 import { CopyToClipboard } from './utils/copy-to-clipboard';
 import { ExpandableAlert } from './utils/alerts';
 import { ExternalLink } from './utils/link';
@@ -314,9 +314,14 @@ const tableColumnClasses = [
   Kebab.columnClass,
 ];
 
-const ImageStreamsTableRow: RowFunction<K8sResourceKind> = ({ obj, index, key, style }) => {
+const ImageStreamsTableRow: React.FC<RowComponentProps<K8sResourceKind>> = ({
+  obj,
+  index,
+  rowKey,
+  style,
+}) => {
   return (
-    <TableRow id={obj.metadata.uid} index={index} trKey={key} style={style}>
+    <TableRow id={obj.metadata.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses[0]}>
         <ResourceLink
           kind={ImageStreamsReference}

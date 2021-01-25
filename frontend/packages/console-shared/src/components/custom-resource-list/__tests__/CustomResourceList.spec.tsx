@@ -2,7 +2,12 @@ import * as React from 'react';
 import { shallow } from 'enzyme';
 import * as fuzzy from 'fuzzysearch';
 import { SortByDirection, sortable } from '@patternfly/react-table';
-import { TableRow, TableData, Table, RowFunction } from '@console/internal/components/factory';
+import {
+  TableRow,
+  TableData,
+  Table,
+  RowComponentProps,
+} from '@console/internal/components/factory';
 import { RowFilter, FilterToolbar } from '@console/internal/components/filter-toolbar';
 import { EmptyState } from '@patternfly/react-core';
 import { LoadingBox } from '@console/internal/components/utils';
@@ -47,8 +52,8 @@ const MockTableHeader = () => {
   ];
 };
 
-const MockTableRow: RowFunction = ({ obj, index, key, style }) => (
-  <TableRow id={obj.name} index={index} trKey={key} style={style}>
+const MockTableRow: React.FC<RowComponentProps> = ({ obj, index, rowKey, style }) => (
+  <TableRow id={obj.name} index={index} trKey={rowKey} style={style}>
     <TableData className={mockColumnClasses.name}>{obj.name}</TableData>
     <TableData className={mockColumnClasses.version}>{obj.version}</TableData>
     <TableData className={mockColumnClasses.status}>{obj.status}</TableData>
@@ -110,7 +115,7 @@ describe('CustomeResourceList', () => {
     sortOrder: SortByDirection.desc,
     rowFilterReducer: getFilteredItemsByRow,
     textFilterReducer: getFilteredItemsByText,
-    resourceRow: MockTableRow,
+    ResourceRow: MockTableRow,
     resourceHeader: MockTableHeader,
   };
 

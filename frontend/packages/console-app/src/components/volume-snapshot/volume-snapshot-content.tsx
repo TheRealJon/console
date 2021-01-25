@@ -14,7 +14,7 @@ import {
   TableData,
   ListPage,
   Table,
-  RowFunction,
+  RowComponentProps,
 } from '@console/internal/components/factory';
 import {
   VolumeSnapshotModel,
@@ -77,13 +77,18 @@ const Header = () => [
   },
 ];
 
-const Row: RowFunction<VolumeSnapshotContentKind> = ({ key, obj, style, index }) => {
+const Row: React.FC<RowComponentProps<VolumeSnapshotContentKind>> = ({
+  rowKey,
+  obj,
+  style,
+  index,
+}) => {
   const { name, creationTimestamp } = obj?.metadata || {};
   const { name: snapshotName, namespace: snapshotNamespace } = obj?.spec?.volumeSnapshotRef || {};
   const size = obj.status?.restoreSize;
   const sizeMetrics = size ? humanizeBinaryBytes(size).string : '-';
   return (
-    <TableRow id={obj?.metadata?.uid} index={index} trKey={key} style={style}>
+    <TableRow id={obj?.metadata?.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses[0]}>
         <ResourceLink kind={referenceForModel(VolumeSnapshotContentModel)} name={name} />
       </TableData>

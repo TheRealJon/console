@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { K8sResourceKind, referenceFor } from '@console/internal/module/k8s';
 import { Status } from '@console/shared';
 import { ResourceLink, Timestamp, resourcePath } from '@console/internal/components/utils';
-import { TableData, TableRow, RowFunction } from '@console/internal/components/factory';
+import { TableData, TableRow, RowComponentProps } from '@console/internal/components/factory';
 import { tableColumnClasses } from './HelmReleaseResourcesHeader';
 
 type HelmReleaseResourceStatusProps = {
@@ -29,15 +29,15 @@ export const HelmReleaseResourceStatus: React.FC<HelmReleaseResourceStatusProps>
   );
 };
 
-const HelmReleaseResourcesRow: RowFunction<K8sResourceKind> = ({
+const HelmReleaseResourcesRow: React.FC<RowComponentProps<K8sResourceKind>> = ({
   obj: resource,
   index,
-  key,
+  rowKey,
   style,
 }) => {
   const kind = referenceFor(resource);
   return (
-    <TableRow id={resource.metadata.uid} index={index} trKey={key} style={style}>
+    <TableRow id={resource.metadata.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses.name}>
         <ResourceLink
           kind={kind}

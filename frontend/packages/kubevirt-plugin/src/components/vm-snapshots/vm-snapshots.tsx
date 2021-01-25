@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Table, RowFunction } from '@console/internal/components/factory';
+import { Table, RowComponentProps } from '@console/internal/components/factory';
 import { sortable } from '@patternfly/react-table';
 import { getName, getNamespace, dimensifyHeader } from '@console/shared';
 import { useSafetyFirst } from '@console/internal/components/safety-first';
@@ -24,7 +24,7 @@ import { useMappedVMRestores } from './use-mapped-vm-restores';
 export type VMSnapshotsTableProps = {
   data?: any[];
   customData?: object;
-  row: RowFunction;
+  Row: React.FC<RowComponentProps>;
   columnClasses: string[];
   loadError: any;
   loaded: boolean;
@@ -33,7 +33,7 @@ export type VMSnapshotsTableProps = {
 export const VMSnapshotsTable: React.FC<VMSnapshotsTableProps> = ({
   data,
   customData,
-  row: Row,
+  Row,
   columnClasses,
   loaded,
   loadError,
@@ -142,7 +142,7 @@ export const VMSnapshotsPage: React.FC<VMLikeEntityTabProps> = ({ obj: vmLikeEnt
             restores: mappedRelevantRestores,
             isDisabled,
           }}
-          row={VMSnapshotRow}
+          Row={VMSnapshotRow}
           columnClasses={snapshotsTableColumnClasses}
         />
       </div>

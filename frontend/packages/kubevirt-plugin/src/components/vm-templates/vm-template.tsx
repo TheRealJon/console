@@ -13,7 +13,7 @@ import {
   TableRow,
   TableData,
   MultiListPage,
-  RowFunction,
+  RowComponentProps,
 } from '@console/internal/components/factory';
 import { RowFilter } from '@console/internal/components/filter-toolbar';
 import {
@@ -168,11 +168,11 @@ type VMTemplateTableRowProps = {
   sourceLoadError: any;
 };
 
-const VMTemplateTableRow: RowFunction<TemplateItem, VMTemplateTableRowProps> = ({
+const VMTemplateTableRow: React.FC<RowComponentProps<TemplateItem, VMTemplateTableRowProps>> = ({
   obj,
   customData: { dataVolumes, pvcs, pods, namespace, loaded, togglePin, isPinned, sourceLoadError },
   index,
-  key,
+  rowKey,
   style,
 }) => {
   const { t } = useTranslation();
@@ -187,7 +187,7 @@ const VMTemplateTableRow: RowFunction<TemplateItem, VMTemplateTableRowProps> = (
       className="kv-vm-template__row"
       id={template.metadata.uid}
       index={index}
-      trKey={key}
+      trKey={rowKey}
       style={style}
     >
       <TableData className={dimensify()}>
@@ -317,7 +317,7 @@ const VirtualMachineTemplates: React.FC<VirtualMachineTemplatesProps> = (props) 
           {...props}
           aria-label={t('kubevirt-plugin~Virtual Machine Templates')}
           Header={() => VMTemplateTableHeader(!namespace, t)}
-          Row={(rowProps) => <VMTemplateTableRow {...rowProps} />}
+          Row={VMTemplateTableRow}
           virtualize
           customData={{
             dataVolumes,

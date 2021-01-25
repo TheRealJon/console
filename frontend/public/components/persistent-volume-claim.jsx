@@ -153,13 +153,13 @@ const mapStateToProps = ({ UI }, { obj }) => ({
   metrics: UI.getIn(['metrics', 'pvc'])?.usedCapacity?.[getNamespace(obj)]?.[getName(obj)],
 });
 
-const PVCTableRow = connect(mapStateToProps)(({ obj, index, key, style, metrics }) => {
+const PVCTableRow = connect(mapStateToProps)(({ obj, index, rowKey, style, metrics }) => {
   const [name, namespace] = [getName(obj), getNamespace(obj)];
   const totalCapacityMetric = convertToBaseValue(obj?.status?.capacity?.storage);
   const totalCapcityHumanized = humanizeBinaryBytes(totalCapacityMetric);
   const usedCapacity = humanizeBinaryBytes(metrics);
   return (
-    <TableRow id={obj.metadata.uid} index={index} trKey={key} style={style}>
+    <TableRow id={obj.metadata.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses[0]}>
         <ResourceLink kind={kind} name={name} namespace={namespace} title={name} />
       </TableData>

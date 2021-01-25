@@ -32,9 +32,9 @@ const tableColumnClasses = [
 
 const kind = 'NetworkPolicy';
 
-const NetworkPolicyTableRow = ({ obj: np, index, key, style }) => {
+const NetworkPolicyTableRow = ({ obj: np, index, rowKey, style }) => {
   return (
-    <TableRow id={np.metadata.uid} index={index} trKey={key} style={style}>
+    <TableRow id={np.metadata.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses[0]}>
         <ResourceLink
           kind={kind}

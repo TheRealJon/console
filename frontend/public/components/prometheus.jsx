@@ -18,10 +18,10 @@ const tableColumnClasses = [
   Kebab.columnClass,
 ];
 
-const PrometheusTableRow = ({ obj: instance, index, key, style }) => {
+const PrometheusTableRow = ({ obj: instance, index, rowKey, style }) => {
   const { metadata, spec } = instance;
   return (
-    <TableRow id={instance.metadata.uid} index={index} trKey={key} style={style}>
+    <TableRow id={instance.metadata.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses[0]}>
         <ResourceLink
           kind={referenceForModel(PrometheusModel)}

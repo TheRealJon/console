@@ -203,9 +203,9 @@ export const RoleLink = ({ binding }) => {
   return <ResourceLink kind={kind} name={binding.roleRef.name} namespace={ns} />;
 };
 
-const RoleBindingsTableRow = ({ obj: binding, index, key, style }) => {
+const RoleBindingsTableRow = ({ obj: binding, index, rowKey, style }) => {
   return (
-    <TableRow id={binding.metadata.uid} index={index} trKey={key} style={style}>
+    <TableRow id={binding.metadata.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses[0]}>
         <ResourceLink
           kind={bindingKind(binding)}

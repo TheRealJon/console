@@ -1,21 +1,21 @@
 import { shallow } from 'enzyme';
 import * as _ from 'lodash';
 import { ClampedText } from '@console/shared';
-import { TableData, RowFunctionArgs } from '@console/internal/components/factory';
+import { TableData, RowComponentProps } from '@console/internal/components/factory';
 import { ResourceLink } from '@console/internal/components/utils';
 import { K8sResourceConditionStatus } from '@console/internal/module/k8s';
 import { revisionObj } from '../../../topology/__tests__/topology-knative-test-data';
 import RevisionRow from '../RevisionRow';
 import { ConditionTypes, RevisionKind } from '../../../types';
 
-let revData: RowFunctionArgs<RevisionKind>;
+let revData: RowComponentProps<RevisionKind>;
 
 describe('RevisionRow', () => {
   beforeEach(() => {
     revData = {
       obj: revisionObj,
       index: 0,
-      key: '0',
+      rowKey: '0',
       style: {
         height: 'auto',
         left: 0,

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { TableRow, TableData, RowFunction } from '@console/internal/components/factory';
+import { TableRow, TableData, RowComponentProps } from '@console/internal/components/factory';
 import { Kebab, ResourceKebab, ResourceLink, Timestamp } from '@console/internal/components/utils';
 import { referenceFor } from '@console/internal/module/k8s';
 import { EventingSubscriptionModel } from '../../../models';
@@ -10,10 +10,10 @@ import { tableColumnClasses } from './subscription-table';
 type SubscriptionRowType = {
   channel?: string;
 };
-const SubscriptionRow: RowFunction<EventSubscriptionKind, SubscriptionRowType> = ({
+const SubscriptionRow: React.FC<RowComponentProps<EventSubscriptionKind, SubscriptionRowType>> = ({
   obj,
   index,
-  key,
+  rowKey,
   style,
   customData,
 }) => {
@@ -32,7 +32,7 @@ const SubscriptionRow: RowFunction<EventSubscriptionKind, SubscriptionRowType> =
     ? getCondition(obj.status.conditions, SubscriptionConditionTypes.Ready)
     : null;
   return (
-    <TableRow id={uid} index={index} trKey={key} style={style}>
+    <TableRow id={uid} index={index} trKey={rowKey} style={style}>
       <TableData columnID="name" className={tableColumnClasses[0]}>
         <ResourceLink kind={objReference} name={name} namespace={namespace} title={uid} />
       </TableData>

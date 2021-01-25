@@ -10,7 +10,7 @@ import {
   TableProps,
   TableRow,
   TableData,
-  RowFunction,
+  RowComponentProps,
 } from '@console/internal/components/factory';
 import { sortable } from '@patternfly/react-table';
 import { humanizeBinaryBytes, Kebab } from '@console/internal/components/utils';
@@ -94,17 +94,17 @@ export const tableColumnClasses = [
   Kebab.columnClass,
 ];
 
-const diskRow: RowFunction<DiskMetadata, OCSMetadata> = ({
+const DiskRow: React.FC<RowComponentProps<DiskMetadata, OCSMetadata>> = ({
   obj,
   index,
-  key,
+  rowKey,
   style,
   customData,
 }) => {
   const { ocsState, dispatch } = customData;
   const diskName = obj.path;
   return (
-    <TableRow id={obj.deviceID} index={index} trKey={key} style={style}>
+    <TableRow id={obj.deviceID} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses[0]}>{obj.path}</TableData>
       <TableData className={tableColumnClasses[1]}>{obj.status.state}</TableData>
       <OCSStatus ocsState={ocsState} diskName={diskName} className={tableColumnClasses[1]} />
@@ -260,7 +260,7 @@ const OCSDisksList: React.FC<TableProps> = React.memo((props) => {
       {...props}
       aria-label={t('ceph-storage-plugin~Disks List')}
       Header={diskHeader}
-      Row={diskRow}
+      Row={DiskRow}
       customData={{ ocsState, dispatch }}
       NoDataEmptyMsg={props.customData.EmptyMsg}
       virtualize

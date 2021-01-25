@@ -9,8 +9,7 @@ import {
   TableRow,
   TableData,
   Table,
-  RowFunction,
-  RowFunctionArgs,
+  RowComponentProps,
 } from '@console/internal/components/factory';
 import { referenceForModel } from '@console/internal/module/k8s';
 import { useFlag } from '@console/shared/src/hooks/flag';
@@ -78,10 +77,10 @@ const HostsTableHeader = (t: TFunction) => () => [
   },
 ];
 
-const HostsTableRow: React.FC<RowFunctionArgs<BareMetalHostBundle>> = ({
+const HostsTableRow: React.FC<RowComponentProps<BareMetalHostBundle>> = ({
   obj: { host, node, nodeMaintenance, machine, machineSet, status },
   index,
-  key,
+  rowKey,
   style,
 }) => {
   const { t } = useTranslation();
@@ -95,7 +94,7 @@ const HostsTableRow: React.FC<RowFunctionArgs<BareMetalHostBundle>> = ({
   const { serialNumber } = getHostVendorInfo(host);
 
   return (
-    <TableRow id={uid} index={index} trKey={key} style={style}>
+    <TableRow id={uid} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses.name}>
         <ResourceLink
           kind={referenceForModel(BareMetalHostModel)}
@@ -144,17 +143,13 @@ type BareMetalHostsTableProps = React.ComponentProps<typeof Table> & {
 
 const BareMetalHostsTable: React.FC<BareMetalHostsTableProps> = (props) => {
   const { t } = useTranslation();
-  const row = React.useCallback<RowFunction<BareMetalHostBundle>>(
-    (rowProps) => <HostsTableRow {...rowProps} />,
-    [],
-  );
   return (
     <Table
       {...props}
       defaultSortField="host.metadata.name"
       aria-label={t('metal3-plugin~Bare Metal Hosts')}
       Header={HostsTableHeader(t)}
-      Row={row}
+      Row={HostsTableRow}
       virtualize
     />
   );

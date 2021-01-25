@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import { useTranslation } from 'react-i18next';
 import { EmptyState, EmptyStateVariant } from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
-import { Table, RowFunction } from '@console/internal/components/factory';
+import { Table, RowComponentProps } from '@console/internal/components/factory';
 import { getQueryArgument, LoadingBox } from '@console/internal/components/utils';
 import { FilterToolbar, RowFilter } from '@console/internal/components/filter-toolbar';
 
@@ -12,7 +12,7 @@ interface CustomResourceListProps {
   rowFilters?: RowFilter[];
   sortBy: string;
   sortOrder: SortByDirection;
-  resourceRow: RowFunction;
+  ResourceRow: React.FC<RowComponentProps>;
   resources?: { [key: string]: any }[];
   resourceHeader: () => { [key: string]: any }[];
   EmptyMsg?: React.ComponentType;
@@ -38,7 +38,7 @@ const CustomResourceList: React.FC<CustomResourceListProps> = ({
   textFilter,
   textFilterReducer,
   resourceHeader,
-  resourceRow,
+  ResourceRow,
   sortBy,
   sortOrder,
 }) => {
@@ -92,7 +92,7 @@ const CustomResourceList: React.FC<CustomResourceListProps> = ({
         defaultSortOrder={sortOrder}
         aria-label="CustomResources"
         Header={resourceHeader}
-        Row={resourceRow}
+        Row={ResourceRow}
         loaded={loaded}
         virtualize
       />

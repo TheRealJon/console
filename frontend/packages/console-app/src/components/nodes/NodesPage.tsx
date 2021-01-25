@@ -27,7 +27,7 @@ import {
   TableRow,
   TableData,
   ListPage,
-  RowFunctionArgs,
+  RowComponentProps,
 } from '@console/internal/components/factory';
 import {
   Kebab,
@@ -400,20 +400,13 @@ type NodesTableRowProps = {
   style: object;
 };
 
+const NodeRow: React.FC<RowComponentProps<NodeKind>> = (props) => (
+  <NodesTableRow obj={props.obj} index={props.index} rowKey={props.rowKey} style={props.style} />
+);
+
 const NodesTable: React.FC<NodesTableProps &
   WithUserSettingsCompatibilityProps<TableColumnsType>> = React.memo(
   ({ userSettingState: tableColumns, ...props }) => {
-    const Row = React.useCallback(
-      (rowArgs: RowFunctionArgs<NodeKind>) => (
-        <NodesTableRow
-          obj={rowArgs.obj}
-          index={rowArgs.index}
-          rowKey={rowArgs.key}
-          style={rowArgs.style}
-        />
-      ),
-      [],
-    );
     const { t } = useTranslation();
     const selectedColumns: Set<string> =
       tableColumns?.[columnManagementID]?.length > 0
@@ -426,7 +419,7 @@ const NodesTable: React.FC<NodesTableProps &
         columnManagementID={columnManagementID}
         aria-label={t('nodes~Nodes')}
         Header={NodeTableHeader}
-        Row={Row}
+        Row={NodeRow}
         virtualize
       />
     );

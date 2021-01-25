@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { TableData, TableRow, RowFunction } from '@console/internal/components/factory';
+import { TableData, TableRow, RowComponentProps } from '@console/internal/components/factory';
 import { asAccessReview, Kebab, KebabOption } from '@console/internal/components/utils';
 import { TemplateModel } from '@console/internal/models';
 import { DASH, dimensifyRow, getDeletetionTimestamp } from '@console/shared';
@@ -118,7 +118,7 @@ export const NicSimpleRow: React.FC<VMNicSimpleRowProps> = ({
   );
 };
 
-export const NicRow: RowFunction<NetworkBundle, VMNicRowCustomData> = ({
+export const NicRow: React.FC<RowComponentProps<NetworkBundle, VMNicRowCustomData>> = ({
   obj: { name, nic, network, ...restData },
   customData: { isDisabled, withProgress, vmLikeEntity, columnClasses, pendingChangesNICs },
   index,

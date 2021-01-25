@@ -57,7 +57,7 @@ const HelmReleaseHistory: React.FC<HelmReleaseHistoryProps> = ({ match, obj }) =
       loaded={revisionsLoaded}
       sortBy="version"
       sortOrder={SortByDirection.desc}
-      resourceRow={HelmReleaseHistoryRow}
+      ResourceRow={HelmReleaseHistoryRow}
       resourceHeader={HelmReleaseHistoryHeader(t)}
     />
   );

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Table, RowFunction } from '@console/internal/components/factory';
+import { Table, RowComponentProps } from '@console/internal/components/factory';
 import { dimensifyHeader } from '@console/shared';
 import { sortable } from '@patternfly/react-table';
 import { AffinityRowData } from '../../types';
@@ -8,14 +8,14 @@ import { AffinityRowData } from '../../types';
 export type AffinityTableProps = {
   data?: AffinityRowData[];
   customData?: object;
-  row: RowFunction;
+  Row: React.FC<RowComponentProps>;
   columnClasses?: string[];
 };
 
 export const AffinityTable: React.FC<AffinityTableProps> = ({
   data,
   customData,
-  row: Row,
+  Row,
   columnClasses,
 }) => {
   const { t } = useTranslation();

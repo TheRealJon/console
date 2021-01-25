@@ -11,7 +11,7 @@ import {
   Table,
   TableRow,
   TableData,
-  RowFunctionArgs,
+  RowComponentProps,
 } from '@console/internal/components/factory';
 import { Conditions } from '@console/internal/components/conditions';
 import {
@@ -62,11 +62,15 @@ const componentsTableColumnClasses = [
   classNames('pf-m-hidden', 'pf-m-visible-on-lg'),
 ];
 
-export const InstallPlanTableRow: React.FC<RowFunctionArgs> = ({ obj, index, key, style }) => {
+export const InstallPlanTableRow: React.FC<RowComponentProps<InstallPlanKind>> = ({
+  obj,
+  index,
+  rowKey,
+  style,
+}) => {
   const { t } = useTranslation();
-  const phaseFor = (phase: InstallPlanKind['status']['phase']) => <Status status={phase} />;
   return (
-    <TableRow id={obj.metadata.uid} index={index} trKey={key} style={style}>
+    <TableRow id={obj.metadata.uid} index={index} trKey={rowKey} style={style}>
       {/* Name */}
       <TableData className={tableColumnClasses[0]}>
         <ResourceLink
@@ -89,7 +93,7 @@ export const InstallPlanTableRow: React.FC<RowFunctionArgs> = ({ obj, index, key
 
       {/* Status */}
       <TableData className={tableColumnClasses[2]}>
-        {phaseFor(obj.status?.phase ?? 'Unknown')}
+        <Status status={obj.status?.phase ?? 'Unknown'} />
       </TableData>
 
       {/* Components */}
@@ -130,7 +134,7 @@ export const InstallPlanTableRow: React.FC<RowFunctionArgs> = ({ obj, index, key
                 />
               </li>
             </ul>
-          )) || <span className="text-muted">{t('olm~None')}</span>}
+          )) || <span className="text-muted">{t('None')}</span>}
       </TableData>
 
       {/* Kebab */}

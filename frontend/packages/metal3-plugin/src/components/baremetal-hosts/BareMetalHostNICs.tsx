@@ -3,7 +3,12 @@ import { useTranslation } from 'react-i18next';
 import { TFunction } from 'i18next';
 import { OutlinedCheckSquareIcon, OutlinedSquareIcon } from '@patternfly/react-icons';
 import { sortable } from '@patternfly/react-table';
-import { Table, TableRow, TableData, RowFunction } from '@console/internal/components/factory';
+import {
+  Table,
+  TableRow,
+  TableData,
+  RowComponentProps,
+} from '@console/internal/components/factory';
 import { getHostNICs } from '../../selectors';
 import { BareMetalHostNIC, BareMetalHostKind } from '../../types';
 
@@ -17,10 +22,15 @@ const NICsTableHeader = (t: TFunction) => () => [
   { title: t('metal3-plugin~VLAN ID'), sortField: 'vlanId', transforms: [sortable] },
 ];
 
-const NICsTableRow: RowFunction<BareMetalHostNIC> = ({ obj: nic, index, key, style }) => {
+const NICsTableRow: React.FC<RowComponentProps<BareMetalHostNIC>> = ({
+  obj: nic,
+  index,
+  rowKey,
+  style,
+}) => {
   const { ip, mac, model, name, pxe, speedGbps, vlanId } = nic;
   return (
-    <TableRow id={ip} index={index} trKey={key} style={style}>
+    <TableRow id={ip} index={index} trKey={rowKey} style={style}>
       <TableData>{name}</TableData>
       <TableData>{model}</TableData>
       <TableData>{pxe ? <OutlinedCheckSquareIcon /> : <OutlinedSquareIcon />}</TableData>

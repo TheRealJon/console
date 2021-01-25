@@ -49,9 +49,9 @@ const tableColumnClasses = [
   Kebab.columnClass,
 ];
 
-const ServiceTableRow = ({ obj: s, index, key, style }) => {
+const ServiceTableRow = ({ obj: s, index, rowKey, style }) => {
   return (
-    <TableRow id={s.metadata.uid} index={index} trKey={key} style={style}>
+    <TableRow id={s.metadata.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses[0]}>
         <ResourceLink
           kind={kind}

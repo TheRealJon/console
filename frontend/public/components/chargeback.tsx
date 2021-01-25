@@ -6,7 +6,7 @@ import { sortable } from '@patternfly/react-table';
 import { connectToFlags } from '../reducers/features';
 import { FLAGS } from '@console/shared';
 import { Conditions } from './conditions';
-import { DetailsPage, ListPage, Table, TableRow, TableData, RowFunction } from './factory';
+import { DetailsPage, ListPage, Table, TableRow, TableData, RowComponentProps } from './factory';
 import { coFetchJSON } from '../co-fetch';
 import { ChargebackReportModel, ReportQueryModel } from '../models';
 import { LoadError, LoadingInline, MsgBox } from './utils/status-box';
@@ -105,9 +105,14 @@ const ReportsTableHeader = () => {
 };
 ReportsTableHeader.displayName = 'ReportsTableHeader';
 
-const ReportsTableRow: RowFunction<K8sResourceKind> = ({ obj, index, key, style }) => {
+const ReportsTableRow: React.FC<RowComponentProps<K8sResourceKind>> = ({
+  obj,
+  index,
+  rowKey,
+  style,
+}) => {
   return (
-    <TableRow id={obj.metadata.uid} index={index} trKey={key} style={style}>
+    <TableRow id={obj.metadata.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses[0]}>
         <ResourceLink
           kind={ReportReference}
@@ -494,14 +499,14 @@ const ReportGenerationQueriesTableHeader = () => {
 };
 ReportGenerationQueriesTableHeader.displayName = 'ReportGenerationQueriesTableHeader';
 
-const ReportGenerationQueriesTableRow: RowFunction<K8sResourceKind> = ({
+const ReportGenerationQueriesTableRow: React.FC<RowComponentProps<K8sResourceKind>> = ({
   obj,
   index,
-  key,
+  rowKey,
   style,
 }) => {
   return (
-    <TableRow id={obj.metadata.uid} index={index} trKey={key} style={style}>
+    <TableRow id={obj.metadata.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={reportsGenerationColumnClasses[0]}>
         <ResourceLink
           kind={ReportGenerationQueryReference}

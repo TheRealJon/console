@@ -20,7 +20,7 @@ import { configureUpdateStrategyModal, errorModal } from './modals';
 import { Conditions } from './conditions';
 import { ResourceEventStream } from './events';
 import { VolumesTable } from './volumes-table';
-import { DetailsPage, ListPage, Table, RowFunction } from './factory';
+import { DetailsPage, ListPage, Table, RowComponentProps } from './factory';
 import {
   AsyncComponent,
   DetailsItem,
@@ -255,18 +255,8 @@ type DeploymentDetailsProps = {
 
 const kind = 'Deployment';
 
-const DeploymentTableRow: RowFunction<DeploymentKind> = ({ obj, index, key, style, ...props }) => {
-  return (
-    <WorkloadTableRow
-      obj={obj}
-      index={index}
-      rowKey={key}
-      style={style}
-      menuActions={menuActions}
-      kind={kind}
-      {...props}
-    />
-  );
+const DeploymentTableRow: React.FC<RowComponentProps<DeploymentKind>> = (props) => {
+  return <WorkloadTableRow menuActions={menuActions} kind={kind} {...props} />;
 };
 
 const DeploymentTableHeader = () => {

@@ -82,9 +82,9 @@ PVTableHeader.displayName = 'PVTableHeader';
 
 const kind = 'PersistentVolume';
 
-const PVTableRow = ({ obj, index, key, style }) => {
+const PVTableRow = ({ obj, index, rowKey, style }) => {
   return (
-    <TableRow id={obj.metadata.uid} index={index} trKey={key} style={style}>
+    <TableRow id={obj.metadata.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses[0]}>
         <ResourceLink
           kind={kind}

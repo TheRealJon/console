@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Status } from '@console/shared';
 import { getJobTypeAndCompletions, K8sKind, JobKind, K8sResourceKind } from '../module/k8s';
 import { Conditions } from './conditions';
-import { DetailsPage, ListPage, Table, TableRow, TableData, RowFunction } from './factory';
+import { DetailsPage, ListPage, Table, TableRow, TableData, RowComponentProps } from './factory';
 import { configureJobParallelismModal } from './modals';
 import {
   ContainerTable,
@@ -58,10 +58,10 @@ const tableColumnClasses = [
   Kebab.columnClass,
 ];
 
-const JobTableRow: RowFunction<JobKind> = ({ obj: job, index, key, style }) => {
+const JobTableRow: React.FC<RowComponentProps<JobKind>> = ({ obj: job, index, rowKey, style }) => {
   const { type, completions } = getJobTypeAndCompletions(job);
   return (
-    <TableRow id={job.metadata.uid} index={index} trKey={key} style={style}>
+    <TableRow id={job.metadata.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses[0]}>
         <ResourceLink
           kind={kind}

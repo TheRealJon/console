@@ -370,7 +370,7 @@ export type TableWrapperProps = {
   ariaRowCount: number | undefined;
 };
 
-const VirtualBody: React.SFC<VirtualBodyProps> = (props) => {
+const VirtualBody: React.FC<VirtualBodyProps> = (props) => {
   const {
     customData,
     Row,
@@ -395,12 +395,9 @@ const VirtualBody: React.SFC<VirtualBodyProps> = (props) => {
       index,
       columns,
       isScrolling: scrolling,
-      key,
       style,
       customData,
     };
-
-    const row = Row(rowArgs);
 
     // do not render non visible elements (this excludes overscan)
     if (!isVisible) {
@@ -414,7 +411,7 @@ const VirtualBody: React.SFC<VirtualBodyProps> = (props) => {
         parent={parent}
         rowIndex={index}
       >
-        {row}
+        <Row rowKey={`${key}__row`} {...rowArgs} />
       </CellMeasurer>
     );
   };
@@ -439,21 +436,19 @@ const VirtualBody: React.SFC<VirtualBodyProps> = (props) => {
   );
 };
 
-export type RowFunctionArgs<T = any, C = any> = {
+export type RowComponentProps<T = any, C = any> = {
   obj: T;
   index: number;
   columns: any[];
   isScrolling: boolean;
-  key: string;
+  rowKey: string;
   style: object;
   customData?: C;
 };
 
-export type RowFunction<T = any, C = any> = (args: RowFunctionArgs<T, C>) => React.ReactElement;
-
 export type VirtualBodyProps = {
   customData?: any;
-  Row: RowFunction;
+  Row: React.FC<RowComponentProps>;
   height: number;
   isScrolling: boolean;
   onChildScroll: (...args) => any;
@@ -474,7 +469,7 @@ export type TableProps = {
   filters?: { [key: string]: any };
   Header: (...args) => any[];
   loadError?: string | Object;
-  Row?: RowFunction;
+  Row?: React.FC<RowComponentProps>;
   Rows?: (...args) => any[];
   'aria-label': string;
   onSelect?: OnSelect;
@@ -818,7 +813,7 @@ export type TableInnerProps = {
   namespace?: string;
   reduxID?: string;
   reduxIDs?: string[];
-  Row?: RowFunction;
+  Row?: React.FC<RowComponentProps>;
   Rows?: (...args) => any[];
   selector?: Object;
   sortList?: (listId: string, field: string, func: any, orderBy: string, column: string) => any;

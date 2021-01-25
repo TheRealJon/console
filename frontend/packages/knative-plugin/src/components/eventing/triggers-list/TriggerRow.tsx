@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { TableRow, TableData, RowFunction } from '@console/internal/components/factory';
+import { TableRow, TableData, RowComponentProps } from '@console/internal/components/factory';
 import { Kebab, ResourceKebab, ResourceLink, Timestamp } from '@console/internal/components/utils';
 import { referenceFor, referenceForModel } from '@console/internal/module/k8s';
 import { EventingTriggerModel, EventingBrokerModel } from '../../../models';
@@ -10,10 +10,10 @@ import { tableColumnClasses } from './trigger-table';
 type TriggerRowType = {
   broker?: string;
 };
-const TriggerRow: RowFunction<EventTriggerKind, TriggerRowType> = ({
+const TriggerRow: React.FC<RowComponentProps<EventTriggerKind, TriggerRowType>> = ({
   obj,
   index,
-  key,
+  rowKey,
   style,
   customData,
 }) => {
@@ -31,7 +31,7 @@ const TriggerRow: RowFunction<EventTriggerKind, TriggerRowType> = ({
     ? getCondition(obj.status.conditions, TriggerConditionTypes.Ready)
     : null;
   return (
-    <TableRow id={uid} index={index} trKey={key} style={style}>
+    <TableRow id={uid} index={index} trKey={rowKey} style={style}>
       <TableData columnID="name" className={tableColumnClasses[0]}>
         <ResourceLink kind={objReference} name={name} namespace={namespace} title={uid} />
       </TableData>

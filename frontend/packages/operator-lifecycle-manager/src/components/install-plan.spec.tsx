@@ -7,7 +7,7 @@ import {
   Table,
   MultiListPage,
   DetailsPage,
-  RowFunctionArgs,
+  RowComponentProps,
   TableRow,
 } from '@console/internal/components/factory';
 import {
@@ -57,10 +57,10 @@ describe('InstallPlanTableRow', () => {
   let wrapper: ShallowWrapper;
 
   const updateWrapper = () => {
-    const rowArgs: RowFunctionArgs<k8s.K8sResourceKind> = {
+    const rowArgs: RowComponentProps<InstallPlanKind> = {
       obj,
       index: 0,
-      key: '0',
+      rowKey: '0',
       style: {},
     } as any;
 

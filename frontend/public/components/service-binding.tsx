@@ -6,7 +6,7 @@ import * as classNames from 'classnames';
 import { Alert } from '@patternfly/react-core';
 
 import { serviceCatalogStatus, referenceForModel, K8sResourceKind } from '../module/k8s';
-import { DetailsPage, ListPage, Table, TableRow, TableData, RowFunction } from './factory';
+import { DetailsPage, ListPage, Table, TableRow, TableData, RowComponentProps } from './factory';
 import { Kebab, ResourceKebab } from './utils/kebab';
 import { SectionHeading } from './utils/headings';
 import { navFactory } from './utils/horizontal-nav';
@@ -161,9 +161,14 @@ const ServiceBindingsTableHeader = () => {
 };
 ServiceBindingsTableHeader.displayName = 'ServiceBindingsTableHeader';
 
-const ServiceBindingsTableRow: RowFunction<K8sResourceKind> = ({ obj, index, key, style }) => {
+const ServiceBindingsTableRow: React.FC<RowComponentProps<K8sResourceKind>> = ({
+  obj,
+  index,
+  rowKey,
+  style,
+}) => {
   return (
-    <TableRow id={obj.metadata.uid} index={index} trKey={key} style={style}>
+    <TableRow id={obj.metadata.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses[0]}>
         <ResourceLink
           kind={referenceForModel(ServiceBindingModel)}

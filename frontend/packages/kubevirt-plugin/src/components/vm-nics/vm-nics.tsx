@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Table, RowFunction } from '@console/internal/components/factory';
+import { Table, RowComponentProps } from '@console/internal/components/factory';
 import { sortable } from '@patternfly/react-table';
 import { useSafetyFirst } from '@console/internal/components/safety-first';
 import { createBasicLookup, dimensifyHeader } from '@console/shared';
@@ -51,14 +51,14 @@ const getNicsData = (vmLikeEntity: VMGenericLikeEntityKind): NetworkBundle[] => 
 export type VMNicsTableProps = {
   data?: any[];
   customData?: object;
-  row: RowFunction;
+  Row: React.FC<RowComponentProps>;
   columnClasses: string[];
 };
 
 export const VMNicsTable: React.FC<VMNicsTableProps> = ({
   data,
   customData,
-  row: Row,
+  Row,
   columnClasses,
 }) => {
   const { t } = useTranslation();
@@ -153,7 +153,7 @@ export const VMNics: React.FC<VMTabProps> = ({ obj: vmLikeEntity, vmis: vmisProp
             isDisabled: isLocked,
             pendingChangesNICs,
           }}
-          row={NicRow}
+          Row={NicRow}
           columnClasses={nicTableColumnClasses}
         />
       </div>

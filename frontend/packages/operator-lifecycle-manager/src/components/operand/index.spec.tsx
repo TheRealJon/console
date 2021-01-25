@@ -5,7 +5,13 @@ import * as _ from 'lodash';
 import * as extensionHooks from '@console/plugin-sdk';
 import { Provider } from 'react-redux';
 import * as k8sModels from '@console/internal/module/k8s';
-import { Table, DetailsPage, MultiListPage, ListPage } from '@console/internal/components/factory';
+import {
+  Table,
+  DetailsPage,
+  MultiListPage,
+  ListPage,
+  RowComponentProps,
+} from '@console/internal/components/factory';
 import { Timestamp, LabelList, StatusBox, ResourceKebab } from '@console/internal/components/utils';
 import store from '@console/internal/redux';
 
@@ -22,7 +28,6 @@ import {
   OperandListProps,
   ProvidedAPIsPage,
   ProvidedAPIsPageProps,
-  OperandTableRowProps,
   OperandTableRow,
   OperandDetails,
   OperandDetailsPageProps,
@@ -37,6 +42,7 @@ import { Resources } from '../k8s-resource';
 import { referenceForProvidedAPI } from '..';
 import { OperandLink } from './operand-link';
 import { DescriptorDetailsItem, DescriptorDetailsItemList } from '../descriptors';
+import { K8sResourceCommon } from '@console/internal/module/k8s';
 
 jest.mock('react-i18next', () => {
   const reactI18next = require.requireActual('react-i18next');
@@ -70,12 +76,19 @@ jest.mock('@console/shared/src/hooks/useK8sModels', () => ({
 const i18nNS = 'details-page';
 
 describe(OperandTableRow.displayName, () => {
-  let wrapper: ShallowWrapper<OperandTableRowProps>;
+  let wrapper: ShallowWrapper<RowComponentProps<K8sResourceCommon>>;
 
   beforeEach(() => {
     spyOn(extensionHooks, 'useExtensions').and.returnValue([]);
     wrapper = shallow(
-      <OperandTableRow obj={testResourceInstance} index={0} rowKey={'0'} style={{}} />,
+      <OperandTableRow
+        obj={testResourceInstance}
+        index={0}
+        rowKey={'0'}
+        style={{}}
+        isScrolling={false}
+        columns={[]}
+      />,
     );
   });
 

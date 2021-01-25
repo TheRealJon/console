@@ -64,10 +64,10 @@ const tableColumnClasses = [
   Kebab.columnClass,
 ];
 
-const SecretTableRow = ({ obj: secret, index, key, style }) => {
+const SecretTableRow = ({ obj: secret, index, rowKey, style }) => {
   const data = _.size(secret.data);
   return (
-    <TableRow id={secret.metadata.uid} index={index} trKey={key} style={style}>
+    <TableRow id={secret.metadata.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses[0]}>
         <ResourceLink
           kind="Secret"

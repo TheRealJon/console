@@ -11,7 +11,7 @@ import {
   referenceForGroupVersionKind,
   referenceForModel,
 } from '../module/k8s';
-import { DetailsPage, ListPage, Table, TableRow, TableData, RowFunction } from './factory';
+import { DetailsPage, ListPage, Table, TableRow, TableData, RowComponentProps } from './factory';
 import {
   Kebab,
   navFactory,
@@ -49,9 +49,14 @@ const tableColumnClasses = [
   Kebab.columnClass,
 ];
 
-const MachineAutoscalerTableRow: RowFunction<K8sResourceKind> = ({ obj, index, key, style }) => {
+const MachineAutoscalerTableRow: React.FC<RowComponentProps<K8sResourceKind>> = ({
+  obj,
+  index,
+  rowKey,
+  style,
+}) => {
   return (
-    <TableRow id={obj.metadata.uid} index={index} trKey={key} style={style}>
+    <TableRow id={obj.metadata.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses[0]}>
         <ResourceLink
           kind={machineAutoscalerReference}

@@ -3,10 +3,10 @@ import { shallow } from 'enzyme';
 import { Link } from 'react-router-dom';
 import { Status } from '@console/shared';
 import { K8sResourceKind } from '@console/internal/module/k8s';
-import { RowFunctionArgs } from '@console/internal/components/factory';
+import { RowComponentProps } from '@console/internal/components/factory';
 import HelmReleaseResourcesRow, { HelmReleaseResourceStatus } from '../HelmReleaseResourcesRow';
 
-let rowArgs: RowFunctionArgs<K8sResourceKind>;
+let rowArgs: RowComponentProps<K8sResourceKind>;
 
 jest.mock('react-i18next', () => {
   const reactI18next = require.requireActual('react-i18next');
@@ -28,7 +28,7 @@ describe('helmReleaseResourcesRow', () => {
         },
       },
       index: 1,
-      key: '1',
+      rowKey: '1',
       style: {},
     } as any;
   });

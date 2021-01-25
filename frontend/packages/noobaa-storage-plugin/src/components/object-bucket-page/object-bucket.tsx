@@ -9,7 +9,7 @@ import {
   Table,
   TableData,
   TableRow,
-  RowFunction,
+  RowComponentProps,
 } from '@console/internal/components/factory';
 import {
   Kebab,
@@ -41,9 +41,14 @@ const tableColumnClasses = [
   Kebab.columnClass,
 ];
 
-const OBTableRow: RowFunction<K8sResourceKind> = ({ obj, index, key, style }) => {
+const OBTableRow: React.FC<RowComponentProps<K8sResourceKind>> = ({
+  obj,
+  index,
+  rowKey,
+  style,
+}) => {
   return (
-    <TableRow id={obj.metadata.uid} index={index} trKey={key} style={style}>
+    <TableRow id={obj.metadata.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses[0]}>
         <ResourceLink
           kind={kind}

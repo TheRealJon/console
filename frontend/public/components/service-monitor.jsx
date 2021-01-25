@@ -44,10 +44,10 @@ const tableColumnClasses = [
   Kebab.columnClass,
 ];
 
-const ServiceMonitorTableRow = ({ obj: sm, index, key, style }) => {
+const ServiceMonitorTableRow = ({ obj: sm, index, rowKey, style }) => {
   const { metadata } = sm;
   return (
-    <TableRow id={sm.metadata.uid} index={index} trKey={key} style={style}>
+    <TableRow id={sm.metadata.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses[0]}>
         <ResourceLink
           kind={referenceForModel(ServiceMonitorModel)}

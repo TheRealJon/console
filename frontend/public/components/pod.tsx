@@ -32,7 +32,7 @@ import {
 } from '../module/k8s/pods';
 import { getContainerState, getContainerStatus } from '../module/k8s/container';
 import { ResourceEventStream } from './events';
-import { DetailsPage, ListPage, Table, TableRow, TableData, RowFunctionArgs } from './factory';
+import { DetailsPage, ListPage, Table, TableRow, TableData, RowComponentProps } from './factory';
 import {
   AsyncComponent,
   DetailsItem,
@@ -791,17 +791,9 @@ export const PodsDetailsPage: React.FC<PodDetailsPageProps> = (props) => {
 };
 PodsDetailsPage.displayName = 'PodsDetailsPage';
 
-const getRow = (showNodes) => {
-  return (rowArgs: RowFunctionArgs<PodKind>) => (
-    <PodTableRow
-      obj={rowArgs.obj}
-      index={rowArgs.index}
-      rowKey={rowArgs.key}
-      style={rowArgs.style}
-      showNodes={showNodes}
-    />
-  );
-};
+const getRow = (showNodes: boolean): React.FC<RowComponentProps<PodKind>> => (props) => (
+  <PodTableRow showNodes={showNodes} {...props} />
+);
 
 export const PodList: React.FC<PodListProps> = withUserSettingsCompatibility<
   PodListProps & WithUserSettingsCompatibilityProps<TableColumnsType>,

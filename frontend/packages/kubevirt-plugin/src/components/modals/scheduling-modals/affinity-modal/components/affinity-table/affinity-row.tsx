@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Kebab, KebabOption, pluralize } from '@console/internal/components/utils';
 import { isVMI } from '../../../../../../selectors/check-type';
 import { VMLikeEntityKind } from '../../../../../../types/vmLike';
-import { TableData, TableRow, RowFunction } from '@console/internal/components/factory';
+import { TableData, TableRow, RowComponentProps } from '@console/internal/components/factory';
 import { DASH, dimensifyRow } from '@console/shared';
 import { ValidationCell } from '../../../../../table/validation-cell';
 import { AffinityRowData } from '../../types';
@@ -41,7 +41,9 @@ const getActions = (
   return actions;
 };
 
-export const AffinityRow: RowFunction<AffinityRowData, AffinityRowCustomData> = (props) => {
+export const AffinityRow: React.FC<RowComponentProps<AffinityRowData, AffinityRowCustomData>> = (
+  props,
+) => {
   const {
     obj,
     customData: { isDisabled, columnClasses, vmLikeEntity, onEdit, onDelete },

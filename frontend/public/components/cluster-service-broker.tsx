@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as classNames from 'classnames';
 import { sortable } from '@patternfly/react-table';
-import { DetailsPage, ListPage, Table, TableRow, TableData, RowFunction } from './factory';
+import { DetailsPage, ListPage, Table, TableRow, TableData, RowComponentProps } from './factory';
 import {
   Kebab,
   SectionHeading,
@@ -66,14 +66,14 @@ const ClusterServiceBrokerTableHeader = () => {
 };
 ClusterServiceBrokerTableHeader.displayName = 'ClusterServiceBrokerTableHeader';
 
-const ClusterServiceBrokerTableRow: RowFunction<K8sResourceKind> = ({
+const ClusterServiceBrokerTableRow: React.FC<RowComponentProps<K8sResourceKind>> = ({
   obj: serviceBroker,
   index,
-  key,
+  rowKey,
   style,
 }) => {
   return (
-    <TableRow id={serviceBroker.metadata.uid} index={index} trKey={key} style={style}>
+    <TableRow id={serviceBroker.metadata.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses[0]}>
         <ResourceLink
           kind={referenceForModel(ClusterServiceBrokerModel)}

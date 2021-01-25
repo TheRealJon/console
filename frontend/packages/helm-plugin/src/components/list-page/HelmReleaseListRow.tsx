@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import { Status } from '@console/shared';
-import { TableRow, TableData, RowFunction } from '@console/internal/components/factory';
+import { TableRow, TableData, RowComponentProps } from '@console/internal/components/factory';
 import { Timestamp, Kebab, ResourceIcon } from '@console/internal/components/utils';
 import { Link } from 'react-router-dom';
 import { HelmRelease, HelmActionOrigins } from '../../types/helm-types';
@@ -12,14 +12,19 @@ import {
   rollbackHelmRelease,
 } from '../../actions/modify-helm-release';
 
-const HelmReleaseListRow: RowFunction<HelmRelease> = ({ obj, index, key, style }) => {
+const HelmReleaseListRow: React.FC<RowComponentProps<HelmRelease>> = ({
+  obj,
+  index,
+  rowKey,
+  style,
+}) => {
   const menuActions = [
     upgradeHelmRelease(obj.name, obj.namespace, HelmActionOrigins.list),
     rollbackHelmRelease(obj.name, obj.namespace, HelmActionOrigins.list),
     deleteHelmRelease(obj.name, obj.namespace),
   ];
   return (
-    <TableRow id={obj.name} index={index} trKey={key} style={style}>
+    <TableRow id={obj.name} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses.name}>
         <ResourceIcon kind={'Helm Release'} />
         <Link

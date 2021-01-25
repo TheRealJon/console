@@ -1,10 +1,10 @@
 import { shallow } from 'enzyme';
-import { TableData, RowFunctionArgs } from '@console/internal/components/factory';
+import { TableData, RowComponentProps } from '@console/internal/components/factory';
 import { TaskRunKind } from '../../../../utils/pipeline-augment';
 import TaskRunsRow from '../TaskRunsRow';
 import { ResourceLink, Timestamp } from '@console/internal/components/utils';
 
-let taskRunsData: RowFunctionArgs<TaskRunKind>;
+let taskRunsData: RowComponentProps<TaskRunKind>;
 
 describe('TaskRunsRow', () => {
   beforeEach(() => {
@@ -33,7 +33,7 @@ describe('TaskRunsRow', () => {
         showPipelineColumn: true,
       },
       index: 0,
-      key: '0',
+      rowKey: '0',
       style: {
         height: 'auto',
         left: 0,

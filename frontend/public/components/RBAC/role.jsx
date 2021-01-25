@@ -48,9 +48,9 @@ const menuActions = [
 
 const roleColumnClasses = [classNames('col-xs-6'), classNames('col-xs-6'), Kebab.columnClass];
 
-const RolesTableRow = ({ obj: role, index, key, style }) => {
+const RolesTableRow = ({ obj: role, index, rowKey, style }) => {
   return (
-    <TableRow id={role.metadata.uid} index={index} trKey={key} style={style}>
+    <TableRow id={role.metadata.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={roleColumnClasses[0]}>
         <ResourceLink
           kind={roleKind(role)}
@@ -154,10 +154,10 @@ const bindingsColumnClasses = [
   classNames('col-xs-2'),
 ];
 
-const BindingsTableRow = ({ obj: binding, index, key, style }) => {
+const BindingsTableRow = ({ obj: binding, index, rowKey, style }) => {
   const { t } = useTranslation();
   return (
-    <TableRow id={binding.metadata.uid} index={index} trKey={key} style={style}>
+    <TableRow id={binding.metadata.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={bindingsColumnClasses[0]}>
         <BindingName binding={binding} />
       </TableData>

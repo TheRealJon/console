@@ -9,7 +9,7 @@ import {
   Table,
   TableRow,
   TableData,
-  RowFunction,
+  RowComponentProps,
 } from '@console/internal/components/factory';
 import { OPERATOR_HUB_LABEL } from '@console/shared';
 import { PackageManifestModel, CatalogSourceModel } from '../models';
@@ -55,16 +55,16 @@ export const PackageManifestTableHeaderWithCatalogSource = () => [
   },
 ];
 
-export const PackageManifestTableRow: RowFunction<
+export const PackageManifestTableRow: React.FC<RowComponentProps<
   PackageManifestKind,
   { catalogSource: CatalogSourceKind }
-> = ({ obj: packageManifest, index, key, style, customData }) => {
+>> = ({ obj: packageManifest, index, rowKey, style, customData }) => {
   const channel = defaultChannelFor(packageManifest);
 
   const { displayName, version, provider } = channel?.currentCSVDesc;
 
   return (
-    <TableRow id={packageManifest.metadata.uid} index={index} trKey={key} style={style}>
+    <TableRow id={packageManifest.metadata.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses[0]}>
         <ClusterServiceVersionLogo
           displayName={displayName}

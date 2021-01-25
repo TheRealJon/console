@@ -345,9 +345,9 @@ export const ResourceQuotasList = (props) => {
       },
     ];
   };
-  const ResourceQuotaTableRow = ({ obj: rq, index, key, style }) => {
+  const ResourceQuotaTableRow = ({ obj: rq, index, rowKey, style }) => {
     return (
-      <TableRow id={rq.metadata.uid} index={index} trKey={key} style={style}>
+      <TableRow id={rq.metadata.uid} index={index} trKey={rowKey} style={style}>
         <TableData className={tableColumnClasses[0]}>
           <ResourceLink
             kind={quotaKind(rq)}

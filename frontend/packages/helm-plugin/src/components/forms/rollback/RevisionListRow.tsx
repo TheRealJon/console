@@ -1,13 +1,13 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import { Status, RadioButtonField } from '@console/shared';
-import { TableRow, TableData, RowFunction } from '@console/internal/components/factory';
+import { TableRow, TableData, RowComponentProps } from '@console/internal/components/factory';
 import { Timestamp } from '@console/internal/components/utils';
 import { tableColumnClasses } from './RevisionListHeader';
 
-const RevisionListRow: RowFunction = ({ obj, index, key, style }) => {
+const RevisionListRow: React.FC<RowComponentProps> = ({ obj, index, rowKey, style }) => {
   return (
-    <TableRow id={obj.revision} index={index} trKey={key} style={style}>
+    <TableRow id={obj.revision} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses.input}>
         <RadioButtonField value={obj.version} name="revision" />
       </TableData>

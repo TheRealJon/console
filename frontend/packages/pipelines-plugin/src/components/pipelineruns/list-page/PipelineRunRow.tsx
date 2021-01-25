@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
-import { TableRow, TableData, RowFunction } from '@console/internal/components/factory';
+import { TableRow, TableData, RowComponentProps } from '@console/internal/components/factory';
 import { ResourceLink, Timestamp } from '@console/internal/components/utils';
 import { referenceForModel } from '@console/internal/module/k8s';
 import { pipelineRunFilterReducer } from '../../../utils/pipeline-filter-reducer';
@@ -30,9 +30,14 @@ const PLRStatus: React.FC<PLRStatusProps> = ({ obj }) => {
   );
 };
 
-const PipelineRunRow: RowFunction<PipelineRun> = ({ obj, index, key, style }) => {
+const PipelineRunRow: React.FC<RowComponentProps<PipelineRun>> = ({
+  obj,
+  index,
+  rowKey,
+  style,
+}) => {
   return (
-    <TableRow id={obj.metadata.uid} index={index} trKey={key} style={style}>
+    <TableRow id={obj.metadata.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses[0]}>
         <ResourceLink
           kind={pipelinerunReference}

@@ -13,7 +13,7 @@ import {
   Table,
   TableRow,
   TableData,
-  RowFunctionArgs,
+  RowComponentProps,
 } from '@console/internal/components/factory';
 import {
   Kebab,
@@ -197,10 +197,15 @@ const menuActions = [
   },
 ];
 
-export const SubscriptionTableRow: React.FC<RowFunctionArgs> = ({ obj, index, key, style }) => {
+export const SubscriptionTableRow: React.FC<RowComponentProps> = ({
+  obj,
+  index,
+  rowKey,
+  style,
+}) => {
   const { t } = useTranslation();
   return (
-    <TableRow id={obj.metadata.uid} index={index} trKey={key} style={style}>
+    <TableRow id={obj.metadata.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses[0]}>
         <ResourceLink
           kind={referenceForModel(SubscriptionModel)}

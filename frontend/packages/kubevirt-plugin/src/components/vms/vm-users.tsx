@@ -4,7 +4,12 @@ import { useTranslation } from 'react-i18next';
 import { TFunction } from 'i18next';
 import { sortable } from '@patternfly/react-table';
 import { fromNow } from '@console/internal/components/utils/datetime';
-import { Table, TableRow, TableData } from '@console/internal/components/factory';
+import {
+  Table,
+  TableRow,
+  TableData,
+  RowComponentProps,
+} from '@console/internal/components/factory';
 import { Timestamp } from '@console/internal/components/utils/timestamp';
 import { getGuestAgentFieldNotAvailMsg } from '../../utils/guest-agent-strings';
 import { isGuestAgentInstalled } from '../dashboards-page/vm-dashboard/vm-alerts';
@@ -48,9 +53,9 @@ const UsersTableHeader = (t: TFunction) => () => {
 };
 UsersTableHeader.displayName = 'UsersTableHeader';
 
-const UsersTableRow = ({ obj: user, index, key, style }) => {
+const UsersTableRow: React.FC<RowComponentProps> = ({ obj: user, index, rowKey, style }) => {
   return (
-    <TableRow id={user?.metadata?.uid} index={index} trKey={key} style={style}>
+    <TableRow id={user?.metadata?.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses[0]}>{user?.metadata?.userName}</TableData>
       <TableData className={classNames(tableColumnClasses[1], 'co-break-word')}>
         {user?.metadata?.domain}

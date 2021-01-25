@@ -21,7 +21,7 @@ import {
   TableData,
   ListPage,
   Table,
-  RowFunction,
+  RowComponentProps,
 } from '@console/internal/components/factory';
 import {
   NamespaceModel,
@@ -106,7 +106,13 @@ const Header = (disableItems = {}) => () =>
     },
   ].filter((item) => !disableItems[item.title]);
 
-const Row: RowFunction<VolumeSnapshotKind> = ({ key, obj, style, index, customData }) => {
+const Row: React.FC<RowComponentProps<VolumeSnapshotKind>> = ({
+  rowKey,
+  obj,
+  style,
+  index,
+  customData,
+}) => {
   const { name, namespace, creationTimestamp } = obj?.metadata || {};
   const size = obj?.status?.restoreSize;
   const sizeBase = convertToBaseValue(size);
@@ -118,7 +124,7 @@ const Row: RowFunction<VolumeSnapshotKind> = ({ key, obj, style, index, customDa
   const snapshotContent = obj?.status?.boundVolumeSnapshotContentName;
   const snapshotClass = obj?.spec?.volumeSnapshotClassName;
   return (
-    <TableRow id={obj?.metadata?.uid} index={index} trKey={key} style={style}>
+    <TableRow id={obj?.metadata?.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses[0]}>
         <ResourceLink
           kind={referenceForModel(VolumeSnapshotModel)}

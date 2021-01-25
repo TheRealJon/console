@@ -12,7 +12,7 @@ import { MachineAutoscalerModel, MachineModel, MachineSetModel } from '../models
 import { K8sKind, MachineDeploymentKind, MachineSetKind, referenceForModel } from '../module/k8s';
 import { MachinePage } from './machine';
 import { configureMachineAutoscalerModal, configureReplicaCountModal } from './modals';
-import { DetailsPage, ListPage, Table, TableRow, TableData, RowFunction } from './factory';
+import { DetailsPage, ListPage, Table, TableRow, TableData, RowComponentProps } from './factory';
 import {
   Kebab,
   KebabAction,
@@ -282,9 +282,14 @@ export const MachineSetList: React.SFC = (props) => {
     ];
   };
 
-  const MachineSetTableRow: RowFunction<MachineSetKind> = ({ obj, index, key, style }) => {
+  const MachineSetTableRow: React.FC<RowComponentProps<MachineSetKind>> = ({
+    obj,
+    index,
+    rowKey,
+    style,
+  }) => {
     return (
-      <TableRow id={obj.metadata.uid} index={index} trKey={key} style={style}>
+      <TableRow id={obj.metadata.uid} index={index} trKey={rowKey} style={style}>
         <TableData className={tableColumnClasses[0]}>
           <ResourceLink
             kind={machineSetReference}

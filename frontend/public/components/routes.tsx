@@ -7,7 +7,7 @@ import { sortable } from '@patternfly/react-table';
 import { EyeIcon, EyeSlashIcon, QuestionCircleIcon } from '@patternfly/react-icons';
 
 import { Status } from '@console/shared';
-import { DetailsPage, ListPage, Table, TableRow, TableData, RowFunction } from './factory';
+import { DetailsPage, ListPage, Table, TableRow, TableData, RowComponentProps } from './factory';
 import {
   CopyToClipboard,
   DetailsItem,
@@ -151,9 +151,14 @@ const tableColumnClasses = [
 
 const kind = 'Route';
 
-const RouteTableRow: RowFunction<RouteKind> = ({ obj: route, index, key, style }) => {
+const RouteTableRow: React.FC<RowComponentProps<RouteKind>> = ({
+  obj: route,
+  index,
+  rowKey,
+  style,
+}) => {
   return (
-    <TableRow id={route.metadata.uid} index={index} trKey={key} style={style}>
+    <TableRow id={route.metadata.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses[0]}>
         <ResourceLink
           kind={kind}

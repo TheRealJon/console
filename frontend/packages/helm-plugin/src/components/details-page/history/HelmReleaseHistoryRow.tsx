@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import { Trans, useTranslation } from 'react-i18next';
 import { TFunction } from 'i18next';
 import { Status } from '@console/shared';
-import { TableRow, TableData, RowFunction } from '@console/internal/components/factory';
+import { TableRow, TableData, RowComponentProps } from '@console/internal/components/factory';
 import { Timestamp, Kebab } from '@console/internal/components/utils';
 import { confirmModal } from '@console/internal/components/modals';
 import { coFetchJSON } from '@console/internal/co-fetch';
@@ -54,8 +54,8 @@ const HelmReleaseHistoryKebab: React.FC<HelmReleaseHistoryKebabProps> = ({ obj }
   return <Kebab options={menuActions} />;
 };
 
-const HelmReleaseHistoryRow: RowFunction = ({ obj, index, key, style }) => (
-  <TableRow id={obj.revision} index={index} trKey={key} style={style}>
+const HelmReleaseHistoryRow: React.FC<RowComponentProps> = ({ obj, index, rowKey, style }) => (
+  <TableRow id={obj.revision} index={index} trKey={rowKey} style={style}>
     <TableData className={tableColumnClasses.revision}>{obj.version}</TableData>
     <TableData className={tableColumnClasses.updated}>
       <Timestamp timestamp={obj.info.last_deployed} />

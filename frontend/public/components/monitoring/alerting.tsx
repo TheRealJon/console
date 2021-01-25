@@ -45,7 +45,7 @@ import {
   silenceState,
 } from '../../reducers/monitoring';
 import store, { RootState } from '../../redux';
-import { RowFunction, Table, TableData, TableRow } from '../factory';
+import { RowComponentProps, Table, TableData, TableRow } from '../factory';
 import { FilterToolbar, RowFilter } from '../filter-toolbar';
 import { confirmModal } from '../modals';
 import { PrometheusLabels } from '../graphs';
@@ -427,12 +427,12 @@ const SilenceMatchersList = ({ silence }) => (
   </div>
 );
 
-const SilenceTableRow: RowFunction<Silence> = ({ index, key, obj, style }) => {
+const SilenceTableRow: React.FC<RowComponentProps<Silence>> = ({ index, rowKey, obj, style }) => {
   const { createdBy, endsAt, firingAlerts, id, name, startsAt } = obj;
   const state = silenceState(obj);
 
   return (
-    <TableRow id={id} index={index} trKey={key} style={style}>
+    <TableRow id={id} index={index} trKey={rowKey} style={style}>
       <TableData className={tableSilenceClasses[0]}>
         <div className="co-resource-item">
           <MonitoringResourceIcon resource={SilenceResource} />
@@ -1119,12 +1119,12 @@ const tableAlertClasses = [
   Kebab.columnClass,
 ];
 
-const AlertTableRow: RowFunction<Alert> = ({ index, key, obj, style }) => {
+const AlertTableRow: React.FC<RowComponentProps<Alert>> = ({ index, rowKey, obj, style }) => {
   const { annotations = {}, labels } = obj;
   const state = alertState(obj);
 
   return (
-    <TableRow id={obj.rule.id} index={index} trKey={key} style={style}>
+    <TableRow id={obj.rule.id} index={index} trKey={rowKey} style={style}>
       <TableData className={tableAlertClasses[0]}>
         <div className="co-resource-item">
           <MonitoringResourceIcon resource={AlertResource} />
@@ -1285,7 +1285,6 @@ const MonitoringListPage = connect(filtersToProps)(MonitoringListPage_);
 
 const AlertsPage_: React.FC<Alerts> = ({ data, loaded, loadError }) => {
   const { t } = useTranslation();
-
   const Header = () => [
     {
       title: t('public~Name'),
@@ -1378,8 +1377,8 @@ const tableRuleClasses = [
   classNames('col-sm-2', 'col-xs-2'),
 ];
 
-const RuleTableRow: RowFunction<Rule> = ({ index, key, obj, style }) => (
-  <TableRow id={obj.id} index={index} trKey={key} style={style}>
+const RuleTableRow: React.FC<RowComponentProps<Rule>> = ({ index, rowKey, obj, style }) => (
+  <TableRow id={obj.id} index={index} trKey={rowKey} style={style}>
     <TableData className={tableRuleClasses[0]}>
       <div className="co-resource-item">
         <MonitoringResourceIcon resource={RuleResource} />

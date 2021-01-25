@@ -36,7 +36,7 @@ import {
   MultiListPage,
   TableRow,
   TableData,
-  RowFunction,
+  RowComponentProps,
 } from '@console/internal/components/factory';
 import {
   FirehoseResult,
@@ -129,7 +129,7 @@ const PendingChanges: React.FC = () => {
   return <div className="kv-vm-row_status-extra-label">{t('kubevirt-plugin~Pending changes')}</div>;
 };
 
-const VMRow: RowFunction<VMRowObjType> = ({ obj, index, key, style }) => {
+const VMRow: React.FC<RowComponentProps<VMRowObjType>> = ({ obj, index, rowKey, style }) => {
   const { vm, vmi, vmImport } = obj;
   const { name, namespace, node, creationTimestamp, uid, vmStatusBundle } = obj.metadata;
   const dimensify = dimensifyRow(tableColumnClasses);
@@ -156,7 +156,7 @@ const VMRow: RowFunction<VMRowObjType> = ({ obj, index, key, style }) => {
   const arePendingChanges = hasPendingChanges(vm, vmi);
 
   return (
-    <TableRow key={`${key}${name}`} id={uid} index={index} trKey={key} style={style}>
+    <TableRow key={`${rowKey}${name}`} id={uid} index={index} trKey={rowKey} style={style}>
       <TableData className={dimensify()}>
         <ResourceLink kind={model?.kind} name={name} namespace={namespace} />
       </TableData>

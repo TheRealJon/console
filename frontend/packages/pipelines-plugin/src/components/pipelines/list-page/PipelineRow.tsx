@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { TableRow, TableData, RowFunction } from '@console/internal/components/factory';
+import { TableRow, TableData, RowComponentProps } from '@console/internal/components/factory';
 import { ResourceLink, Timestamp } from '@console/internal/components/utils';
 import { referenceForModel } from '@console/internal/module/k8s';
 import { pipelineFilterReducer } from '../../../utils/pipeline-filter-reducer';
@@ -29,13 +29,13 @@ const PipelineStatus: React.FC<PipelineStatusProps> = ({ obj }) => {
   );
 };
 
-const PipelineRow: RowFunction<Pipeline> = ({ obj, index, key, style }) => {
+const PipelineRow: React.FC<RowComponentProps<Pipeline>> = ({ obj, index, rowKey, style }) => {
   return (
     <TableRow
       id={obj.metadata.uid}
       data-test-id={`${obj.metadata.namespace}-${obj.metadata.name}`}
       index={index}
-      trKey={key}
+      trKey={rowKey}
       style={style}
     >
       <TableData className={tableColumnClasses[0]}>

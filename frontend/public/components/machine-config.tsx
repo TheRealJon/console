@@ -7,7 +7,7 @@ import { TFunction } from 'i18next';
 
 import { MachineConfigKind, referenceForModel } from '../module/k8s';
 import { MachineConfigModel } from '../models';
-import { DetailsPage, ListPage, Table, TableRow, TableData, RowFunction } from './factory';
+import { DetailsPage, ListPage, Table, TableRow, TableData, RowComponentProps } from './factory';
 import {
   Kebab,
   navFactory,
@@ -73,9 +73,14 @@ const tableColumnClasses = [
   Kebab.columnClass,
 ];
 
-const MachineConfigTableRow: RowFunction<MachineConfigKind> = ({ obj, index, key, style }) => {
+const MachineConfigTableRow: React.FC<RowComponentProps<MachineConfigKind>> = ({
+  obj,
+  index,
+  rowKey,
+  style,
+}) => {
   return (
-    <TableRow id={obj.metadata.uid} index={index} trKey={key} style={style}>
+    <TableRow id={obj.metadata.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses[0]}>
         <ResourceLink
           kind={machineConfigReference}

@@ -6,7 +6,7 @@ import {
   Table,
   MultiListPage,
   DetailsPage,
-  RowFunctionArgs,
+  RowComponentProps,
   TableRow,
 } from '@console/internal/components/factory';
 import { ResourceKebab, ResourceLink, Kebab } from '@console/internal/components/utils';
@@ -55,12 +55,14 @@ describe('SubscriptionTableRow', () => {
   let subscription: SubscriptionKind;
 
   const updateWrapper = () => {
-    const rowArgs: RowFunctionArgs<SubscriptionKind> = {
+    const rowArgs: RowComponentProps<SubscriptionKind> = {
       obj: subscription,
       index: 0,
-      key: '0',
+      rowKey: '0',
       style: {},
-    } as any;
+      columns: [],
+      isScrolling: false,
+    };
 
     wrapper = shallow(<SubscriptionTableRow {...rowArgs} />);
     return wrapper;

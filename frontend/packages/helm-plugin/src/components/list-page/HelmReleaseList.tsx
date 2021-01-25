@@ -134,7 +134,7 @@ const HelmReleaseList: React.FC<HelmReleaseListProps> = ({ namespace }) => {
       sortOrder={SortByDirection.asc}
       rowFilterReducer={filterHelmReleasesByStatus}
       textFilterReducer={filterHelmReleasesByName}
-      resourceRow={HelmReleaseListRow}
+      ResourceRow={HelmReleaseListRow}
       resourceHeader={HelmReleaseListHeader(t)}
     />
   );

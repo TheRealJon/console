@@ -18,7 +18,7 @@ import { useTranslation } from 'react-i18next';
 import { K8sResourceKind } from '../../module/k8s';
 import { history, Kebab, MsgBox, SectionHeading, StatusBox } from '../utils';
 import { confirmModal, createAlertRoutingModal } from '../modals';
-import { Table, TableData, TableRow, TextFilter, RowFunction } from '../factory';
+import { Table, TableData, TableRow, TextFilter, RowComponentProps } from '../factory';
 import {
   getAlertmanagerConfig,
   patchAlertmanagerConfig,
@@ -257,13 +257,13 @@ const ReceiversTable: React.FC<ReceiverTableProps> = (props) => {
       },
     ];
   };
-  const ReceiverTableRow: RowFunction<
+  const ReceiverTableRow: React.FC<RowComponentProps<
     AlertmanagerReceiver,
     {
       routingLabelsByReceivers: RoutingLabelsByReceivers[];
       defaultReceiverName: string;
     }
-  > = ({ obj: receiver, index, key, style }) => {
+  >> = ({ obj: receiver, index, rowKey, style }) => {
     // filter to routing labels belonging to current Receiver
     const receiverRoutingLabels = _.filter(routingLabelsByReceivers, { receiver: receiver.name });
     const receiverIntegrationTypes = getIntegrationTypes(receiver);
@@ -311,7 +311,7 @@ const ReceiversTable: React.FC<ReceiverTableProps> = (props) => {
     ];
 
     return (
-      <TableRow id={index} index={index} trKey={key} style={style}>
+      <TableRow id={index} index={index} trKey={rowKey} style={style}>
         <TableData className={tableColumnClasses[0]}>{receiver.name}</TableData>
         <TableData className={tableColumnClasses[1]}>
           {(receiver.name === InitialReceivers.Critical ||

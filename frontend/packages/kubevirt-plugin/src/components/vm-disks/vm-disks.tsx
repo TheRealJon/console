@@ -4,7 +4,7 @@ import { TFunction } from 'i18next';
 import { Button, Popover } from '@patternfly/react-core';
 import { sortable } from '@patternfly/react-table';
 import { QuestionCircleIcon } from '@patternfly/react-icons';
-import { RowFunction, Table, MultiListPage } from '@console/internal/components/factory';
+import { RowComponentProps, Table, MultiListPage } from '@console/internal/components/factory';
 import { PersistentVolumeClaimModel, TemplateModel } from '@console/internal/models';
 import { Firehose, FirehoseResult } from '@console/internal/components/utils';
 import { useSafetyFirst } from '@console/internal/components/safety-first';
@@ -67,7 +67,7 @@ const getStoragesData = ({
 export type VMDisksTableProps = {
   data?: any[];
   customData?: object;
-  Row: RowFunction;
+  Row: React.FC<RowComponentProps>;
   loaded: boolean;
 };
 

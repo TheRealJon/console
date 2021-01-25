@@ -35,7 +35,7 @@ import {
   TableData,
   TableProps,
   MultiListPage,
-  RowFunction,
+  RowComponentProps,
 } from '@console/internal/components/factory';
 import { ConfigMapModel } from '@console/internal/models';
 import { PopoverStatus, StatusIconAndText } from '@console/shared';
@@ -342,7 +342,7 @@ const tableColumnClasses = [
   Kebab.columnClass,
 ];
 
-const CatalogSourceTableRow: RowFunction<CatalogSourceTableRowObj> = ({
+const CatalogSourceTableRow: React.FC<RowComponentProps<CatalogSourceTableRowObj>> = ({
   obj: {
     availability = '-',
     disabled = false,
@@ -357,7 +357,7 @@ const CatalogSourceTableRow: RowFunction<CatalogSourceTableRowObj> = ({
     source,
   },
   index,
-  key,
+  rowKey,
   style,
 }) => (
   <TableRow
@@ -365,7 +365,7 @@ const CatalogSourceTableRow: RowFunction<CatalogSourceTableRowObj> = ({
     id={source ? source.metadata.uid : index}
     index={index}
     style={style}
-    trKey={key}
+    trKey={rowKey}
   >
     <TableData className={tableColumnClasses[0]}>
       {source ? (

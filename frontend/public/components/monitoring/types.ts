@@ -1,6 +1,6 @@
 import { APIError } from '@console/shared';
 
-import { RowFunction } from '../factory';
+import { RowComponentProps } from '../factory';
 import { RowFilter } from '../filter-toolbar';
 import { PrometheusLabels } from '../graphs';
 
@@ -144,7 +144,7 @@ export type ListPageProps = {
   loadError?: string;
   nameFilterID: string;
   reduxID: string;
-  Row: RowFunction;
+  Row: React.FC<RowComponentProps>;
   rowFilters: RowFilter[];
   showTitle?: boolean;
 };

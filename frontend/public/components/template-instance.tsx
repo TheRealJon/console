@@ -4,7 +4,7 @@ import * as classNames from 'classnames';
 import { sortable } from '@patternfly/react-table';
 
 import { Status } from '@console/shared';
-import { DetailsPage, ListPage, Table, TableRow, TableData, RowFunction } from './factory';
+import { DetailsPage, ListPage, Table, TableRow, TableData, RowComponentProps } from './factory';
 import { Conditions } from './conditions';
 import { getTemplateInstanceStatus, referenceFor, TemplateInstanceKind } from '../module/k8s';
 import {
@@ -54,14 +54,14 @@ const TemplateInstanceTableHeader = () => {
 };
 TemplateInstanceTableHeader.displayName = 'TemplateInstanceTableHeader';
 
-const TemplateInstanceTableRow: RowFunction<TemplateInstanceKind> = ({
+const TemplateInstanceTableRow: React.FC<RowComponentProps<TemplateInstanceKind>> = ({
   obj,
   index,
-  key,
+  rowKey,
   style,
 }) => {
   return (
-    <TableRow id={obj.metadata.uid} index={index} trKey={key} style={style}>
+    <TableRow id={obj.metadata.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={classNames(tableColumnClasses[0], 'co-break-word')}>
         <ResourceLink
           kind="TemplateInstance"

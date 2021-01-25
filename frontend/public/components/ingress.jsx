@@ -67,9 +67,9 @@ const tableColumnClasses = [
 
 const kind = 'Ingress';
 
-const IngressTableRow = ({ obj: ingress, index, key, style }) => {
+const IngressTableRow = ({ obj: ingress, index, rowKey, style }) => {
   return (
-    <TableRow id={ingress.metadata.uid} index={index} trKey={key} style={style}>
+    <TableRow id={ingress.metadata.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses[0]}>
         <ResourceLink
           kind={kind}

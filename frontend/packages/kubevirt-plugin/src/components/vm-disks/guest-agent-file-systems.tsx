@@ -5,7 +5,12 @@ import * as classNames from 'classnames';
 import { sortable } from '@patternfly/react-table';
 import { Button, Popover } from '@patternfly/react-core';
 import { QuestionCircleIcon } from '@patternfly/react-icons';
-import { TableRow, TableData, Table } from '@console/internal/components/factory';
+import {
+  TableRow,
+  TableData,
+  Table,
+  RowComponentProps,
+} from '@console/internal/components/factory';
 import { humanizeBinaryBytes } from '@console/internal/components/utils';
 import { useGuestAgentInfo } from '../../hooks/use-guest-agent-info';
 import { GuestAgentInfoWrapper } from '../../k8s/wrapper/vm/guest-agent-info/guest-agent-info-wrapper';
@@ -60,9 +65,14 @@ const FileSystemsTableHeader = (t: TFunction) => () => {
 };
 FileSystemsTableHeader.displayName = 'FileSystemsTableHeader';
 
-const FileSystemTableRow = ({ obj: fileSystem, index, key, style }) => {
+const FileSystemTableRow: React.FC<RowComponentProps> = ({
+  obj: fileSystem,
+  index,
+  rowKey,
+  style,
+}) => {
   return (
-    <TableRow id={fileSystem?.metadata?.uid} index={index} trKey={key} style={style}>
+    <TableRow id={fileSystem?.metadata?.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses[0]}>{fileSystem?.metadata?.name}</TableData>
       <TableData className={tableColumnClasses[1]}>
         {fileSystem?.metadata?.fileSystemType}

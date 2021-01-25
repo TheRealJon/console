@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { TableRow, TableData, RowFunction } from '@console/internal/components/factory';
+import { TableRow, TableData, RowComponentProps } from '@console/internal/components/factory';
 import { ResourceLink, Timestamp, Kebab, ResourceKebab } from '@console/internal/components/utils';
 import { referenceForModel } from '@console/internal/module/k8s';
 import { TaskRunKind, getModelReferenceFromTaskKind } from '../../../utils/pipeline-augment';
@@ -12,8 +12,14 @@ import TaskRunStatus from '../status/TaskRunStatus';
 const taskRunsReference = referenceForModel(TaskRunModel);
 const pipelineReference = referenceForModel(PipelineModel);
 
-const TaskRunsRow: RowFunction<TaskRunKind> = ({ obj, index, key, style, ...props }) => (
-  <TableRow id={obj.metadata.uid} index={index} trKey={key} style={style}>
+const TaskRunsRow: React.FC<RowComponentProps<TaskRunKind>> = ({
+  obj,
+  index,
+  rowKey,
+  style,
+  ...props
+}) => (
+  <TableRow id={obj.metadata.uid} index={index} trKey={rowKey} style={style}>
     <TableData className={tableColumnClasses[0]}>
       <ResourceLink
         kind={taskRunsReference}

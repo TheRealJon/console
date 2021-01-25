@@ -1,13 +1,13 @@
 import { shallow, ShallowWrapper } from 'enzyme';
 import * as _ from 'lodash';
 import { ClampedText } from '@console/shared';
-import { TableData, RowFunctionArgs } from '@console/internal/components/factory';
+import { TableData, RowComponentProps } from '@console/internal/components/factory';
 import { ExternalLink } from '@console/internal/components/utils';
 import { knativeServiceObj } from '../../../topology/__tests__/topology-knative-test-data';
 import ServiceRow from '../ServiceRow';
 import { ServiceKind } from '../../../types';
 
-let svcData: RowFunctionArgs<ServiceKind>;
+let svcData: RowComponentProps<ServiceKind>;
 let wrapper: ShallowWrapper;
 
 describe('ServiceRow', () => {
@@ -15,7 +15,7 @@ describe('ServiceRow', () => {
     svcData = {
       obj: knativeServiceObj,
       index: 0,
-      key: '0',
+      rowKey: '0',
       style: {
         height: 'auto',
         left: 0,

@@ -1,22 +1,17 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Table, RowFunction } from '@console/internal/components/factory';
+import { Table, RowComponentProps } from '@console/internal/components/factory';
 import { dimensifyHeader } from '@console/shared';
 import { sortable } from '@patternfly/react-table';
 
 export type VMCDsTableProps = {
   data?: any[];
   customData?: object;
-  row: RowFunction;
+  Row: React.FC<RowComponentProps>;
   columnClasses: string[];
 };
 
-export const VMCDsTable: React.FC<VMCDsTableProps> = ({
-  data,
-  customData,
-  row: Row,
-  columnClasses,
-}) => {
+export const VMCDsTable: React.FC<VMCDsTableProps> = ({ data, customData, Row, columnClasses }) => {
   const { t } = useTranslation();
 
   return (

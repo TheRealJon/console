@@ -166,9 +166,9 @@ const ReplicaSetsList = (props) => {
     },
   ];
 
-  const ReplicaSetTableRow = ({ obj, index, key, style }) => {
+  const ReplicaSetTableRow = ({ obj, index, rowKey, style }) => {
     return (
-      <TableRow id={obj.metadata.uid} index={index} trKey={key} style={style}>
+      <TableRow id={obj.metadata.uid} index={index} trKey={rowKey} style={style}>
         <TableData className={tableColumnClasses[0]}>
           <ResourceLink
             kind={kind}

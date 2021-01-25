@@ -5,12 +5,17 @@ import * as classNames from 'classnames';
 import { sortable } from '@patternfly/react-table';
 import { Kebab, ResourceLink } from '@console/internal/components/utils';
 import { DASH, getName, getUID, getNamespace, SecondaryStatus } from '@console/shared';
-import { TableRow, TableData, Table, RowFunction } from '@console/internal/components/factory';
+import {
+  TableRow,
+  TableData,
+  Table,
+  RowComponentProps,
+} from '@console/internal/components/factory';
 import { referenceForModel } from '@console/internal/module/k8s';
 import NodeRoles from '@console/app/src/components/nodes/NodeRoles';
 import { MachineModel, NodeModel } from '@console/internal/models';
 
-import { BareMetalNodeBundle, BareMetalNodeListBundle, isCSRBundle, CSRBundle } from '../types';
+import { BareMetalNodeBundle, isCSRBundle, CSRBundle } from '../types';
 import { getHostBMCAddress } from '../../selectors';
 import { BareMetalHostModel } from '../../models';
 import { baremetalNodeSecondaryStatus } from '../../status/baremetal-node-status';
@@ -67,12 +72,7 @@ const BareMetalNodesTableHeader = (t: TFunction) => () => [
   },
 ];
 
-const CSRTableRow: React.FC<BareMetalNodesTableRowProps<CSRBundle>> = ({
-  obj,
-  index,
-  rowKey,
-  style,
-}) => {
+const CSRTableRow: React.FC<RowComponentProps<CSRBundle>> = ({ obj, index, rowKey, style }) => {
   return (
     <TableRow id={obj.csr.metadata.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses.name}>{obj.metadata.name}</TableData>
@@ -87,14 +87,7 @@ const CSRTableRow: React.FC<BareMetalNodesTableRowProps<CSRBundle>> = ({
   );
 };
 
-type BareMetalNodesTableRowProps<R = CSRBundle | BareMetalNodeBundle> = {
-  obj: R;
-  index: number;
-  rowKey: string;
-  style: object;
-};
-
-const BareMetalNodesTableRow: React.FC<BareMetalNodesTableRowProps<BareMetalNodeBundle>> = ({
+const BareMetalNodesTableRow: React.FC<RowComponentProps<BareMetalNodeBundle>> = ({
   obj: { host, node, nodeMaintenance, machine, status, csr },
   index,
   rowKey,
@@ -162,34 +155,18 @@ type BareMetalNodesTableProps = React.ComponentProps<typeof Table> & {
   data: BareMetalNodeBundle[];
 };
 
+const Row: React.FC<RowComponentProps> = (props) =>
+  isCSRBundle(props.obj) ? <CSRTableRow {...props} /> : <BareMetalNodesTableRow {...props} />;
+
 const BareMetalNodesTable: React.FC<BareMetalNodesTableProps> = (props) => {
   const { t } = useTranslation();
-  const row = React.useCallback<RowFunction<BareMetalNodeListBundle>>(
-    (rowProps) =>
-      isCSRBundle(rowProps.obj) ? (
-        <CSRTableRow
-          obj={rowProps.obj}
-          index={rowProps.index}
-          rowKey={rowProps.key}
-          style={rowProps.style}
-        />
-      ) : (
-        <BareMetalNodesTableRow
-          obj={rowProps.obj}
-          index={rowProps.index}
-          rowKey={rowProps.key}
-          style={rowProps.style}
-        />
-      ),
-    [],
-  );
   return (
     <Table
       {...props}
       defaultSortField="node.metadata.name"
       aria-label={t('metal3-plugin~Nodes')}
       Header={BareMetalNodesTableHeader(t)}
-      Row={row}
+      Row={Row}
       virtualize
     />
   );

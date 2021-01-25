@@ -1,7 +1,12 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import * as cx from 'classnames';
-import { Table, TableRow, TableData, RowFunction } from '@console/internal/components/factory';
+import {
+  Table,
+  TableRow,
+  TableData,
+  RowComponentProps,
+} from '@console/internal/components/factory';
 import { sortable, SortByDirection } from '@patternfly/react-table';
 import { Button } from '@patternfly/react-core';
 import { Modal } from '@console/shared';
@@ -16,9 +21,9 @@ const tableColumnClasses = [
   cx('pf-m-hidden', 'pf-m-visible-on-lg'),
 ];
 
-const DiskRow: RowFunction<Discoveries> = ({ obj, index, key, style }) => {
+const DiskRow: React.FC<RowComponentProps<Discoveries>> = ({ obj, index, rowKey, style }) => {
   return (
-    <TableRow id={obj.deviceID} index={index} trKey={key} style={style}>
+    <TableRow id={obj.deviceID} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses[0]}>{obj.path}</TableData>
       <TableData className={tableColumnClasses[1]}>{obj.node}</TableData>
       <TableData className={tableColumnClasses[2]}>{obj.type || '-'}</TableData>

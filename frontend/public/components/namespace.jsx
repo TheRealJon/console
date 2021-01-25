@@ -274,7 +274,7 @@ const namespacesRowStateToProps = ({ UI }) => ({
 });
 
 const NamespacesTableRow = connect(namespacesRowStateToProps)(
-  withTranslation()(({ obj: ns, index, key, style, metrics, t }) => {
+  withTranslation()(({ obj: ns, index, rowKey, style, metrics, t }) => {
     const [tableColumns, , loaded] = useUserSettingsCompatibility(
       COLUMN_MANAGEMENT_CONFIGMAP_KEY,
       COLUMN_MANAGEMENT_LOCAL_STORAGE_KEY,
@@ -292,7 +292,7 @@ const NamespacesTableRow = connect(namespacesRowStateToProps)(
         ? new Set(tableColumns[NamespacesColumnManagementID])
         : getNamespacesSelectedColumns();
     return (
-      <TableRow id={ns.metadata.uid} index={index} trKey={key} style={style}>
+      <TableRow id={ns.metadata.uid} index={index} trKey={rowKey} style={style}>
         <TableData className={namespaceColumnInfo.name.classes}>
           <ResourceLink kind="Namespace" name={ns.metadata.name} title={ns.metadata.uid} />
         </TableData>

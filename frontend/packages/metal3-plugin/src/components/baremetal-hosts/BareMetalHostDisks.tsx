@@ -2,7 +2,12 @@ import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import { TFunction } from 'i18next';
 import { sortable } from '@patternfly/react-table';
-import { Table, TableRow, TableData, RowFunction } from '@console/internal/components/factory';
+import {
+  Table,
+  TableRow,
+  TableData,
+  RowComponentProps,
+} from '@console/internal/components/factory';
 import { humanizeDecimalBytes } from '@console/internal/components/utils';
 import { getHostStorage } from '../../selectors';
 import { BareMetalHostDisk, BareMetalHostKind } from '../../types';
@@ -17,11 +22,16 @@ const DisksTableHeader = (t: TFunction) => () => [
   { title: t('metal3-plugin~HCTL'), sortField: 'hctl', transforms: [sortable] },
 ];
 
-const DisksTableRow: RowFunction<BareMetalHostDisk> = ({ obj, index, key, style }) => {
+const DisksTableRow: React.FC<RowComponentProps<BareMetalHostDisk>> = ({
+  obj,
+  index,
+  rowKey,
+  style,
+}) => {
   const { hctl, model, name, rotational, serialNumber, sizeBytes, vendor } = obj;
   const { string: size } = humanizeDecimalBytes(sizeBytes);
   return (
-    <TableRow id={name} index={index} trKey={key} style={style}>
+    <TableRow id={name} index={index} trKey={rowKey} style={style}>
       <TableData>{name}</TableData>
       <TableData>{size}</TableData>
       <TableData>{rotational ? 'Rotational' : 'SSD'}</TableData>

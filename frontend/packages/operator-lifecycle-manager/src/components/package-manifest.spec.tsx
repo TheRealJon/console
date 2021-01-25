@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { shallow, ShallowWrapper } from 'enzyme';
-import { TableRow, RowFunction } from '@console/internal/components/factory';
+import { TableRow, RowComponentProps } from '@console/internal/components/factory';
 import * as UIActions from '@console/internal/actions/ui';
 import { testPackageManifest, testCatalogSource } from '../../mocks';
 import {
@@ -33,24 +33,21 @@ describe(PackageManifestTableHeaderWithCatalogSource.displayName, () => {
 });
 
 describe('PackageManifestTableRow', () => {
-  let wrapper: ShallowWrapper<RowFunction<
-    PackageManifestKind,
-    { catalogSource: CatalogSourceKind }
+  let wrapper: ShallowWrapper<React.FC<
+    RowComponentProps<PackageManifestKind, { catalogSource: CatalogSourceKind }>
   >>;
 
   beforeEach(() => {
     jest.spyOn(UIActions, 'getActiveNamespace').mockReturnValue('default');
-
-    const columns: any[] = [];
     wrapper = shallow(
       <PackageManifestTableRow
         obj={testPackageManifest}
         customData={{ catalogSource: testCatalogSource }}
         index={0}
-        key={'0'}
+        rowKey={'0'}
         style={null}
-        isScrolling
-        columns={columns}
+        isScrolling={false}
+        columns={[]}
       />,
     );
   });
@@ -102,7 +99,7 @@ describe('PackageManifestTableRow', () => {
         obj={testPackageManifest}
         customData={{ catalogSource: null }}
         index={0}
-        key={'0'}
+        rowKey={'0'}
         style={null}
         isScrolling
         columns={columns}

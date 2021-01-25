@@ -14,7 +14,7 @@ import {
   Table,
   TableRow,
   TableData,
-  RowFunctionArgs,
+  RowComponentProps,
 } from '@console/internal/components/factory';
 import {
   Kebab,
@@ -45,6 +45,7 @@ import {
   nameForModel,
   CustomResourceDefinitionKind,
   definitionFor,
+  K8sResourceCommon,
 } from '@console/internal/module/k8s';
 import { ResourceEventStream } from '@console/internal/components/events';
 import { deleteModal } from '@console/internal/components/modals';
@@ -190,7 +191,12 @@ const getOperandStatusText = (operand: K8sResourceKind): string => {
   return status ? `${status.type}: ${status.value}` : '';
 };
 
-export const OperandTableRow: React.FC<OperandTableRowProps> = ({ obj, index, rowKey, style }) => {
+export const OperandTableRow: React.FC<RowComponentProps<K8sResourceCommon>> = ({
+  obj,
+  index,
+  rowKey,
+  style,
+}) => {
   const actionExtensions = useExtensions<ClusterServiceVersionAction>(
     isClusterServiceVersionAction,
   );
@@ -266,17 +272,7 @@ export const OperandList: React.FC<OperandListProps> = (props) => {
       },
     ];
   };
-  const Row = React.useCallback(
-    (rowArgs: RowFunctionArgs<K8sResourceKind>) => (
-      <OperandTableRow
-        obj={rowArgs.obj}
-        index={rowArgs.index}
-        rowKey={rowArgs.key}
-        style={rowArgs.style}
-      />
-    ),
-    [],
-  );
+
   const data = React.useMemo(
     () =>
       props.data?.map?.((obj) => {
@@ -311,7 +307,7 @@ export const OperandList: React.FC<OperandListProps> = (props) => {
       EmptyMsg={EmptyMsg}
       aria-label="Operands"
       Header={Header}
-      Row={Row}
+      Row={OperandTableRow}
       virtualize
     />
   );

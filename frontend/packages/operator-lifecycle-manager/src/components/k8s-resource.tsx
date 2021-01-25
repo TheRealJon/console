@@ -15,7 +15,7 @@ import {
   Table,
   TableRow,
   TableData,
-  RowFunction,
+  RowComponentProps,
 } from '@console/internal/components/factory';
 import {
   K8sResourceKind,
@@ -53,13 +53,13 @@ const tableColumnClasses = [
   classNames('col-lg-4', 'col-md-4', 'col-sm-4', 'hidden-xs'),
 ];
 
-export const ResourceTableRow: RowFunction<
+export const ResourceTableRow: React.FC<RowComponentProps<
   K8sResourceKind,
   {
     linkFor: (obj: K8sResourceKind, providedAPI: ProvidedAPI) => JSX.Element;
     providedAPI: ProvidedAPI;
   }
-> = ({ obj, index, style, customData: { linkFor, providedAPI } }) => (
+>> = ({ obj, index, style, customData: { linkFor, providedAPI } }) => (
   <TableRow id={obj.metadata.uid} index={index} trKey={obj.metadata.uid} style={style}>
     <TableData className={tableColumnClasses[0]}>{linkFor(obj, providedAPI)}</TableData>
     <TableData className={tableColumnClasses[1]}>{obj.kind}</TableData>

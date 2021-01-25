@@ -6,7 +6,7 @@ import { sortable } from '@patternfly/react-table';
 
 import { GroupModel, UserModel } from '../models';
 import { referenceForModel, GroupKind, K8sKind } from '../module/k8s';
-import { DetailsPage, ListPage, Table, TableRow, TableData, RowFunction } from './factory';
+import { DetailsPage, ListPage, Table, TableRow, TableData, RowComponentProps } from './factory';
 import { addUsersModal, removeUserModal } from './modals';
 import { RoleBindingsPage } from './RBAC';
 import {
@@ -55,9 +55,9 @@ const tableColumnClasses = [
   Kebab.columnClass,
 ];
 
-const GroupTableRow: RowFunction<GroupKind> = ({ obj, index, key, style }) => {
+const GroupTableRow: React.FC<RowComponentProps<GroupKind>> = ({ obj, index, rowKey, style }) => {
   return (
-    <TableRow id={obj.metadata.uid} index={index} trKey={key} style={style}>
+    <TableRow id={obj.metadata.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses[0]}>
         <ResourceLink kind={referenceForModel(GroupModel)} name={obj.metadata.name} />
       </TableData>

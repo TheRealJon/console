@@ -7,7 +7,7 @@ import { SyncAltIcon, UnknownIcon } from '@patternfly/react-icons';
 import { useTranslation } from 'react-i18next';
 
 import { ClusterOperatorModel } from '../../models';
-import { DetailsPage, ListPage, Table, TableRow, TableData, RowFunction } from '../factory';
+import { DetailsPage, ListPage, Table, TableRow, TableData, RowComponentProps } from '../factory';
 import { Conditions } from '../conditions';
 import {
   getClusterOperatorStatus,
@@ -65,11 +65,16 @@ const tableColumnClasses = [
   Kebab.columnClass,
 ];
 
-const ClusterOperatorTableRow: RowFunction<ClusterOperator> = ({ obj, index, key, style }) => {
+const ClusterOperatorTableRow: React.FC<RowComponentProps<ClusterOperator>> = ({
+  obj,
+  index,
+  rowKey,
+  style,
+}) => {
   const { status, message } = getStatusAndMessage(obj);
   const operatorVersion = getClusterOperatorVersion(obj);
   return (
-    <TableRow id={obj.metadata.uid} index={index} trKey={key} style={style}>
+    <TableRow id={obj.metadata.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses[0]}>
         <ResourceLink
           kind={clusterOperatorReference}

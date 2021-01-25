@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as cx from 'classnames';
 import * as _ from 'lodash';
 import { ClampedText } from '@console/shared';
-import { TableRow, TableData, RowFunction } from '@console/internal/components/factory';
+import { TableRow, TableData, RowComponentProps } from '@console/internal/components/factory';
 import { ResourceLink, ResourceKebab, Timestamp } from '@console/internal/components/utils';
 import { referenceForModel } from '@console/internal/module/k8s';
 import { RevisionModel, ServiceModel } from '../../models';
@@ -14,13 +14,13 @@ import { getRevisionActions } from '../../actions/getRevisionActions';
 const revisionReference = referenceForModel(RevisionModel);
 const serviceReference = referenceForModel(ServiceModel);
 
-const RevisionRow: RowFunction<RevisionKind> = ({ obj, index, key, style }) => {
+const RevisionRow: React.FC<RowComponentProps<RevisionKind>> = ({ obj, index, rowKey, style }) => {
   const readyCondition = obj.status
     ? getCondition(obj.status.conditions, ConditionTypes.Ready)
     : null;
   const service = _.get(obj.metadata, `labels["serving.knative.dev/service"]`);
   return (
-    <TableRow id={obj.metadata.uid} index={index} trKey={key} style={style}>
+    <TableRow id={obj.metadata.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses[0]}>
         <ResourceLink
           kind={revisionReference}

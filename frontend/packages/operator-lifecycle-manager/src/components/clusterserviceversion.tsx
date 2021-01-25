@@ -28,7 +28,7 @@ import {
   TableRow,
   TableData,
   MultiListPage,
-  RowFunctionArgs,
+  RowComponentProps,
 } from '@console/internal/components/factory';
 import { withFallback } from '@console/shared/src/components/error/error-boundary';
 import {
@@ -598,15 +598,12 @@ export const ClusterServiceVersionList: React.FC<ClusterServiceVersionListProps>
       {...rest}
       aria-label="Installed Operators"
       Header={allNamespaceActive ? AllProjectsTableHeader : SingleProjectTableHeader}
-      Row={(rowArgs: RowFunctionArgs<ClusterServiceVersionKind | SubscriptionKind>) => (
+      Row={(rowProps: RowComponentProps<ClusterServiceVersionKind | SubscriptionKind>) => (
         <InstalledOperatorTableRow
           activeNamespace={activeNamespace}
-          obj={rowArgs.obj}
-          index={rowArgs.index}
-          rowKey={rowArgs.key}
-          style={rowArgs.style}
           catalogSources={catalogSources.data}
           subscriptions={subscriptions.data}
+          {...rowProps}
         />
       )}
       EmptyMsg={CSVListEmptyMsg}

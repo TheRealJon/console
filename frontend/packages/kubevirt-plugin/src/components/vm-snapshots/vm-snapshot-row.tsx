@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Button } from '@patternfly/react-core';
-import { TableData, TableRow, RowFunction } from '@console/internal/components/factory';
+import { TableData, TableRow, RowComponentProps } from '@console/internal/components/factory';
 import { Kebab, ResourceKebab, ResourceLink, Timestamp } from '@console/internal/components/utils';
 import { getName, getNamespace, dimensifyRow, getCreationTimestamp, DASH } from '@console/shared';
 import { referenceFor, referenceForModel } from '@console/internal/module/k8s';
@@ -76,7 +76,7 @@ export const VMSnapshotSimpleRow: React.FC<VMSnapshotSimpleRowProps> = ({
   );
 };
 
-export const VMSnapshotRow: RowFunction<VMSnapshot, VMSnapshotRowCustomData> = ({
+export const VMSnapshotRow: React.FC<RowComponentProps<VMSnapshot, VMSnapshotRowCustomData>> = ({
   obj: snapshot,
   customData: { restores, columnClasses, isDisabled },
   index,

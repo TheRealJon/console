@@ -53,12 +53,12 @@ const TableHeader = () => {
 };
 TableHeader.displayName = 'TableHeader';
 
-const TableRowForKind = ({ obj, index, key, style, customData }) => {
+const TableRowForKind = ({ obj, index, rowKey, style, customData }) => {
   const kind = referenceFor(obj) || customData.kind;
   const menuActions = [...Kebab.getExtensionsActionsForKind(kindObj(kind)), ...common];
 
   return (
-    <TableRow id={obj.metadata.uid} index={index} trKey={key} style={style}>
+    <TableRow id={obj.metadata.uid} index={index} trKey={rowKey} style={style}>
       <TableData className={tableColumnClasses[0]}>
         <ResourceLink
           kind={customData.kind}

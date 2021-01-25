@@ -10,7 +10,7 @@ import {
   TableProps,
   TableRow,
   TableData,
-  RowFunction,
+  RowComponentProps,
   MultiListPage,
 } from '@console/internal/components/factory';
 import {
@@ -38,8 +38,8 @@ export const tableColumnClasses = [
   Kebab.columnClass,
 ];
 
-const diskRow: RowFunction<DiskMetadata> = ({ obj, index, key, style }) => (
-  <TableRow id={obj.deviceID} index={index} trKey={key} style={style}>
+const diskRow: React.FC<RowComponentProps<DiskMetadata>> = ({ obj, index, rowKey, style }) => (
+  <TableRow id={obj.deviceID} index={index} trKey={rowKey} style={style}>
     <TableData className={tableColumnClasses[0]}>{obj.path}</TableData>
     <TableData className={tableColumnClasses[1]}>{obj.status.state}</TableData>
     <TableData className={tableColumnClasses[2]}>{obj.type || '-'}</TableData>
