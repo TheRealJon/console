@@ -8,9 +8,14 @@ import { Route, Switch, Link, withRouter, match, matchPath } from 'react-router-
 import { EmptyBox, StatusBox } from './status-box';
 import { PodsPage } from '../pod';
 import { AsyncComponent } from './async';
-import { K8sResourceKind, K8sResourceCommon } from '../../module/k8s';
+import {
+  K8sResourceKind,
+  K8sResourceCommon,
+  AccessReviewResourceAttributes,
+} from '../../module/k8s';
 import { referenceForModel, referenceFor } from '../../module/k8s/k8s';
 import { useExtensions, HorizontalNavTab, isHorizontalNavTab } from '@console/plugin-sdk';
+import { useMultipleAccessReviews } from './rbac';
 
 const editYamlComponent = (props) => (
   <AsyncComponent loader={() => import('../edit-yaml').then((c) => c.EditYAML)} obj={props.obj} />
@@ -56,6 +61,7 @@ export type Page = {
   nameKey?: string;
   component?: React.ComponentType<PageComponentProps>;
   pageData?: any;
+  accessReview?: AccessReviewResourceAttributes;
 };
 
 type NavFactory = { [name: string]: (c?: React.ComponentType<any>) => Page };
@@ -245,7 +251,7 @@ export const HorizontalNav = React.memo((props: HorizontalNavProps) => {
   const objReference = props.obj?.data ? referenceFor(props.obj.data) : '';
   const navTabExtensions = useExtensions<HorizontalNavTab>(isHorizontalNavTab);
 
-  const pluginPages = React.useMemo(
+  const pluginPages: Page[] = React.useMemo(
     () =>
       navTabExtensions
         .filter((tab) => referenceForModel(tab.properties.model) === objReference)
@@ -258,23 +264,59 @@ export const HorizontalNav = React.memo((props: HorizontalNavProps) => {
     [navTabExtensions, objReference],
   );
 
-  const pages = (props.pages || props.pagesFor(props.obj?.data)).concat(pluginPages);
+  const allPages = React.useMemo(
+    () => [...(props.pages || props.pagesFor?.(props.obj?.data) || []), ...(pluginPages ?? [])],
+    [props.pages, props.pagesFor, pluginPages, props.obj],
+  );
 
-  const routes = pages.map((p) => {
-    const path = `${props.match.path}/${p.path || p.href}`;
-    const render = (params) => {
-      return (
-        <p.component
-          {...componentProps}
-          {...extraResources}
-          {...p.pageData}
-          params={params}
-          customData={props.customData}
-        />
-      );
-    };
-    return <Route path={path} exact key={p.nameKey || p.name} render={render} />;
-  });
+  const pageAccessReviewResourceAttributes = React.useMemo(
+    () =>
+      allPages.reduce(
+        (resourceAttributesAccumulator, page) => [
+          ...resourceAttributesAccumulator,
+          ...(page.accessReview ? [page.accessReview] : []),
+        ],
+        [],
+      ),
+    [allPages],
+  );
+
+  const [pageAccessReviews, pageAccessReviewsLoading] = useMultipleAccessReviews(
+    pageAccessReviewResourceAttributes,
+  );
+
+  const pages = React.useMemo(
+    () =>
+      pageAccessReviewsLoading
+        ? []
+        : allPages.filter(
+            (page) =>
+              pageAccessReviews.find((accessReviewResult) =>
+                _.isEqual(accessReviewResult.resourceAttributes, page.accessReview),
+              )?.allowed ?? true,
+          ),
+    [allPages, pageAccessReviews, pageAccessReviewsLoading],
+  );
+
+  const routes = React.useMemo(
+    () =>
+      pages.map((p) => {
+        const path = `${props.match.path}/${p.path || p.href}`;
+        const render = (params) => {
+          return (
+            <p.component
+              {...componentProps}
+              {...extraResources}
+              {...p.pageData}
+              params={params}
+              customData={props.customData}
+            />
+          );
+        };
+        return <Route path={path} exact key={p.nameKey || p.name} render={render} />;
+      }),
+    [pages, componentProps, extraResources, props.customData, props.match.path],
+  );
 
   return (
     <div className={classNames('co-m-page__body', props.className)}>

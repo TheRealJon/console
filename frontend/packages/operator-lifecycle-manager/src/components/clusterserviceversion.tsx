@@ -64,6 +64,7 @@ import {
   resourceObjPath,
   KebabAction,
   openshiftHelpBase,
+  Page,
 } from '@console/internal/components/utils';
 import { useK8sWatchResource } from '@console/internal/components/utils/k8s-watch-hook';
 import { useAccessReview } from '@console/internal/components/utils/rbac';
@@ -85,7 +86,11 @@ import {
   PackageManifestKind,
   SubscriptionKind,
 } from '../types';
-import { OPERATOR_TYPE_ANNOTATION, NON_STANDALONE_ANNOTATION_VALUE } from '../const';
+import {
+  OPERATOR_TYPE_ANNOTATION,
+  NON_STANDALONE_ANNOTATION_VALUE,
+  OPERATOR_NAMESPACE_ANNOTATION,
+} from '../const';
 import { subscriptionForCSV, getSubscriptionStatus } from '../status/csv-status';
 import { ProvidedAPIsPage, ProvidedAPIPage } from './operand';
 import { createUninstallOperatorModal } from './modals/uninstall-operator-modal';
@@ -1083,55 +1088,49 @@ export const ClusterServiceVersionsDetailsPage: React.FC<ClusterServiceVersionsD
     ];
   };
 
-  const canListSubscriptions = useAccessReview({
-    group: SubscriptionModel.apiGroup,
-    resource: SubscriptionModel.plural,
-    verb: 'list',
-  });
-
-  const pagesFor = React.useCallback(
-    (obj: ClusterServiceVersionKind) => {
-      const providedAPIs = providedAPIsForCSV(obj);
-      return [
-        navFactory.details(ClusterServiceVersionDetails),
-        navFactory.editYaml(),
-        ...(canListSubscriptions
-          ? [
-              {
-                href: 'subscription',
-                // t('olm~Subscription')
-                nameKey: 'olm~Subscription',
-                component: CSVSubscription,
-              },
-            ]
-          : []),
-        navFactory.events(ResourceEventStream),
-        ...(providedAPIs.length > 1
-          ? [
-              {
-                href: 'instances',
-                // t('olm~All instances')
-                nameKey: 'olm~All instances',
-                component: ProvidedAPIsPage,
-              },
-            ]
-          : []),
-        ...providedAPIs.map((api: CRDDescription) => ({
-          href: referenceForProvidedAPI(api),
-          name: ['Details', 'YAML', 'Subscription', 'Events'].includes(api.displayName)
-            ? `${api.displayName} Operand`
-            : api.displayName || api.kind,
-          component: ProvidedAPIPage,
-          pageData: {
-            csv: obj,
-            kind: referenceForProvidedAPI(api),
-            namespace: obj.metadata.namespace,
-          },
-        })),
-      ];
-    },
-    [canListSubscriptions],
-  );
+  const pagesFor = React.useCallback((obj: ClusterServiceVersionKind): Page[] => {
+    const providedAPIs = providedAPIsForCSV(obj);
+    const operatorNamespace = obj?.metadata?.annotations?.[OPERATOR_NAMESPACE_ANNOTATION];
+    return [
+      navFactory.details(ClusterServiceVersionDetails),
+      navFactory.editYaml(),
+      {
+        href: 'subscription',
+        // t('olm~Subscription')
+        nameKey: 'olm~Subscription',
+        component: CSVSubscription,
+        accessReview: {
+          group: SubscriptionModel.apiGroup,
+          resource: SubscriptionModel.plural,
+          namespace: operatorNamespace ?? '',
+          verb: 'list',
+        },
+      },
+      navFactory.events(ResourceEventStream),
+      ...(providedAPIs.length > 1
+        ? [
+            {
+              href: 'instances',
+              // t('olm~All instances')
+              nameKey: 'olm~All instances',
+              component: ProvidedAPIsPage,
+            },
+          ]
+        : []),
+      ...providedAPIs.map((api: CRDDescription) => ({
+        href: referenceForProvidedAPI(api),
+        name: ['Details', 'YAML', 'Subscription', 'Events'].includes(api.displayName)
+          ? `${api.displayName} Operand`
+          : api.displayName || api.kind,
+        component: ProvidedAPIPage,
+        pageData: {
+          csv: obj,
+          kind: referenceForProvidedAPI(api),
+          namespace: obj.metadata.namespace,
+        },
+      })),
+    ];
+  }, []);
 
   return (
     <DetailsPage
