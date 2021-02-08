@@ -1,4 +1,8 @@
 import * as React from 'react';
+// FIXME upgrading redux types is causing many errors at this time
+// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+// @ts-ignore
+import { useSelector } from 'react-redux';
 import { Base64 } from 'js-base64';
 import { Alert, AlertActionLink, Button } from '@patternfly/react-core';
 import * as _ from 'lodash-es';
@@ -18,6 +22,7 @@ import { LineBuffer } from './line-buffer';
 import * as screenfull from 'screenfull';
 import { k8sGet, k8sList, K8sResourceKind } from '@console/internal/module/k8s';
 import { ConsoleExternalLogLinkModel, ProjectModel } from '@console/internal/models';
+import { getActiveCluster } from '@console/internal/reducers/ui';
 import { useFlag } from '@console/shared/src/hooks/flag';
 import { usePrevious } from '@console/shared/src/hooks/previous';
 
@@ -60,6 +65,7 @@ const replaceVariables = (template: string, values: any): string => {
 
 // Build a log API url for a given resource
 const getResourceLogURL = (
+  cluster: string,
   resource: K8sResourceKind,
   containerName?: string,
   tailLines?: number,
@@ -70,6 +76,7 @@ const getResourceLogURL = (
     ns: resource.metadata.namespace,
     path: 'log',
     queryParams: {
+      cluster,
       container: containerName || '',
       ...(tailLines && { tailLines: `${tailLines}` }),
       ...(follow && { follow: `${follow}` }),
@@ -187,6 +194,7 @@ export const ResourceLog: React.FC<ResourceLogProps> = ({
   resourceStatus,
 }) => {
   const { t } = useTranslation();
+  const activeCluster = useSelector((state: RootState) => getActiveCluster(state));
   const buffer = React.useRef(new LineBuffer(bufferSize)); // TODO Make this a hook
   const ws = React.useRef<any>(); // TODO Make this a hook
   const resourceLogRef = React.useRef();
@@ -204,8 +212,8 @@ export const ResourceLog: React.FC<ResourceLogProps> = ({
   const previousResourceStatus = usePrevious(resourceStatus);
   const previousTotalLineCount = usePrevious(totalLineCount);
   const bufferFull = lines.length === bufferSize;
-  const linkURL = getResourceLogURL(resource, containerName);
-  const watchURL = getResourceLogURL(resource, containerName, bufferSize, true);
+  const linkURL = getResourceLogURL(activeCluster, resource, containerName);
+  const watchURL = getResourceLogURL(activeCluster, resource, containerName, bufferSize, true);
 
   // Update lines behind while stream is paused, reset when unpaused
   React.useEffect(() => {

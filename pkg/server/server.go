@@ -139,6 +139,9 @@ type Server struct {
 	ThanosPublicURL       *url.URL
 	DevCatalogCategories  string
 	UserSettingsLocation  string
+	// DO NOT MERGE
+	ManagedClusterURL   *url.URL
+	ManagedClusterToken string
 }
 
 func (s *Server) authDisabled() bool {
@@ -247,11 +250,32 @@ func (s *Server) HTTPHandler() http.Handler {
 	}.ServeHTTP)
 
 	k8sProxy := proxy.NewProxy(s.K8sProxyConfig)
+
+	// DEV ONLY
+	managedK8sProxy := proxy.NewProxy(&proxy.Config{
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true,
+		},
+		HeaderBlacklist: []string{"Cookie", "X-CSRFToken"},
+		Endpoint:        s.ManagedClusterURL,
+	})
+
 	handle(k8sProxyEndpoint, http.StripPrefix(
 		proxy.SingleJoiningSlash(s.BaseURL.Path, k8sProxyEndpoint),
 		authHandlerWithUser(func(user *auth.User, w http.ResponseWriter, r *http.Request) {
-			r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
-			k8sProxy.ServeHTTP(w, r)
+			// The client can't set headers for WebSockets, so check both the header and query
+			// parameters for the active cluster.
+			cluster := r.Header.Get("X-Cluster")
+			if len(cluster) == 0 {
+				cluster = r.URL.Query().Get("cluster")
+			}
+			if cluster == "managed" {
+				r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", s.ManagedClusterToken))
+				managedK8sProxy.ServeHTTP(w, r)
+			} else {
+				r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
+				k8sProxy.ServeHTTP(w, r)
+			}
 		})),
 	)
 

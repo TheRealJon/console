@@ -124,6 +124,10 @@ func main() {
 	fDevCatalogCategories := fs.String("developer-catalog-categories", "", "Allow catalog categories customization. (JSON as string)")
 	fUserSettingsLocation := fs.String("user-settings-location", "configmap", "DEV ONLY. Define where the user settings should be stored. (configmap | localstorage).")
 
+	// DO NOT MERGE
+	fManagedClusterURL := fs.String("managed-cluster-public-url", "", "DEV ONLY. Public URL of the managed cluster.")
+	fManagedClusterToken := fs.String("managed-cluster-bearer-token", "", "DEV ONLY. Bearer token for communicating with the managed cluster.")
+
 	if err := serverconfig.Parse(fs, os.Args[1:], "BRIDGE"); err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)
@@ -217,6 +221,12 @@ func main() {
 		}
 	}
 
+	// DO NOT MERGE
+	managedClusterURL := &url.URL{}
+	if *fManagedClusterURL != "" {
+		managedClusterURL = bridge.ValidateFlagIsURL("managed-cluster-public-url", *fManagedClusterURL)
+	}
+
 	srv := &server.Server{
 		PublicDir:             *fPublicDir,
 		BaseURL:               baseURL,
@@ -235,6 +245,8 @@ func main() {
 		DevCatalogCategories:  *fDevCatalogCategories,
 		UserSettingsLocation:  *fUserSettingsLocation,
 		EnabledConsolePlugins: consolePluginsMap,
+		ManagedClusterURL:     managedClusterURL,
+		ManagedClusterToken:   *fManagedClusterToken,
 	}
 
 	// if !in-cluster (dev) we should not pass these values to the frontend

@@ -1,7 +1,14 @@
 import * as React from 'react';
+// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+// @ts-ignore
+import { useDispatch, useSelector } from 'react-redux';
 import { Dropdown, DropdownItem, DropdownToggle, Title } from '@patternfly/react-core';
 import { CaretDownIcon } from '@patternfly/react-icons';
 import { Perspective, useExtensions, isPerspective } from '@console/plugin-sdk';
+import { setActiveCluster } from '@console/internal/actions/ui';
+import { getActiveCluster } from '@console/internal/reducers/ui';
+import { detectFeatures, clearSSARFlags } from '@console/internal/actions/features';
+import { RootState } from '../../redux';
 import { history } from '../utils';
 import { useActivePerspective } from '@console/shared';
 
@@ -9,13 +16,27 @@ export type NavHeaderProps = {
   onPerspectiveSelected: () => void;
 };
 
+const ClusterIcon: React.FC<{}> = () => <span className="co-m-resource-icon">C</span>;
+
 const NavHeader: React.FC<NavHeaderProps> = ({ onPerspectiveSelected }) => {
+  const dispatch = useDispatch();
+  const activeCluster = useSelector((state: RootState) => getActiveCluster(state));
   const [activePerspective, setActivePerspective] = useActivePerspective();
+  const [isClusterDropdownOpen, setClusterDropdownOpen] = React.useState(false);
   const [isPerspectiveDropdownOpen, setPerspectiveDropdownOpen] = React.useState(false);
   const perspectiveExtensions = useExtensions<Perspective>(isPerspective);
   const togglePerspectiveOpen = React.useCallback(() => {
     setPerspectiveDropdownOpen(!isPerspectiveDropdownOpen);
   }, [isPerspectiveDropdownOpen]);
+
+  const onClusterSelect = (event, cluster: string): void => {
+    event.preventDefault();
+    setClusterDropdownOpen(false);
+    dispatch(setActiveCluster(cluster));
+    dispatch(clearSSARFlags());
+    dispatch(detectFeatures());
+    history.push(window.SERVER_FLAGS.basePath);
+  };
 
   const onPerspectiveSelect = React.useCallback(
     (event: React.MouseEvent<HTMLLinkElement>, perspective: Perspective): void => {
@@ -49,6 +70,17 @@ const NavHeader: React.FC<NavHeaderProps> = ({ onPerspectiveSelected }) => {
     [isPerspectiveDropdownOpen, togglePerspectiveOpen],
   );
 
+  const clusterItems = [
+    <DropdownItem key="hub" component="button" onClick={(e) => onClusterSelect(e, 'hub')}>
+      <ClusterIcon />
+      Hub Cluster
+    </DropdownItem>,
+    <DropdownItem key="managed" component="button" onClick={(e) => onClusterSelect(e, 'managed')}>
+      <ClusterIcon />
+      Managed Cluster
+    </DropdownItem>,
+  ];
+
   const perspectiveItems = React.useMemo(
     () =>
       perspectiveExtensions.map((nextPerspective: Perspective) => (
@@ -75,18 +107,34 @@ const NavHeader: React.FC<NavHeaderProps> = ({ onPerspectiveSelected }) => {
   );
 
   return (
-    <div
-      className="oc-nav-header"
-      data-tour-id="tour-perspective-dropdown"
-      data-quickstart-id="qs-perspective-switcher"
-    >
-      <Dropdown
-        isOpen={isPerspectiveDropdownOpen}
-        toggle={renderToggle(icon, name)}
-        dropdownItems={perspectiveItems}
-        data-test-id="perspective-switcher-menu"
-      />
-    </div>
+    <>
+      <div className="oc-nav-header">
+        <Dropdown
+          isOpen={isClusterDropdownOpen}
+          toggle={
+            <DropdownToggle onToggle={() => setClusterDropdownOpen(!isClusterDropdownOpen)}>
+              <Title headingLevel="h2" size="md">
+                <ClusterIcon />
+                {activeCluster === 'hub' ? 'Hub Cluster' : 'Managed Cluster'}
+              </Title>
+            </DropdownToggle>
+          }
+          dropdownItems={clusterItems}
+        />
+      </div>
+      <div
+        className="oc-nav-header"
+        data-tour-id="tour-perspective-dropdown"
+        data-quickstart-id="qs-perspective-switcher"
+      >
+        <Dropdown
+          isOpen={isPerspectiveDropdownOpen}
+          toggle={renderToggle(icon, name)}
+          dropdownItems={perspectiveItems}
+          data-test-id="perspective-switcher-menu"
+        />
+      </div>
+    </>
   );
 };
 

@@ -23,6 +23,7 @@ export enum ActionType {
   SelectOverviewDetailsTab = 'selectOverviewDetailsTab',
   SelectOverviewItem = 'selectOverviewItem',
   SetActiveApplication = 'setActiveApplication',
+  SetActiveCluster = 'setActiveCluster',
   SetActiveNamespace = 'setActiveNamespace',
   SetCreateProjectMessage = 'setCreateProjectMessage',
   SetCurrentLocation = 'setCurrentLocation',
@@ -120,6 +121,7 @@ export const getNamespacedResources = () => {
   return namespacedResources;
 };
 
+export const getActiveCluster = (): string => store.getState().UI.get('activeCluster');
 export const getActiveNamespace = (): string => store.getState().UI.get('activeNamespace');
 
 export const getNamespaceMetric = (ns: K8sResourceKind, metric: string): number => {
@@ -191,6 +193,9 @@ export const setCurrentLocation = (location: string) =>
 export const setActiveApplication = (application: string) => {
   return action(ActionType.SetActiveApplication, { application });
 };
+
+export const setActiveCluster = (cluster: string) =>
+  action(ActionType.SetActiveCluster, { cluster });
 
 export const setActiveNamespace = (namespace: string = '') => {
   namespace = namespace.trim();
@@ -387,6 +392,7 @@ export const setPVCMetrics = (pvcMetrics: PVCMetrics) =>
 const uiActions = {
   setCurrentLocation,
   setActiveApplication,
+  setActiveCluster,
   setActiveNamespace,
   beginImpersonate,
   endImpersonate,
