@@ -10,9 +10,9 @@ import { DetailsCard } from './details-card';
 import { InventoryCard } from './inventory-card';
 import { UtilizationCard } from './utilization-card';
 import { ActivityCard } from './activity-card';
-import { useK8sGet } from '../../../utils/k8s-get-hook';
+import { useK8sWatchResource } from '../../../utils/k8s-watch-hook';
 import { InfrastructureModel } from '../../../../models';
-import { K8sResourceKind } from '../../../../module/k8s';
+import { K8sResourceKind, referenceForModel } from '../../../../module/k8s';
 import { ClusterDashboardContext } from './context';
 
 const mainCards = [{ Card: StatusCard }, { Card: UtilizationCard }];
@@ -22,10 +22,14 @@ const rightCards = [{ Card: ActivityCard }];
 const HIDE_QUICK_START_DASHBOARD_TILE_USER_SETTINGS_KEY = 'console.dashboard.quickStartTile';
 
 export const ClusterDashboard: React.FC<{}> = () => {
-  const [infrastructure, infrastructureLoaded, infrastructureError] = useK8sGet<K8sResourceKind>(
-    InfrastructureModel,
-    'cluster',
-  );
+  const [infrastructure, infrastructureLoaded, infrastructureError] = useK8sWatchResource<
+    K8sResourceKind
+  >({
+    isList: false,
+    kind: referenceForModel(InfrastructureModel),
+    name: 'cluster',
+    namespaced: false,
+  });
   // [TODO](sahil143): use sync capability here
   const [showQuickStartsCatalogCard, , loaded] = useUserSettings(
     HIDE_QUICK_START_DASHBOARD_TILE_USER_SETTINGS_KEY,
