@@ -240,6 +240,7 @@ export const useK8sWatchResources = <R extends ResourcesObject>(
 type GetIDAndDispatch = (
   resource: WatchK8sResource,
   k8sModel: K8sKind,
+  cluster?: string,
 ) => { id: string; dispatch: (dispatch: Dispatch, getState: () => RootState) => void };
 
 export type ResourcesObject = { [key: string]: K8sResourceCommon | K8sResourceCommon[] };

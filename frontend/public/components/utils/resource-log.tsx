@@ -22,6 +22,7 @@ import { LineBuffer } from './line-buffer';
 import * as screenfull from 'screenfull';
 import { k8sGet, k8sList, K8sResourceKind } from '@console/internal/module/k8s';
 import { ConsoleExternalLogLinkModel, ProjectModel } from '@console/internal/models';
+import { RootState } from '../../redux';
 import { getActiveCluster } from '@console/internal/reducers/ui';
 import { useFlag } from '@console/shared/src/hooks/flag';
 import { usePrevious } from '@console/shared/src/hooks/previous';
