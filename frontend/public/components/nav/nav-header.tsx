@@ -11,6 +11,7 @@ import { detectFeatures, clearSSARFlags } from '@console/internal/actions/featur
 import { RootState } from '../../redux';
 import { history } from '../utils';
 import { useActivePerspective } from '@console/shared';
+import { STORAGE_PREFIX } from '@console/shared/src/constants/common';
 
 export type NavHeaderProps = {
   onPerspectiveSelected: () => void;
@@ -35,7 +36,7 @@ const NavHeader: React.FC<NavHeaderProps> = ({ onPerspectiveSelected }) => {
     dispatch(setActiveCluster(cluster));
     dispatch(clearSSARFlags());
     dispatch(detectFeatures());
-    history.push(window.SERVER_FLAGS.basePath);
+    window.localStorage.setItem(`${STORAGE_PREFIX}/last-cluster`, cluster);
   };
 
   const onPerspectiveSelect = React.useCallback(
