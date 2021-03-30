@@ -181,6 +181,10 @@ export const k8sWatch = (kind, query = {}, wsOptions = {}) => {
     queryParams.resourceVersion = encodeURIComponent(query.resourceVersion);
   }
 
+  if (query.cluster) {
+    queryParams.cluster = encodeURIComponent(query.cluster);
+  }
+
   const path = resourceURL(kind, opts);
   wsOptions.path = path;
   return new WSFactory(path, wsOptions);

@@ -68,6 +68,7 @@ import {
 import { VolumesTable } from './volumes-table';
 import { PodModel } from '../models';
 import { Conditions } from './conditions';
+import { RootState } from '../redux';
 
 // Key translations for oauth login templates
 // t('public~Log in to your account')
@@ -867,8 +868,8 @@ const dispatchToProps = (dispatch): PodPagePropsFromDispatch => ({
   setPodMetrics: (metrics) => dispatch(UIActions.setPodMetrics(metrics)),
 });
 
-export const PodsPage = connect<{}, PodPagePropsFromDispatch, PodPageProps>(
-  null,
+export const PodsPage = connect<PodPagePropsFromState, PodPagePropsFromDispatch, PodPageProps>(
+  ({ UI }: RootState) => ({ cluster: UI.get('activeCluster') }),
   dispatchToProps,
 )(
   withUserSettingsCompatibility<
@@ -882,12 +883,14 @@ export const PodsPage = connect<{}, PodPagePropsFromDispatch, PodPageProps>(
   )(
     (
       props: PodPageProps &
+        PodPagePropsFromState &
         PodPagePropsFromDispatch &
         WithUserSettingsCompatibilityProps<TableColumnsType>,
     ) => {
       const {
         canCreate = true,
         namespace,
+        cluster,
         setPodMetrics,
         customData,
         userSettingState: tableColumns,
@@ -913,7 +916,7 @@ export const PodsPage = connect<{}, PodPagePropsFromDispatch, PodPageProps>(
           const id = setInterval(updateMetrics, 30 * 1000);
           return () => clearInterval(id);
         }
-      }, [namespace]);
+      }, [namespace, cluster]);
       /* eslint-enable react-hooks/exhaustive-deps */
       return (
         <ListPage
@@ -1010,6 +1013,10 @@ type PodPageProps = {
   selector?: any;
   showTitle?: boolean;
   customData?: any;
+};
+
+type PodPagePropsFromState = {
+  cluster: string;
 };
 
 type PodPagePropsFromDispatch = {

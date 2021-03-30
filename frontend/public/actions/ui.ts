@@ -23,6 +23,7 @@ export enum ActionType {
   SelectOverviewDetailsTab = 'selectOverviewDetailsTab',
   SelectOverviewItem = 'selectOverviewItem',
   SetActiveApplication = 'setActiveApplication',
+  SetActiveCluster = 'setActiveCluster',
   SetActiveNamespace = 'setActiveNamespace',
   SetCreateProjectMessage = 'setCreateProjectMessage',
   SetCurrentLocation = 'setCurrentLocation',
@@ -120,6 +121,7 @@ export const getNamespacedResources = () => {
   return namespacedResources;
 };
 
+export const getActiveCluster = (): string => store.getState().UI.get('activeCluster');
 export const getActiveNamespace = (): string => store.getState().UI.get('activeNamespace');
 
 export const getNamespaceMetric = (ns: K8sResourceKind, metric: string): number => {
@@ -142,7 +144,12 @@ export const getPVCMetric = (pvc: K8sResourceKind, metric: string): number => {
   return metrics?.[metric]?.[pvc.metadata.namespace]?.[pvc.metadata.name] ?? 0;
 };
 
-export const formatNamespaceRoute = (activeNamespace, originalPath, location?) => {
+export const formatNamespaceRoute = (
+  activeNamespace,
+  originalPath,
+  location?,
+  forceList?: boolean,
+) => {
   let path = originalPath.substr(window.SERVER_FLAGS.basePath.length);
 
   let parts = path.split('/').filter((p) => p);
@@ -164,7 +171,8 @@ export const formatNamespaceRoute = (activeNamespace, originalPath, location?) =
   if (
     (previousNS !== activeNamespace &&
       (parts[1] !== 'new' || activeNamespace !== ALL_NAMESPACES_KEY)) ||
-    (activeNamespace === ALL_NAMESPACES_KEY && parts[1] === 'new')
+    (activeNamespace === ALL_NAMESPACES_KEY && parts[1] === 'new') ||
+    forceList
   ) {
     // a given resource will not exist when we switch namespaces, so pop off the tail end
     parts = parts.slice(0, 1);
@@ -191,6 +199,9 @@ export const setCurrentLocation = (location: string) =>
 export const setActiveApplication = (application: string) => {
   return action(ActionType.SetActiveApplication, { application });
 };
+
+export const setActiveCluster = (cluster: string) =>
+  action(ActionType.SetActiveCluster, { cluster });
 
 export const setActiveNamespace = (namespace: string = '') => {
   namespace = namespace.trim();
@@ -387,6 +398,7 @@ export const setPVCMetrics = (pvcMetrics: PVCMetrics) =>
 const uiActions = {
   setCurrentLocation,
   setActiveApplication,
+  setActiveCluster,
   setActiveNamespace,
   beginImpersonate,
   endImpersonate,

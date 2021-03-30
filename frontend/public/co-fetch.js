@@ -184,6 +184,7 @@ export const getImpersonateHeaders = () => {
 
 export const coFetchCommon = async (url, method = 'GET', options = {}, timeout) => {
   const headers = getImpersonateHeaders() || {};
+  headers['X-Cluster'] = store.getState().UI.get('activeCluster');
   // Pass headers last to let callers to override Accept.
   const allOptions = _.defaultsDeep({ method }, options, { headers });
   const response = await coFetch(url, allOptions, timeout);
