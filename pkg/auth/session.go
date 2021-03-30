@@ -9,6 +9,7 @@ import (
 )
 
 const openshiftSessionCookieName = "openshift-session-token"
+const acmSessionCookieName = "acm-access-token-cookie"
 
 type oldSession struct {
 	token string
