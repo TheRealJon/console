@@ -168,16 +168,29 @@ func (o *openShiftAuth) logout(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+func getUserSessionCookie(r *http.Request) (*http.Cookie, error) {
+	ocpCookie, ocpCookieErr := r.Cookie(openshiftSessionCookieName)
+	acmCookie, acmCookieErr := r.Cookie(acmSessionCookieName)
+
+	// ACM cookie exists, use it instead of OCP cookie
+	if acmCookieErr == nil {
+		return acmCookie, acmCookieErr
+	}
+
+	// Default to OCP cookie
+	return ocpCookie, ocpCookieErr
+}
+
 func getOpenShiftUser(r *http.Request) (*User, error) {
 	// TODO: This doesn't do any validation of the cookie with the assumption that the
 	// API server will reject tokens it doesn't recognize. If we want to keep some backend
 	// state we should sign this cookie. If not there's not much we can do.
-	cookie, err := r.Cookie(openshiftSessionCookieName)
+	cookie, err := getUserSessionCookie(r)
 	if err != nil {
 		return nil, err
 	}
 	if cookie.Value == "" {
-		return nil, fmt.Errorf("unauthenticated, no value for cookie %s", openshiftSessionCookieName)
+		return nil, fmt.Errorf("unauthenticated, no value for cookie %s or %s", openshiftSessionCookieName, acmSessionCookieName)
 	}
 
 	return &User{
