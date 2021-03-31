@@ -8,21 +8,25 @@ import (
 	"strings"
 
 	"github.com/openshift/console/pkg/auth"
+	"github.com/openshift/console/pkg/serverutils"
 
 	"k8s.io/klog"
 )
 
 // Middleware generates a middleware wrapper for request hanlders.
 // Responds with 401 for requests with missing/invalid/incomplete token with verified email address.
-func authMiddleware(a *auth.Authenticator, hdlr http.HandlerFunc) http.Handler {
+func authMiddleware(authers map[string]*auth.Authenticator, hdlr http.HandlerFunc) http.Handler {
 	f := func(user *auth.User, w http.ResponseWriter, r *http.Request) {
 		hdlr.ServeHTTP(w, r)
 	}
-	return authMiddlewareWithUser(a, f)
+	return authMiddlewareWithUser(authers, f)
 }
 
-func authMiddlewareWithUser(a *auth.Authenticator, handlerFunc func(user *auth.User, w http.ResponseWriter, r *http.Request)) http.Handler {
+func authMiddlewareWithUser(authers map[string]*auth.Authenticator, handlerFunc func(user *auth.User, w http.ResponseWriter, r *http.Request)) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Get the correct Auther for the cluster.
+		cluster := serverutils.GetCluster(r)
+		a := authers[cluster]
 		user, err := a.Authenticate(r)
 		if err != nil {
 			klog.V(4).Infof("authentication failed: %v", err)

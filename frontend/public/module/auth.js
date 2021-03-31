@@ -52,19 +52,21 @@ export const authSvc = {
   email: () => loginStateItem(email),
 
   // Avoid logging out multiple times if concurrent requests return unauthorized.
-  logout: _.once((next) => {
+  logout: _.once((next, cluster) => {
     setNext(next);
-    clearLocalStorage();
-    coFetch(window.SERVER_FLAGS.logoutURL, { method: 'POST' })
-      // eslint-disable-next-line no-console
-      .catch((e) => console.error('Error logging out', e))
-      .then(() => {
-        if (window.SERVER_FLAGS.logoutRedirect && !next) {
-          window.location = window.SERVER_FLAGS.logoutRedirect;
-        } else {
-          authSvc.login();
-        }
-      });
+    authSvc.login(cluster);
+    // FIXME
+    // clearLocalStorage();
+    // coFetch(window.SERVER_FLAGS.logoutURL, { method: 'POST' })
+    //   // eslint-disable-next-line no-console
+    //   .catch((e) => console.error('Error logging out', e))
+    //   .then(() => {
+    //     if (window.SERVER_FLAGS.logoutRedirect && !next) {
+    //       window.location = window.SERVER_FLAGS.logoutRedirect;
+    //     } else {
+    //       authSvc.login(cluster);
+    //     }
+    //   });
   }),
 
   // Extra steps are needed if this is OpenShift to delete the user's access
@@ -117,14 +119,19 @@ export const authSvc = {
       });
   },
 
-  login: () => {
+  login: (cluster) => {
     // Ensure that we don't redirect to the current URL in a loop
     // when using local bridge in development mode without authorization.
+    // FIXME: update this check
     if (
       window.location.href !== window.SERVER_FLAGS.loginURL &&
       window.location.pathname !== window.SERVER_FLAGS.loginURL
     ) {
-      window.location = window.SERVER_FLAGS.loginURL;
+      if (cluster === 'managed') {
+        window.location = `${window.SERVER_FLAGS.loginURL}/managed`;
+      } else {
+        window.location = window.SERVER_FLAGS.loginURL;
+      }
     }
   },
 };
