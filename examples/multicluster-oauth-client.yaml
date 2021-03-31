@@ -1,0 +1,8 @@
+apiVersion: oauth.openshift.io/v1
+kind: OAuthClient
+metadata:
+  name: multicluster-console
+grantMethod: auto
+secret: open-sesame
+redirectURIs:
+  - http://localhost:9000/auth/callback

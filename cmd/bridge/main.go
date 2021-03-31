@@ -126,7 +126,6 @@ func main() {
 
 	// DO NOT MERGE
 	fManagedClusterURL := fs.String("managed-cluster-public-url", "", "DEV ONLY. Public URL of the managed cluster.")
-	fManagedClusterToken := fs.String("managed-cluster-bearer-token", "", "DEV ONLY. Bearer token for communicating with the managed cluster.")
 	fManagedClusterThanosURL := fs.String("managed-cluster-thanos-url", "", "DEV ONLY. Public URL of the managed cluster's Thanos.")
 
 	if err := serverconfig.Parse(fs, os.Args[1:], "BRIDGE"); err != nil {
@@ -251,7 +250,6 @@ func main() {
 		UserSettingsLocation:    *fUserSettingsLocation,
 		EnabledConsolePlugins:   consolePluginsMap,
 		ManagedClusterURL:       managedClusterURL,
-		ManagedClusterToken:     *fManagedClusterToken,
 		ManagedClusterThanosURL: managedClusterThanosURL,
 	}
 
@@ -532,6 +530,7 @@ func main() {
 			CookiePath:    cookiePath,
 			RefererPath:   refererPath,
 			SecureCookies: secureCookies,
+			ClusterName:   "hub",
 		}
 
 		// NOTE: This won't work when using the OpenShift auth mode.
@@ -551,6 +550,37 @@ func main() {
 
 		if srv.Auther, err = auth.NewAuthenticator(context.Background(), oidcClientConfig); err != nil {
 			klog.Fatalf("Error initializing authenticator: %v", err)
+		}
+
+		srv.Authers = make(map[string]*auth.Authenticator)
+		srv.Authers["hub"] = srv.Auther
+
+		if *fManagedClusterURL != "" {
+			managedClusterOIDCClientConfig := &auth.Config{
+				AuthSource:   authSource,
+				IssuerURL:    managedClusterURL.String(),
+				IssuerCA:     *fUserAuthOIDCCAFile,
+				ClientID:     *fUserAuthOIDCClientID,
+				ClientSecret: oidcClientSecret,
+				RedirectURL:  proxy.SingleJoiningSlash(srv.BaseURL.String(), server.AuthLoginManagedCallbackEndpoint),
+				Scope:        scopes,
+
+				// Use the k8s CA file for OpenShift OAuth metadata discovery.
+				// This might be different than IssuerCA.
+				K8sCA: caCertFilePath,
+
+				ErrorURL:   authLoginErrorEndpoint,
+				SuccessURL: authLoginSuccessEndpoint,
+
+				CookiePath:    cookiePath,
+				RefererPath:   refererPath,
+				SecureCookies: secureCookies,
+				ClusterName:   "managed",
+			}
+
+			if srv.Authers["managed"], err = auth.NewAuthenticator(context.Background(), managedClusterOIDCClientConfig); err != nil {
+				klog.Fatalf("Error initializing managed cluster authenticator: %v", err)
+			}
 		}
 	case "disabled":
 		klog.Warning("running with AUTHENTICATION DISABLED!")
