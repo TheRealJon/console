@@ -124,14 +124,10 @@ export const authSvc = {
     // when using local bridge in development mode without authorization.
     // FIXME: update this check
     if (
-      window.location.href !== window.SERVER_FLAGS.loginURL &&
-      window.location.pathname !== window.SERVER_FLAGS.loginURL
+      window.location.href !== `${window.SERVER_FLAGS.loginURL}/${cluster}` &&
+      window.location.pathname !== `${window.SERVER_FLAGS.loginURL}/${cluster}`
     ) {
-      if (cluster === 'managed') {
-        window.location = `${window.SERVER_FLAGS.loginURL}/managed`;
-      } else {
-        window.location = window.SERVER_FLAGS.loginURL;
-      }
+      window.location = `${window.SERVER_FLAGS.loginURL}/${cluster}`;
     }
   },
 };

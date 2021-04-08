@@ -14,6 +14,7 @@ import { Perspective, useExtensions, isPerspective } from '@console/plugin-sdk';
 import { formatNamespaceRoute, setActiveCluster } from '@console/internal/actions/ui';
 import { getActiveCluster } from '@console/internal/reducers/ui';
 import { detectFeatures, clearSSARFlags } from '@console/internal/actions/features';
+import { K8sResourceCommon } from '@console/internal/module/k8s';
 import { RootState } from '../../redux';
 import { history } from '../utils';
 import { useTelemetry } from '@console/shared/src/hooks/useTelemetry';
@@ -38,6 +39,12 @@ const NavHeader: React.FC<NavHeaderProps> = ({ onPerspectiveSelected }) => {
   const [activePerspective, setActivePerspective] = useActivePerspective();
   const [isClusterDropdownOpen, setClusterDropdownOpen] = React.useState(false);
   const [isPerspectiveDropdownOpen, setPerspectiveDropdownOpen] = React.useState(false);
+  const [managedClusters] = useK8sWatchResource<K8sResourceCommon[]>({
+    kind: 'cluster.open-cluster-management.io~v1~ManagedCluster',
+    namespaced: false,
+    isList: true,
+    cluster: 'local-cluster',
+  });
   const perspectiveExtensions = useExtensions<Perspective>(isPerspective);
   const [acmLink] = useK8sWatchResource<K8sResourceKind>({
     kind: referenceForModel(ConsoleLinkModel),
@@ -99,16 +106,16 @@ const NavHeader: React.FC<NavHeaderProps> = ({ onPerspectiveSelected }) => {
     [isPerspectiveDropdownOpen, togglePerspectiveOpen],
   );
 
-  const clusterItems = [
-    <DropdownItem key="hub" component="button" onClick={(e) => onClusterSelect(e, 'hub')}>
+  const clusterItems = (managedClusters ?? []).map((managedCluster) => (
+    <DropdownItem
+      key={managedCluster.metadata.name}
+      component="button"
+      onClick={(e) => onClusterSelect(e, managedCluster.metadata.name)}
+    >
       <ClusterIcon />
-      Hub Cluster
-    </DropdownItem>,
-    <DropdownItem key="managed" component="button" onClick={(e) => onClusterSelect(e, 'managed')}>
-      <ClusterIcon />
-      Managed Cluster
-    </DropdownItem>,
-  ];
+      {managedCluster.metadata.name}
+    </DropdownItem>
+  ));
 
   const perspectiveItems = React.useMemo(() => {
     const items = perspectiveExtensions.map((nextPerspective: Perspective) => (
@@ -153,20 +160,22 @@ const NavHeader: React.FC<NavHeaderProps> = ({ onPerspectiveSelected }) => {
 
   return (
     <>
-      <div className="oc-nav-header">
-        <Dropdown
-          isOpen={isClusterDropdownOpen}
-          toggle={
-            <DropdownToggle onToggle={() => setClusterDropdownOpen(!isClusterDropdownOpen)}>
-              <Title headingLevel="h2" size="md">
-                <ClusterIcon />
-                {activeCluster === 'hub' ? 'Hub Cluster' : 'Managed Cluster'}
-              </Title>
-            </DropdownToggle>
-          }
-          dropdownItems={clusterItems}
-        />
-      </div>
+      {clusterItems.length && (
+        <div className="oc-nav-header">
+          <Dropdown
+            isOpen={isClusterDropdownOpen}
+            toggle={
+              <DropdownToggle onToggle={() => setClusterDropdownOpen(!isClusterDropdownOpen)}>
+                <Title headingLevel="h2" size="md">
+                  <ClusterIcon />
+                  {activeCluster}
+                </Title>
+              </DropdownToggle>
+            }
+            dropdownItems={clusterItems}
+          />
+        </div>
+      )}
       <div
         className="oc-nav-header"
         data-tour-id="tour-perspective-dropdown"

@@ -81,8 +81,9 @@ const useModelsLoaded = (): boolean => {
 };
 
 export const useK8sWatchResource: UseK8sWatchResource = (initResource) => {
-  const cluster = useSelector((state: RootState) => getActiveCluster(state));
+  const activeCluster = useSelector((state: RootState) => getActiveCluster(state));
   const resource = useDeepCompareMemoize(initResource, true);
+  const cluster = resource?.cluster ?? activeCluster;
   const modelsLoaded = useModelsLoaded();
 
   const k8sModel = useSelector<RootState, K8sKind>(({ k8s }) =>
