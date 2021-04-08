@@ -19,7 +19,7 @@ func GetCluster(r *http.Request) string {
 	if len(cluster) != 0 {
 		return cluster
 	}
-	return "hub"
+	return "local-cluster"
 }
 
 // Copied from Server package to maintain error response consistency

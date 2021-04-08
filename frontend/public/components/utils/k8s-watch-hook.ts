@@ -67,8 +67,9 @@ const useModelsLoaded = (): boolean => {
 export const useK8sWatchResource = <R extends K8sResourceCommon | K8sResourceCommon[]>(
   initResource: WatchK8sResource,
 ): WatchK8sResult<R> => {
-  const cluster = useSelector((state: RootState) => getActiveCluster(state));
+  const activeCluster = useSelector((state: RootState) => getActiveCluster(state));
   const resource = useDeepCompareMemoize(initResource, true);
+  const cluster = resource?.cluster ?? activeCluster;
   const modelsLoaded = useModelsLoaded();
 
   const k8sModel = useSelector<RootState, K8sKind>(({ k8s }) =>
@@ -151,19 +152,19 @@ export const useK8sWatchResources = <R extends ResourcesObject>(
     () =>
       modelsLoaded
         ? Object.keys(resources).reduce((ids, key) => {
-            const resourceModel = k8sModels.get(resources[key].kind);
-            if (!resourceModel) {
-              ids[key] = {
-                noModel: true,
-              };
-            } else {
-              const idAndDispatch = getIDAndDispatch(resources[key], resourceModel, cluster);
-              if (idAndDispatch) {
-                ids[key] = idAndDispatch;
-              }
+          const resourceModel = k8sModels.get(resources[key].kind);
+          if (!resourceModel) {
+            ids[key] = {
+              noModel: true,
+            };
+          } else {
+            const idAndDispatch = getIDAndDispatch(resources[key], resourceModel, cluster);
+            if (idAndDispatch) {
+              ids[key] = idAndDispatch;
             }
-            return ids;
-          }, {})
+          }
+          return ids;
+        }, {})
         : null,
     [k8sModels, modelsLoaded, resources, cluster],
   );
@@ -263,6 +264,7 @@ export type WatchK8sResources<R extends ResourcesObject> = {
 
 export type WatchK8sResource = {
   kind: K8sResourceKindReference;
+  cluster?: string;
   name?: string;
   namespace?: string;
   isList?: boolean;

@@ -229,7 +229,7 @@ export const watchK8sList = (
       const { subprotocols } = getState().UI.get('impersonate', {});
       WS[id] = k8sWatch(
         k8skind,
-        { ...query, resourceVersion, cluster: getState().UI.get('activeCluter') },
+        { ...query, resourceVersion, cluster: query.cluster ?? getState().UI.get('activeCluter') },
         { subprotocols, timeout: 60 * 1000 },
       );
     } catch (e) {

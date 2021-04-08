@@ -38,9 +38,7 @@ const (
 	tokenizerPageTemplateName = "tokener.html"
 
 	authLoginEndpoint                = "/auth/login"
-	authLoginManagedEndpoint         = "/auth/login/managed"
 	AuthLoginCallbackEndpoint        = "/auth/callback"
-	AuthLoginManagedCallbackEndpoint = "/auth/callback/managed"
 	AuthLoginSuccessEndpoint         = "/"
 	AuthLoginErrorEndpoint           = "/error"
 	authLogoutEndpoint               = "/auth/logout"
@@ -97,7 +95,7 @@ type jsGlobals struct {
 }
 
 type Server struct {
-	K8sProxyConfig       *proxy.Config
+	K8sProxyConfigs      map[string]*proxy.Config
 	BaseURL              *url.URL
 	LogoutRedirect       *url.URL
 	PublicDir            string
@@ -143,8 +141,7 @@ type Server struct {
 	DevCatalogCategories  string
 	UserSettingsLocation  string
 	// DO NOT MERGE
-	ManagedClusterURL       *url.URL
-	ManagedClusterThanosURL *url.URL
+	ManagedClusterAPIEndpoints map[string]string
 }
 
 func (s *Server) authDisabled() bool {
@@ -171,8 +168,17 @@ func (s *Server) HTTPHandler() http.Handler {
 	mux := http.NewServeMux()
 
 	if len(s.BaseURL.Scheme) > 0 && len(s.BaseURL.Host) > 0 {
-		s.K8sProxyConfig.Origin = fmt.Sprintf("%s://%s", s.BaseURL.Scheme, s.BaseURL.Host)
+		for cluster := range s.K8sProxyConfigs {
+			s.K8sProxyConfigs[cluster].Origin = fmt.Sprintf("%s://%s", s.BaseURL.Scheme, s.BaseURL.Host)
+		}
 	}
+
+	localK8sProxyConfig := s.K8sProxyConfigs["local-cluster"];
+	k8sProxies := make(map[string]*proxy.Proxy);
+	for cluster, proxyConfig := range s.K8sProxyConfigs {
+		k8sProxies[cluster] = proxy.NewProxy(proxyConfig)
+	}
+
 	handle := func(path string, handler http.Handler) {
 		mux.Handle(proxy.SingleJoiningSlash(s.BaseURL.Path, path), handler)
 	}
@@ -229,12 +235,11 @@ func (s *Server) HTTPHandler() http.Handler {
 		handleFunc(authLogoutEndpoint, s.Auther.LogoutFunc)
 		handleFunc(AuthLoginCallbackEndpoint, s.Auther.CallbackFunc(fn))
 		handle("/api/openshift/delete-token", authHandlerWithUser(s.handleOpenShiftTokenDeletion))
-
-		// FIXME: remove hard-coded cluster name
-		managedAuther := s.Authers["managed"]
-		if managedAuther != nil {
-			handleFunc(authLoginManagedEndpoint, managedAuther.LoginFunc)
-			handleFunc(AuthLoginManagedCallbackEndpoint, managedAuther.CallbackFunc(fn))
+		for clusterName, clusterAuther := range s.Authers {
+			if clusterAuther != nil {
+				handleFunc(fmt.Sprintf("%s/%s", authLoginEndpoint, clusterName), clusterAuther.LoginFunc)
+				handleFunc(fmt.Sprintf("%s/%s", AuthLoginCallbackEndpoint, clusterName), clusterAuther.CallbackFunc(fn))
+			}
 		}
 	}
 
@@ -258,28 +263,13 @@ func (s *Server) HTTPHandler() http.Handler {
 		Checks: []health.Checkable{},
 	}.ServeHTTP)
 
-	k8sProxy := proxy.NewProxy(s.K8sProxyConfig)
-
-	// DO NOT MERGE
-	managedK8sProxy := proxy.NewProxy(&proxy.Config{
-		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: true,
-		},
-		HeaderBlacklist: []string{"Cookie", "X-CSRFToken"},
-		Endpoint:        s.ManagedClusterURL,
-	})
 
 	handle(k8sProxyEndpoint, http.StripPrefix(
 		proxy.SingleJoiningSlash(s.BaseURL.Path, k8sProxyEndpoint),
 		authHandlerWithUser(func(user *auth.User, w http.ResponseWriter, r *http.Request) {
 			cluster := serverutils.GetCluster(r)
-			if cluster == "managed" {
-				r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
-				managedK8sProxy.ServeHTTP(w, r)
-			} else {
-				r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
-				k8sProxy.ServeHTTP(w, r)
-			}
+			r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
+			k8sProxies[cluster].ServeHTTP(w, r)
 		})),
 	)
 
@@ -287,8 +277,8 @@ func (s *Server) HTTPHandler() http.Handler {
 
 	terminalProxy := terminal.NewProxy(
 		s.TerminalProxyTLSConfig,
-		s.K8sProxyConfig.TLSClientConfig,
-		s.K8sProxyConfig.Endpoint)
+		localK8sProxyConfig.TLSClientConfig,
+		localK8sProxyConfig.Endpoint)
 
 	handle(terminal.ProxyEndpoint, authHandlerWithUser(terminalProxy.HandleProxy))
 	handleFunc(terminal.AvailableEndpoint, terminalProxy.HandleProxyEnabled)
@@ -298,7 +288,7 @@ func (s *Server) HTTPHandler() http.Handler {
 		panic(err)
 	}
 	opts := []graphql.SchemaOpt{graphql.UseFieldResolvers()}
-	k8sResolver := resolver.K8sResolver{K8sProxy: k8sProxy}
+	k8sResolver := resolver.K8sResolver{K8sProxy: k8sProxies["local-cluster"]}
 	rootResolver := resolver.RootResolver{K8sResolver: &k8sResolver}
 	schema := graphql.MustParseSchema(string(graphQLSchema), &rootResolver, opts...)
 	handler := graphqlws.NewHandler()
@@ -330,53 +320,23 @@ func (s *Server) HTTPHandler() http.Handler {
 			thanosTenancyForRulesProxy = proxy.NewProxy(s.ThanosTenancyProxyForRulesConfig)
 		)
 
-		// DO NOT MERGE
-		managedThanosProxy := proxy.NewProxy(&proxy.Config{
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: true,
-			},
-			HeaderBlacklist: []string{"Cookie", "X-CSRFToken"},
-			Endpoint:        s.ManagedClusterThanosURL,
-		})
-
 		// global label, query, and query_range requests have to be proxied via thanos
 		handle(querySourcePath, http.StripPrefix(
 			proxy.SingleJoiningSlash(s.BaseURL.Path, targetAPIPath),
 			authHandlerWithUser(func(user *auth.User, w http.ResponseWriter, r *http.Request) {
-				cluster := serverutils.GetCluster(r)
-				if cluster == "managed" {
-					r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
-					managedThanosProxy.ServeHTTP(w, r)
-				} else {
-					r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
-					thanosProxy.ServeHTTP(w, r)
-				}
+				thanosProxy.ServeHTTP(w, r)
 			})),
 		)
 		handle(queryRangeSourcePath, http.StripPrefix(
 			proxy.SingleJoiningSlash(s.BaseURL.Path, targetAPIPath),
 			authHandlerWithUser(func(user *auth.User, w http.ResponseWriter, r *http.Request) {
-				cluster := serverutils.GetCluster(r)
-				if cluster == "managed" {
-					r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
-					managedThanosProxy.ServeHTTP(w, r)
-				} else {
-					r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
-					thanosProxy.ServeHTTP(w, r)
-				}
+				thanosProxy.ServeHTTP(w, r)
 			})),
 		)
 		handle(labelSourcePath, http.StripPrefix(
 			proxy.SingleJoiningSlash(s.BaseURL.Path, targetAPIPath),
 			authHandlerWithUser(func(user *auth.User, w http.ResponseWriter, r *http.Request) {
-				cluster := serverutils.GetCluster(r)
-				if cluster == "managed" {
-					r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
-					managedThanosProxy.ServeHTTP(w, r)
-				} else {
-					r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
-					thanosProxy.ServeHTTP(w, r)
-				}
+				thanosProxy.ServeHTTP(w, r)
 			})),
 		)
 
@@ -385,14 +345,7 @@ func (s *Server) HTTPHandler() http.Handler {
 		handle(rulesSourcePath, http.StripPrefix(
 			proxy.SingleJoiningSlash(s.BaseURL.Path, targetAPIPath),
 			authHandlerWithUser(func(user *auth.User, w http.ResponseWriter, r *http.Request) {
-				cluster := serverutils.GetCluster(r)
-				if cluster == "managed" {
-					r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
-					managedThanosProxy.ServeHTTP(w, r)
-				} else {
-					r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
-					thanosProxy.ServeHTTP(w, r)
-				}
+				thanosProxy.ServeHTTP(w, r)
 			})),
 		)
 
@@ -400,41 +353,20 @@ func (s *Server) HTTPHandler() http.Handler {
 		handle(tenancyQuerySourcePath, http.StripPrefix(
 			proxy.SingleJoiningSlash(s.BaseURL.Path, tenancyTargetAPIPath),
 			authHandlerWithUser(func(user *auth.User, w http.ResponseWriter, r *http.Request) {
-				cluster := serverutils.GetCluster(r)
-				if cluster == "managed" {
-					r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
-					managedThanosProxy.ServeHTTP(w, r)
-				} else {
-					r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
-					thanosTenancyProxy.ServeHTTP(w, r)
-				}
+				thanosTenancyProxy.ServeHTTP(w, r)
 			})),
 		)
 		handle(tenancyQueryRangeSourcePath, http.StripPrefix(
 			proxy.SingleJoiningSlash(s.BaseURL.Path, tenancyTargetAPIPath),
 			authHandlerWithUser(func(user *auth.User, w http.ResponseWriter, r *http.Request) {
-				cluster := serverutils.GetCluster(r)
-				if cluster == "managed" {
-					r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
-					managedThanosProxy.ServeHTTP(w, r)
-				} else {
-					r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
-					thanosTenancyProxy.ServeHTTP(w, r)
-				}
+				thanosTenancyProxy.ServeHTTP(w, r)
 			})),
 		)
 		// tenancy rules have to be proxied via thanos
 		handle(tenancyRulesSourcePath, http.StripPrefix(
 			proxy.SingleJoiningSlash(s.BaseURL.Path, tenancyTargetAPIPath),
 			authHandlerWithUser(func(user *auth.User, w http.ResponseWriter, r *http.Request) {
-				cluster := serverutils.GetCluster(r)
-				if cluster == "managed" {
-					r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
-					managedThanosProxy.ServeHTTP(w, r)
-				} else {
-					r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
-					thanosTenancyForRulesProxy.ServeHTTP(w, r)
-				}
+				thanosTenancyForRulesProxy.ServeHTTP(w, r)
 			})),
 		)
 	}
@@ -484,14 +416,14 @@ func (s *Server) HTTPHandler() http.Handler {
 
 	// User settings
 	userSettingHandler := usersettings.UserSettingsHandler{
-		K8sProxyConfig:      s.K8sProxyConfig,
+		K8sProxyConfig:      localK8sProxyConfig,
 		Client:              s.K8sClient,
-		Endpoint:            s.K8sProxyConfig.Endpoint.String(),
+		Endpoint:            localK8sProxyConfig.Endpoint.String(),
 		ServiceAccountToken: s.ServiceAccountToken,
 	}
 	handle("/api/console/user-settings", authHandlerWithUser(userSettingHandler.HandleUserSettings))
 
-	helmHandlers := helmhandlerspkg.New(s.K8sProxyConfig.Endpoint.String(), s.K8sClient.Transport, s)
+	helmHandlers := helmhandlerspkg.New(localK8sProxyConfig.Endpoint.String(), s.K8sClient.Transport, s)
 
 	// No need to create plugins handler if no plugin is enabled.
 	if len(s.EnabledConsolePlugins) > 0 {
@@ -667,7 +599,7 @@ func (s *Server) handleOpenShiftTokenDeletion(user *auth.User, w http.ResponseWr
 
 	// Delete the OpenShift OAuthAccessToken.
 	path := "/apis/oauth.openshift.io/v1/oauthaccesstokens/" + tokenName
-	url := proxy.SingleJoiningSlash(s.K8sProxyConfig.Endpoint.String(), path)
+	url := proxy.SingleJoiningSlash(s.K8sProxyConfigs["local-cluster"].Endpoint.String(), path)
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
 		serverutils.SendResponse(w, http.StatusInternalServerError, serverutils.ApiError{Err: fmt.Sprintf("Failed to create token DELETE request: %v", err)})
