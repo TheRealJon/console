@@ -52,7 +52,8 @@ export default (state: UIState, action: UIAction): UIState => {
     return ImmutableMap({
       activeNavSectionId: 'workloads',
       location: pathname,
-      activeCluster: window.localStorage.getItem(`${STORAGE_PREFIX}/last-cluster`) || 'hub',
+      activeCluster:
+        window.localStorage.getItem(`${STORAGE_PREFIX}/last-cluster`) || 'local-cluster',
       activeNamespace: ALL_NAMESPACES_KEY,
       activeApplication: ALL_APPLICATIONS_KEY,
       createProjectMessage: '',

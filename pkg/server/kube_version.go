@@ -2,6 +2,7 @@ package server
 
 import (
 	"errors"
+
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/rest"
 	"k8s.io/klog"
@@ -12,7 +13,7 @@ func (s *Server) GetKubeVersion() string {
 		return s.KubeVersion
 	}
 	config := &rest.Config{
-		Host:      s.K8sProxyConfig.Endpoint.String(),
+		Host:      s.K8sProxyConfigs["local-cluster"].Endpoint.String(),
 		Transport: s.K8sClient.Transport,
 	}
 	kubeVersion, err := kubeVersion(config)

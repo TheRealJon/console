@@ -128,8 +128,8 @@ func main() {
 	fProjectAccessClusterRoles := fs.String("project-access-cluster-roles", "", "The list of Cluster Roles assignable for the project access page. (JSON as string)")
 
 	// DO NOT MERGE
-	fManagedClusterURL := fs.String("managed-cluster-public-url", "", "DEV ONLY. Public URL of the managed cluster.")
-	fManagedClusterThanosURL := fs.String("managed-cluster-thanos-url", "", "DEV ONLY. Public URL of the managed cluster's Thanos.")
+	managedClustersFlags := serverconfig.MultiKeyValue{}
+	fs.Var(&managedClustersFlags, "managed-clusters", "DEV ONLY. List of managed clusters that are managed by this cluster. Each entry consists if cluster nanme as a key and managed cluster k8s API endpoint as a value" )
 
 	if err := serverconfig.Parse(fs, os.Args[1:], "BRIDGE"); err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
@@ -224,16 +224,6 @@ func main() {
 		}
 	}
 
-	// DO NOT MERGE
-	managedClusterURL := &url.URL{}
-	if *fManagedClusterURL != "" {
-		managedClusterURL = bridge.ValidateFlagIsURL("managed-cluster-public-url", *fManagedClusterURL)
-	}
-	managedClusterThanosURL := &url.URL{}
-	if *fManagedClusterThanosURL != "" {
-		managedClusterThanosURL = bridge.ValidateFlagIsURL("managed-cluster-thanos-url", *fManagedClusterThanosURL)
-	}
-
 	srv := &server.Server{
 		PublicDir:                 *fPublicDir,
 		BaseURL:                   baseURL,
@@ -255,8 +245,24 @@ func main() {
 		QuickStarts:               *fQuickStarts,
 		AddPage:                   *fAddPage,
 		ProjectAccessClusterRoles: *fProjectAccessClusterRoles,
-		ManagedClusterURL:       managedClusterURL,
-		ManagedClusterThanosURL: managedClusterThanosURL,
+		K8sProxyConfigs:         make(map[string]*proxy.Config),
+	}
+
+	managedClustersMap := managedClustersFlags.ToMap();
+	if len(managedClustersMap) > 0 {
+		for managedClusterName, managedClusterAPIEndpoint := range managedClustersMap {
+			if managedClusterAPIEndpointURL, err := url.Parse(managedClusterAPIEndpoint); err != nil {
+				klog.Fatalf("Error parsing managed cluster URL from %s", managedClusterAPIEndpoint)
+			} else {
+				srv.K8sProxyConfigs[managedClusterName] = &proxy.Config{
+					TLSClientConfig: &tls.Config{
+						InsecureSkipVerify: true,
+					},
+					HeaderBlacklist: []string{"Cookie", "X-CSRFToken"},
+					Endpoint:        managedClusterAPIEndpointURL,
+				}
+			}
+		}
 	}
 
 	// if !in-cluster (dev) we should not pass these values to the frontend
@@ -320,7 +326,7 @@ func main() {
 			klog.Fatalf("failed to read bearer token: %v", err)
 		}
 
-		srv.K8sProxyConfig = &proxy.Config{
+		srv.K8sProxyConfigs["local-cluster"] = &proxy.Config{
 			TLSClientConfig: tlsConfig,
 			HeaderBlacklist: []string{"Cookie", "X-CSRFToken"},
 			Endpoint:        k8sEndpoint,
@@ -386,7 +392,7 @@ func main() {
 		serviceProxyTLSConfig := oscrypto.SecureTLSConfig(&tls.Config{
 			InsecureSkipVerify: *fK8sModeOffClusterSkipVerifyTLS,
 		})
-		srv.K8sProxyConfig = &proxy.Config{
+		srv.K8sProxyConfigs["local-cluster"] = &proxy.Config{
 			TLSClientConfig: serviceProxyTLSConfig,
 			HeaderBlacklist: []string{"Cookie", "X-CSRFToken"},
 			Endpoint:        k8sEndpoint,
@@ -455,12 +461,12 @@ func main() {
 
 	apiServerEndpoint := *fK8sPublicEndpoint
 	if apiServerEndpoint == "" {
-		apiServerEndpoint = srv.K8sProxyConfig.Endpoint.String()
+		apiServerEndpoint = srv.K8sProxyConfigs["local-cluster"].Endpoint.String()
 	}
 	srv.KubeAPIServerURL = apiServerEndpoint
 	srv.K8sClient = &http.Client{
 		Transport: &http.Transport{
-			TLSClientConfig: srv.K8sProxyConfig.TLSClientConfig,
+			TLSClientConfig: srv.K8sProxyConfigs["local-cluster"].TLSClientConfig,
 		},
 	}
 
@@ -536,7 +542,7 @@ func main() {
 			CookiePath:    cookiePath,
 			RefererPath:   refererPath,
 			SecureCookies: secureCookies,
-			ClusterName:   "hub",
+			ClusterName:   "local-cluster",
 		}
 
 		// NOTE: This won't work when using the OpenShift auth mode.
@@ -559,33 +565,35 @@ func main() {
 		}
 
 		srv.Authers = make(map[string]*auth.Authenticator)
-		srv.Authers["hub"] = srv.Auther
+		srv.Authers["local-cluster"] = srv.Auther
 
-		if *fManagedClusterURL != "" {
-			managedClusterOIDCClientConfig := &auth.Config{
-				AuthSource:   authSource,
-				IssuerURL:    managedClusterURL.String(),
-				IssuerCA:     *fUserAuthOIDCCAFile,
-				ClientID:     *fUserAuthOIDCClientID,
-				ClientSecret: oidcClientSecret,
-				RedirectURL:  proxy.SingleJoiningSlash(srv.BaseURL.String(), server.AuthLoginManagedCallbackEndpoint),
-				Scope:        scopes,
+		if len(managedClustersMap) > 0 {
+			for managedClusterName, managedClusterURLStr := range managedClustersMap {
+				managedClusterOIDCClientConfig := &auth.Config{
+					AuthSource:   authSource,
+					IssuerURL:    managedClusterURLStr,
+					IssuerCA:     *fUserAuthOIDCCAFile,
+					ClientID:     *fUserAuthOIDCClientID,
+					ClientSecret: oidcClientSecret,
+					RedirectURL:  proxy.SingleJoiningSlash(srv.BaseURL.String(), fmt.Sprintf("%s/%s", server.AuthLoginCallbackEndpoint, managedClusterName)),
+					Scope:        scopes,
 
-				// Use the k8s CA file for OpenShift OAuth metadata discovery.
-				// This might be different than IssuerCA.
-				K8sCA: caCertFilePath,
+					// Use the k8s CA file for OpenShift OAuth metadata discovery.
+					// This might be different than IssuerCA.
+					K8sCA: caCertFilePath,
 
-				ErrorURL:   authLoginErrorEndpoint,
-				SuccessURL: authLoginSuccessEndpoint,
+					ErrorURL:   authLoginErrorEndpoint,
+					SuccessURL: authLoginSuccessEndpoint,
 
-				CookiePath:    cookiePath,
-				RefererPath:   refererPath,
-				SecureCookies: secureCookies,
-				ClusterName:   "managed",
-			}
+					CookiePath:    cookiePath,
+					RefererPath:   refererPath,
+					SecureCookies: secureCookies,
+					ClusterName:   managedClusterName,
+				}
 
-			if srv.Authers["managed"], err = auth.NewAuthenticator(context.Background(), managedClusterOIDCClientConfig); err != nil {
-				klog.Fatalf("Error initializing managed cluster authenticator: %v", err)
+				if srv.Authers[managedClusterName], err = auth.NewAuthenticator(context.Background(), managedClusterOIDCClientConfig); err != nil {
+					klog.Fatalf("Error initializing managed cluster authenticator: %v", err)
+				}
 			}
 		}
 	case "disabled":
@@ -626,7 +634,7 @@ func main() {
 		},
 		&http.Client{
 			Transport: &http.Transport{
-				TLSClientConfig: srv.K8sProxyConfig.TLSClientConfig,
+				TLSClientConfig: srv.K8sProxyConfigs["local-cluster"].TLSClientConfig,
 			},
 		},
 		nil,
@@ -644,7 +652,7 @@ func main() {
 		},
 		&http.Client{
 			Transport: &http.Transport{
-				TLSClientConfig: srv.K8sProxyConfig.TLSClientConfig,
+				TLSClientConfig: srv.K8sProxyConfigs["local-cluster"].TLSClientConfig,
 			},
 		},
 		knative.EventSourceFilter,
@@ -662,7 +670,7 @@ func main() {
 		},
 		&http.Client{
 			Transport: &http.Transport{
-				TLSClientConfig: srv.K8sProxyConfig.TLSClientConfig,
+				TLSClientConfig: srv.K8sProxyConfigs["local-cluster"].TLSClientConfig,
 			},
 		},
 		knative.ChannelFilter,
