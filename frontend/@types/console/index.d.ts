@@ -50,6 +50,7 @@ declare interface Window {
     consolePlugins: string[]; // Console dynamic plugins enabled on the cluster
     quickStarts: string;
     projectAccessClusterRoles: string;
+    clusters: string[];
   };
   windowError?: string;
   __REDUX_DEVTOOLS_EXTENSION_COMPOSE__?: Function;
