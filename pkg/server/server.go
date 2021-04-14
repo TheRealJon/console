@@ -96,6 +96,7 @@ type jsGlobals struct {
 	ConsolePlugins            []string `json:"consolePlugins"`
 	QuickStarts               string   `json:"quickStarts"`
 	ProjectAccessClusterRoles string   `json:"projectAccessClusterRoles"`
+	Clusters                 []string `json:"clusters"`
 }
 
 type Server struct {
@@ -180,8 +181,8 @@ func (s *Server) HTTPHandler() http.Handler {
 		}
 	}
 
-	localK8sProxyConfig := s.K8sProxyConfigs["local-cluster"];
-	k8sProxies := make(map[string]*proxy.Proxy);
+	localK8sProxyConfig := s.K8sProxyConfigs["local-cluster"]
+	k8sProxies := make(map[string]*proxy.Proxy)
 	for cluster, proxyConfig := range s.K8sProxyConfigs {
 		k8sProxies[cluster] = proxy.NewProxy(proxyConfig)
 	}
@@ -269,7 +270,6 @@ func (s *Server) HTTPHandler() http.Handler {
 	handleFunc("/health", health.Checker{
 		Checks: []health.Checkable{},
 	}.ServeHTTP)
-
 
 	handle(k8sProxyEndpoint, http.StripPrefix(
 		proxy.SingleJoiningSlash(s.BaseURL.Path, k8sProxyEndpoint),
@@ -512,6 +512,16 @@ func (s *Server) indexHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	plugins := make([]string, 0, len(s.EnabledConsolePlugins))
+	for plugin := range s.EnabledConsolePlugins {
+		plugins = append(plugins, plugin)
+	}
+
+	clusters := make([]string, 0, len(s.K8sProxyConfigs))
+	for cluster := range s.K8sProxyConfigs {
+		clusters = append(clusters, cluster)
+	}
+
 	jsg := &jsGlobals{
 		ConsoleVersion:            version.Version,
 		AuthDisabled:              s.authDisabled(),
@@ -538,10 +548,11 @@ func (s *Server) indexHandler(w http.ResponseWriter, r *http.Request) {
 		GraphQLBaseURL:            proxy.SingleJoiningSlash(s.BaseURL.Path, graphQLEndpoint),
 		DevCatalogCategories:      s.DevCatalogCategories,
 		UserSettingsLocation:      s.UserSettingsLocation,
-		ConsolePlugins:            getMapKeys(s.EnabledConsolePlugins),
 		QuickStarts:               s.QuickStarts,
 		AddPage:                   s.AddPage,
+		ConsolePlugins:        plugins,
 		ProjectAccessClusterRoles: s.ProjectAccessClusterRoles,
+		Clusters:              clusters,
 	}
 
 	if !s.authDisabled() {
@@ -635,12 +646,4 @@ func tokenToObjectName(token string) string {
 	name := strings.TrimPrefix(token, sha256Prefix)
 	h := sha256.Sum256([]byte(name))
 	return sha256Prefix + base64.RawURLEncoding.EncodeToString(h[0:])
-}
-
-func getMapKeys(m map[string]string) []string {
-	keys := []string{}
-	for key := range m {
-		keys = append(keys, key)
-	}
-	return keys
 }

@@ -83,17 +83,16 @@ const useModelsLoaded = (): boolean => {
 export const useK8sWatchResource: UseK8sWatchResource = (initResource) => {
   const activeCluster = useSelector((state: RootState) => getActiveCluster(state));
   const resource = useDeepCompareMemoize(initResource, true);
-  const cluster = resource?.cluster ?? activeCluster;
   const modelsLoaded = useModelsLoaded();
 
   const k8sModel = useSelector<RootState, K8sKind>(({ k8s }) =>
     resource ? k8s.getIn(['RESOURCES', 'models', resource.kind]) : null,
   );
 
-  const reduxID = React.useMemo(() => getIDAndDispatch(resource, k8sModel, cluster), [
+  const reduxID = React.useMemo(() => getIDAndDispatch(resource, k8sModel, activeCluster), [
     k8sModel,
     resource,
-    cluster,
+    activeCluster,
   ]);
 
   const dispatch = useDispatch();
