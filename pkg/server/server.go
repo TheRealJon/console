@@ -146,6 +146,10 @@ type Server struct {
 	QuickStarts               string
 	AddPage                   string
 	ProjectAccessClusterRoles string
+	// DO NOT MERGE
+	ManagedClusterURL       *url.URL
+	ManagedClusterToken     string
+	ManagedClusterThanosURL *url.URL
 }
 
 func (s *Server) authDisabled() bool {
@@ -254,11 +258,32 @@ func (s *Server) HTTPHandler() http.Handler {
 	}.ServeHTTP)
 
 	k8sProxy := proxy.NewProxy(s.K8sProxyConfig)
+
+	// DO NOT MERGE
+	managedK8sProxy := proxy.NewProxy(&proxy.Config{
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true,
+		},
+		HeaderBlacklist: []string{"Cookie", "X-CSRFToken"},
+		Endpoint:        s.ManagedClusterURL,
+	})
+
 	handle(k8sProxyEndpoint, http.StripPrefix(
 		proxy.SingleJoiningSlash(s.BaseURL.Path, k8sProxyEndpoint),
 		authHandlerWithUser(func(user *auth.User, w http.ResponseWriter, r *http.Request) {
-			r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
-			k8sProxy.ServeHTTP(w, r)
+			// The client can't set headers for WebSockets, so check both the header and query
+			// parameters for the active cluster.
+			cluster := r.Header.Get("X-Cluster")
+			if len(cluster) == 0 {
+				cluster = r.URL.Query().Get("cluster")
+			}
+			if cluster == "managed" {
+				r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", s.ManagedClusterToken))
+				managedK8sProxy.ServeHTTP(w, r)
+			} else {
+				r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
+				k8sProxy.ServeHTTP(w, r)
+			}
 		})),
 	)
 
@@ -310,26 +335,53 @@ func (s *Server) HTTPHandler() http.Handler {
 			thanosTenancyForRulesProxy = proxy.NewProxy(s.ThanosTenancyProxyForRulesConfig)
 		)
 
+		// DO NOT MERGE
+		managedThanosProxy := proxy.NewProxy(&proxy.Config{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+			HeaderBlacklist: []string{"Cookie", "X-CSRFToken"},
+			Endpoint:        s.ManagedClusterThanosURL,
+		})
+
 		// global label, query, and query_range requests have to be proxied via thanos
 		handle(querySourcePath, http.StripPrefix(
 			proxy.SingleJoiningSlash(s.BaseURL.Path, targetAPIPath),
 			authHandlerWithUser(func(user *auth.User, w http.ResponseWriter, r *http.Request) {
-				r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
-				thanosProxy.ServeHTTP(w, r)
+				cluster := r.Header.Get("X-Cluster")
+				if cluster == "managed" {
+					r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", s.ManagedClusterToken))
+					managedThanosProxy.ServeHTTP(w, r)
+				} else {
+					r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
+					thanosProxy.ServeHTTP(w, r)
+				}
 			})),
 		)
 		handle(queryRangeSourcePath, http.StripPrefix(
 			proxy.SingleJoiningSlash(s.BaseURL.Path, targetAPIPath),
 			authHandlerWithUser(func(user *auth.User, w http.ResponseWriter, r *http.Request) {
-				r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
-				thanosProxy.ServeHTTP(w, r)
+				cluster := r.Header.Get("X-Cluster")
+				if cluster == "managed" {
+					r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", s.ManagedClusterToken))
+					managedThanosProxy.ServeHTTP(w, r)
+				} else {
+					r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
+					thanosProxy.ServeHTTP(w, r)
+				}
 			})),
 		)
 		handle(labelSourcePath, http.StripPrefix(
 			proxy.SingleJoiningSlash(s.BaseURL.Path, targetAPIPath),
 			authHandlerWithUser(func(user *auth.User, w http.ResponseWriter, r *http.Request) {
-				r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
-				thanosProxy.ServeHTTP(w, r)
+				cluster := r.Header.Get("X-Cluster")
+				if cluster == "managed" {
+					r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", s.ManagedClusterToken))
+					managedThanosProxy.ServeHTTP(w, r)
+				} else {
+					r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
+					thanosProxy.ServeHTTP(w, r)
+				}
 			})),
 		)
 
@@ -338,8 +390,14 @@ func (s *Server) HTTPHandler() http.Handler {
 		handle(rulesSourcePath, http.StripPrefix(
 			proxy.SingleJoiningSlash(s.BaseURL.Path, targetAPIPath),
 			authHandlerWithUser(func(user *auth.User, w http.ResponseWriter, r *http.Request) {
-				r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
-				thanosProxy.ServeHTTP(w, r)
+				cluster := r.Header.Get("X-Cluster")
+				if cluster == "managed" {
+					r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", s.ManagedClusterToken))
+					managedThanosProxy.ServeHTTP(w, r)
+				} else {
+					r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
+					thanosProxy.ServeHTTP(w, r)
+				}
 			})),
 		)
 
@@ -347,23 +405,41 @@ func (s *Server) HTTPHandler() http.Handler {
 		handle(tenancyQuerySourcePath, http.StripPrefix(
 			proxy.SingleJoiningSlash(s.BaseURL.Path, tenancyTargetAPIPath),
 			authHandlerWithUser(func(user *auth.User, w http.ResponseWriter, r *http.Request) {
-				r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
-				thanosTenancyProxy.ServeHTTP(w, r)
+				cluster := r.Header.Get("X-Cluster")
+				if cluster == "managed" {
+					r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", s.ManagedClusterToken))
+					managedThanosProxy.ServeHTTP(w, r)
+				} else {
+					r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
+					thanosTenancyProxy.ServeHTTP(w, r)
+				}
 			})),
 		)
 		handle(tenancyQueryRangeSourcePath, http.StripPrefix(
 			proxy.SingleJoiningSlash(s.BaseURL.Path, tenancyTargetAPIPath),
 			authHandlerWithUser(func(user *auth.User, w http.ResponseWriter, r *http.Request) {
-				r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
-				thanosTenancyProxy.ServeHTTP(w, r)
+				cluster := r.Header.Get("X-Cluster")
+				if cluster == "managed" {
+					r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", s.ManagedClusterToken))
+					managedThanosProxy.ServeHTTP(w, r)
+				} else {
+					r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
+					thanosTenancyProxy.ServeHTTP(w, r)
+				}
 			})),
 		)
 		// tenancy rules have to be proxied via thanos
 		handle(tenancyRulesSourcePath, http.StripPrefix(
 			proxy.SingleJoiningSlash(s.BaseURL.Path, tenancyTargetAPIPath),
 			authHandlerWithUser(func(user *auth.User, w http.ResponseWriter, r *http.Request) {
-				r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
-				thanosTenancyForRulesProxy.ServeHTTP(w, r)
+				cluster := r.Header.Get("X-Cluster")
+				if cluster == "managed" {
+					r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", s.ManagedClusterToken))
+					managedThanosProxy.ServeHTTP(w, r)
+				} else {
+					r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
+					thanosTenancyForRulesProxy.ServeHTTP(w, r)
+				}
 			})),
 		)
 	}
@@ -628,7 +704,7 @@ func tokenToObjectName(token string) string {
 
 func getMapKeys(m map[string]string) []string {
 	keys := []string{}
-	for key, _ := range m {
+	for key := range m {
 		keys = append(keys, key)
 	}
 	return keys

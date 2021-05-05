@@ -127,6 +127,11 @@ func main() {
 	fAddPage := fs.String("add-page", "", "DEV ONLY. Allow add page customization. (JSON as string)")
 	fProjectAccessClusterRoles := fs.String("project-access-cluster-roles", "", "The list of Cluster Roles assignable for the project access page. (JSON as string)")
 
+	// DO NOT MERGE
+	fManagedClusterURL := fs.String("managed-cluster-public-url", "", "DEV ONLY. Public URL of the managed cluster.")
+	fManagedClusterToken := fs.String("managed-cluster-bearer-token", "", "DEV ONLY. Bearer token for communicating with the managed cluster.")
+	fManagedClusterThanosURL := fs.String("managed-cluster-thanos-url", "", "DEV ONLY. Public URL of the managed cluster's Thanos.")
+
 	if err := serverconfig.Parse(fs, os.Args[1:], "BRIDGE"); err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)
@@ -220,6 +225,16 @@ func main() {
 		}
 	}
 
+	// DO NOT MERGE
+	managedClusterURL := &url.URL{}
+	if *fManagedClusterURL != "" {
+		managedClusterURL = bridge.ValidateFlagIsURL("managed-cluster-public-url", *fManagedClusterURL)
+	}
+	managedClusterThanosURL := &url.URL{}
+	if *fManagedClusterThanosURL != "" {
+		managedClusterThanosURL = bridge.ValidateFlagIsURL("managed-cluster-thanos-url", *fManagedClusterThanosURL)
+	}
+
 	srv := &server.Server{
 		PublicDir:                 *fPublicDir,
 		BaseURL:                   baseURL,
@@ -241,6 +256,9 @@ func main() {
 		QuickStarts:               *fQuickStarts,
 		AddPage:                   *fAddPage,
 		ProjectAccessClusterRoles: *fProjectAccessClusterRoles,
+		ManagedClusterURL:       managedClusterURL,
+		ManagedClusterToken:     *fManagedClusterToken,
+		ManagedClusterThanosURL: managedClusterThanosURL,
 	}
 
 	// if !in-cluster (dev) we should not pass these values to the frontend

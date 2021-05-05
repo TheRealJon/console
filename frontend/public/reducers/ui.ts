@@ -9,6 +9,7 @@ import { RootState } from '../redux';
 import { Alert, AlertStates, RuleStates, SilenceStates } from '../components/monitoring/types';
 import { isSilenced } from '../components/monitoring/utils';
 import { MONITORING_DASHBOARDS_DEFAULT_TIMESPAN } from '../components/monitoring/dashboards/types';
+import { STORAGE_PREFIX } from '@console/shared/src/constants/common';
 
 export type UIState = ImmutableMap<string, any>;
 
@@ -51,6 +52,7 @@ export default (state: UIState, action: UIAction): UIState => {
     return ImmutableMap({
       activeNavSectionId: 'workloads',
       location: pathname,
+      activeCluster: window.localStorage.getItem(`${STORAGE_PREFIX}/last-cluster`) || 'hub',
       activeNamespace: ALL_NAMESPACES_KEY,
       activeApplication: ALL_APPLICATIONS_KEY,
       createProjectMessage: '',
@@ -81,6 +83,9 @@ export default (state: UIState, action: UIAction): UIState => {
   switch (action.type) {
     case ActionType.SetActiveApplication:
       return state.set('activeApplication', action.payload.application);
+
+    case ActionType.SetActiveCluster:
+      return state.set('activeCluster', action.payload.cluster);
 
     case ActionType.SetActiveNamespace:
       if (!action.payload.namespace) {
@@ -343,6 +348,8 @@ export const userStateToProps = ({ UI }: RootState) => {
 export const impersonateStateToProps = ({ UI }: RootState) => {
   return { impersonate: UI.get('impersonate') };
 };
+
+export const getActiveCluster = ({ UI }: RootState): string => UI.get('activeCluster');
 
 export const getActiveNamespace = ({ UI }: RootState): string => UI.get('activeNamespace');
 

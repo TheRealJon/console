@@ -90,6 +90,7 @@ export const watchK8sObject = (
   dispatch(startWatchK8sObject(id));
   REF_COUNTS[id] = 1;
 
+  query.cluster = getState().UI.get('activeCluster');
   if (query.name) {
     query.fieldSelector = `metadata.name=${query.name}`;
     delete query.name;
@@ -228,7 +229,7 @@ export const watchK8sList = (
       const { subprotocols } = getState().UI.get('impersonate', {});
       WS[id] = k8sWatch(
         k8skind,
-        { ...query, resourceVersion },
+        { ...query, resourceVersion, cluster: getState().UI.get('activeCluter') },
         { subprotocols, timeout: 60 * 1000 },
       );
     } catch (e) {

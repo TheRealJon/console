@@ -121,7 +121,7 @@ ListPageWrapper_.propTypes = {
 };
 
 /** @type {React.FC<<WrappedComponent>, {canCreate?: Boolean, textFilter:string, createAccessReview?: Object, createButtonText?: String, createProps?: Object, fieldSelector?: String, filterLabel?: String, resources: any, badge?: React.ReactNode}>*/
-export const FireMan_ = connect(null, { filterList })(
+export const FireMan_ = connect(({ UI }) => ({ cluster: UI.get('activeCluster') }), { filterList })(
   class ConnectedFireMan extends React.PureComponent {
     constructor(props) {
       super(props);
@@ -129,14 +129,22 @@ export const FireMan_ = connect(null, { filterList })(
       this.applyFilter = this.applyFilter.bind(this);
 
       const reduxIDs = props.resources.map((r) =>
-        makeReduxID(kindObj(r.kind), makeQuery(r.namespace, r.selector, r.fieldSelector, r.name)),
+        makeReduxID(
+          kindObj(r.kind),
+          makeQuery(r.namespace, r.selector, r.fieldSelector, r.name),
+          this.props.cluster,
+        ),
       );
       this.state = { reduxIDs };
     }
 
-    UNSAFE_componentWillReceiveProps({ resources }) {
+    UNSAFE_componentWillReceiveProps({ resources, cluster }) {
       const reduxIDs = resources.map((r) =>
-        makeReduxID(kindObj(r.kind), makeQuery(r.namespace, r.selector, r.fieldSelector, r.name)),
+        makeReduxID(
+          kindObj(r.kind),
+          makeQuery(r.namespace, r.selector, r.fieldSelector, r.name),
+          cluster,
+        ),
       );
       if (_.isEqual(reduxIDs, this.state.reduxIDs)) {
         return;
