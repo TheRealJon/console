@@ -254,6 +254,7 @@ func main() {
 			if managedClusterAPIEndpointURL, err := url.Parse(managedClusterAPIEndpoint); err != nil {
 				klog.Fatalf("Error parsing managed cluster URL from %s", managedClusterAPIEndpoint)
 			} else {
+				klog.V(4).Infof("Setting proxy config for managed cluster %s", managedClusterName)
 				srv.K8sProxyConfigs[managedClusterName] = &proxy.Config{
 					TLSClientConfig: &tls.Config{
 						InsecureSkipVerify: true,

@@ -99,6 +99,7 @@ func SetFlagsFromConfig(fs *flag.FlagSet, filename string) (err error) {
 	addMonitoringInfo(fs, &config.MonitoringInfo)
 	addHelmConfig(fs, &config.Helm)
 	addPlugins(fs, config.Plugins)
+	addManagedClusters(fs, config.ManagedClusters)
 
 	return nil
 }
@@ -293,5 +294,11 @@ func isAlreadySet(fs *flag.FlagSet, name string) bool {
 func addPlugins(fs *flag.FlagSet, plugins map[string]string) {
 	for pluginName, pluginEndpoint := range plugins {
 		fs.Set("plugins", fmt.Sprintf("%s=%s", pluginName, pluginEndpoint))
+	}
+}
+
+func addManagedClusters(fs *flag.FlagSet, managedClusters map[string]string) {
+	for managedClusterName, managedClusterEndpoint := range managedClusters {
+		fs.Set("managed-clusters", fmt.Sprintf("%s=%s", managedClusterName, managedClusterEndpoint))
 	}
 }
