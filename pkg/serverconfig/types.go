@@ -6,18 +6,18 @@ package serverconfig
 
 // Config is the top-level console server cli configuration.
 type Config struct {
-	APIVersion     string `yaml:"apiVersion"`
-	Kind           string `yaml:"kind"`
-	ServingInfo    `yaml:"servingInfo"`
-	ClusterInfo    `yaml:"clusterInfo"`
-	Auth           `yaml:"auth"`
-	Customization  `yaml:"customization"`
-	Providers      `yaml:"providers"`
-	Helm           `yaml:"helm"`
-	MonitoringInfo `yaml:"monitoringInfo,omitempty"`
-	Plugins        map[string]string `yaml:"plugins,omitempty"`
+	APIVersion      string `yaml:"apiVersion"`
+	Kind            string `yaml:"kind"`
+	ServingInfo     `yaml:"servingInfo"`
+	ClusterInfo     `yaml:"clusterInfo"`
+	Auth            `yaml:"auth"`
+	Customization   `yaml:"customization"`
+	Providers       `yaml:"providers"`
+	Helm            `yaml:"helm"`
+	MonitoringInfo  `yaml:"monitoringInfo,omitempty"`
+	Plugins         map[string]string `yaml:"plugins,omitempty"`
+	ManagedClusterConfigs []ManagedClusterConfig `yaml:"managedClusters"`
 }
-
 // ServingInfo holds configuration for serving HTTP.
 type ServingInfo struct {
 	BindAddress  string `yaml:"bindAddress,omitempty"`
@@ -128,4 +128,10 @@ type HelmChartRepo struct {
 
 type Helm struct {
 	ChartRepo HelmChartRepo `yaml:"chartRepository"`
+}
+
+type ManagedClusterConfig struct {
+	Name   string `json:"name" yaml:"name"`
+	Server string `json:"server" yaml:"server"`
+	CAData string `json:"caData" yaml:"caData"`
 }

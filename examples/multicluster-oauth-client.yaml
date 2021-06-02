@@ -5,4 +5,4 @@ metadata:
 grantMethod: auto
 secret: open-sesame
 redirectURIs:
-  - http://localhost:9000/auth/callback
+  - https://console-openshift-console.apps.jonjacks.devcluster.openshift.com/auth/callback

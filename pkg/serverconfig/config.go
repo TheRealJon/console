@@ -99,6 +99,7 @@ func SetFlagsFromConfig(fs *flag.FlagSet, filename string) (err error) {
 	addMonitoringInfo(fs, &config.MonitoringInfo)
 	addHelmConfig(fs, &config.Helm)
 	addPlugins(fs, config.Plugins)
+	addManagedClusterConfigs(fs, config.ManagedClusterConfigs)
 
 	return nil
 }
@@ -293,5 +294,16 @@ func isAlreadySet(fs *flag.FlagSet, name string) bool {
 func addPlugins(fs *flag.FlagSet, plugins map[string]string) {
 	for pluginName, pluginEndpoint := range plugins {
 		fs.Set("plugins", fmt.Sprintf("%s=%s", pluginName, pluginEndpoint))
+	}
+}
+
+func addManagedClusterConfigs(fs *flag.FlagSet, managedClusterConfigs []ManagedClusterConfig) {
+	if managedClusterConfigs != nil && len(managedClusterConfigs) > 0 {
+		configJSON, err := json.Marshal(managedClusterConfigs)
+		if err != nil {
+			klog.Fatalf("Could not marshal ConsoleConfig managedClusters field: %v", err)
+		} else {
+			fs.Set("managed-clusters", string(configJSON))
+		}
 	}
 }

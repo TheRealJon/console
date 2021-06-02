@@ -23,7 +23,6 @@ import { useK8sWatchResource } from '../utils/k8s-watch-hook';
 import { useTranslation } from 'react-i18next';
 import { useActiveNamespace, useActivePerspective, ACM_LINK_ID } from '@console/shared';
 import { STORAGE_PREFIX } from '@console/shared/src/constants/common';
-import * as acmIcon from '../../imgs/ACM-icon.svg';
 
 export type NavHeaderProps = {
   onPerspectiveSelected: () => void;
@@ -117,41 +116,24 @@ const NavHeader: React.FC<NavHeaderProps> = ({ onPerspectiveSelected }) => {
     </DropdownItem>
   ));
 
-  const perspectiveItems = React.useMemo(() => {
-    const items = perspectiveExtensions.map((nextPerspective: Perspective) => (
-      <DropdownItem
-        key={nextPerspective.properties.id}
-        onClick={(event: React.MouseEvent<HTMLLinkElement>) =>
-          onPerspectiveSelect(event, nextPerspective)
-        }
-        isHovered={nextPerspective.properties.id === activePerspective}
-      >
-        <Title headingLevel="h2" size="md" data-test-id="perspective-switcher-menu-option">
-          <span className="oc-nav-header__icon">{nextPerspective.properties.icon}</span>
-          {nextPerspective.properties.name}
-        </Title>
-      </DropdownItem>
-    ));
-    if (acmLink) {
-      items.push(
+  const perspectiveItems = React.useMemo(
+    () =>
+      perspectiveExtensions.map((nextPerspective: Perspective) => (
         <DropdownItem
-          key={ACM_LINK_ID}
-          onClick={() => {
-            window.location.href = acmLink.spec.href;
-          }}
-          isHovered={ACM_LINK_ID === activePerspective}
+          key={nextPerspective.properties.id}
+          onClick={(event: React.MouseEvent<HTMLLinkElement>) =>
+            onPerspectiveSelect(event, nextPerspective)
+          }
+          isHovered={nextPerspective.properties.id === activePerspective}
         >
           <Title headingLevel="h2" size="md" data-test-id="perspective-switcher-menu-option">
-            <span className="oc-nav-header__icon">
-              <img src={acmIcon} height="12em" width="12em" alt="" />
-            </span>
-            {t('public~Advanced Cluster Management')}
+            <span className="oc-nav-header__icon">{nextPerspective.properties.icon}</span>
+            {nextPerspective.properties.name}
           </Title>
-        </DropdownItem>,
-      );
-    }
-    return items;
-  }, [acmLink, activePerspective, onPerspectiveSelect, perspectiveExtensions, t]);
+        </DropdownItem>
+      )),
+    [activePerspective, onPerspectiveSelect, perspectiveExtensions],
+  );
 
   const { icon, name } = React.useMemo(
     () => perspectiveExtensions.find((p) => p.properties.id === activePerspective).properties,
@@ -160,7 +142,7 @@ const NavHeader: React.FC<NavHeaderProps> = ({ onPerspectiveSelected }) => {
 
   return (
     <>
-      {clusterItems.length && (
+      {clusterItems.length > 0 && (
         <div className="oc-nav-header">
           <Dropdown
             isOpen={isClusterDropdownOpen}
@@ -168,11 +150,25 @@ const NavHeader: React.FC<NavHeaderProps> = ({ onPerspectiveSelected }) => {
               <DropdownToggle onToggle={() => setClusterDropdownOpen(!isClusterDropdownOpen)}>
                 <Title headingLevel="h2" size="md">
                   <ClusterIcon />
-                  {activeCluster}
+                  {activePerspective === ACM_LINK_ID ? t('public~All Clusters') : activeCluster}
                 </Title>
               </DropdownToggle>
             }
-            dropdownItems={clusterItems}
+            dropdownItems={[
+              ...(clusterItems.length > 1
+                ? [
+                    <DropdownItem
+                      key={ACM_LINK_ID}
+                      onClick={() =>
+                        (window.location.href = acmLink?.spec?.href ?? window.location.href)
+                      }
+                    >
+                      {t('public~All Clusters')}
+                    </DropdownItem>,
+                  ]
+                : []),
+              ...clusterItems,
+            ]}
           />
         </div>
       )}
