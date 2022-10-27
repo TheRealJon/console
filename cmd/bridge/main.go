@@ -304,9 +304,9 @@ func main() {
 		for _, managedClusterConfig := range unvalidatedManagedClusters {
 			err := serverconfig.ValidateManagedClusterConfig(managedClusterConfig)
 			if err != nil {
-				klog.Errorf("Error configuring managed cluster. Invalid configuration: %v", err)
-				continue
+				klog.Fatalf("Error configuring managed cluster. Invalid configuration: %v", err)
 			}
+			klog.V(4).Infof("Managed cluster config validated for %s", managedClusterConfig.Name)
 			managedClusterConfigs = append(managedClusterConfigs, managedClusterConfig)
 		}
 	}

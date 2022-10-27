@@ -29,6 +29,13 @@ export const applyConsoleHeaders = (url, options) => {
     }
   }
 
+  const cluster = getActiveCluster(storeHandler.getStore()?.getState());
+  if (options.headers) {
+    options.headers['X-Cluster'] = cluster;
+  } else {
+    options.headers = { 'X-Cluster': cluster };
+  }
+
   // If the URL being requested is absolute (and therefore, not a local request),
   // remove the authorization header to prevent credentials from leaking.
   if (url.indexOf('://') >= 0 && options.headers) {
