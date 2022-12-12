@@ -67,6 +67,11 @@ const (
 	operandsListEndpoint                  = "/api/list-operands/"
 	accountManagementEndpoint             = "/api/accounts_mgmt/"
 	sha256Prefix                          = "sha256~"
+
+	// Managed service proxy paths
+	thanosWebServiceProxyPath             = "/api/v1/namespaces/openshift-monitoring/services/https:thanos-querier:9091/proxy-service/api"
+	thanosTenancyServiceProxyPath         = "/api/v1/namespaces/openshift-monitoring/services/https:thanos-querier:9092/proxy-service/api"
+	thanosTenancyForRulesServiceProxyPath = "/api/v1/namespaces/openshift-monitoring/services/https:thanos-querier:9093/proxy-service/api"
 )
 
 type jsGlobals struct {
@@ -209,13 +214,12 @@ func (s *Server) getLocalAuther() *auth.Authenticator {
 	return s.Authers[serverutils.LocalClusterName]
 }
 
-func (s *Server) getK8sProxyConfig(cluster string) *proxy.Config {
-	proxyConfig := s.LocalK8sProxyConfig
+func (s *Server) getProxyConfig(cluster string, localConfig *proxy.Config, proxyPath string) *proxy.Config {
+	proxyConfig := localConfig
 	if cluster != serverutils.LocalClusterName {
 		proxyConfig = s.ManagedClusterProxyConfig
-		path := fmt.Sprintf("/%s", cluster)
-		proxyConfig.Endpoint.Path = path
-		proxyConfig.Endpoint.RawPath = path
+		proxyConfig.Endpoint.Path = proxyPath
+		proxyConfig.Endpoint.RawPath = proxyPath
 	}
 
 	if len(s.BaseURL.Scheme) > 0 && len(s.BaseURL.Host) > 0 {
@@ -223,6 +227,30 @@ func (s *Server) getK8sProxyConfig(cluster string) *proxy.Config {
 	}
 
 	return proxyConfig
+}
+
+func (s *Server) getK8sProxy(cluster string) *proxy.Proxy {
+	k8sServicePath := fmt.Sprintf("/%s", cluster)
+	proxyConfig := s.getProxyConfig(cluster, s.LocalK8sProxyConfig, k8sServicePath)
+	return proxy.NewProxy(proxyConfig)
+}
+
+func (s *Server) getThanosProxy(cluster string) *proxy.Proxy {
+	thanosServicePath := fmt.Sprintf("/%s%s", cluster, thanosWebServiceProxyPath)
+	proxyConfig := s.getProxyConfig(cluster, s.ThanosProxyConfig, thanosServicePath)
+	return proxy.NewProxy(proxyConfig)
+}
+
+func (s *Server) getThanosTenancyProxy(cluster string) *proxy.Proxy {
+	thanosTenancyServicePath := fmt.Sprintf("/%s%s", cluster, thanosTenancyServiceProxyPath)
+	proxyConfig := s.getProxyConfig(cluster, s.ThanosProxyConfig, thanosTenancyServicePath)
+	return proxy.NewProxy(proxyConfig)
+}
+
+func (s *Server) getThanosTenancyForRulesProxy(cluster string) *proxy.Proxy {
+	thanosTenancyForRulesServicePath := fmt.Sprintf("/%s%s", cluster, thanosTenancyForRulesServiceProxyPath)
+	proxyConfig := s.getProxyConfig(cluster, s.ThanosProxyConfig, thanosTenancyForRulesServicePath)
+	return proxy.NewProxy(proxyConfig)
 }
 
 func (s *Server) getK8sClient(cluster string) *http.Client {
@@ -239,8 +267,7 @@ func (s *Server) getK8sClient(cluster string) *http.Client {
 func (s *Server) HTTPHandler() http.Handler {
 	mux := http.NewServeMux()
 	localAuther := s.getLocalAuther()
-	localK8sProxyConfig := s.getK8sProxyConfig(serverutils.LocalClusterName)
-	localK8sProxy := proxy.NewProxy(localK8sProxyConfig)
+	localK8sProxy := s.getK8sProxy(serverutils.LocalClusterName)
 	handle := func(path string, handler http.Handler) {
 		mux.Handle(proxy.SingleJoiningSlash(s.BaseURL.Path, path), handler)
 	}
@@ -331,9 +358,7 @@ func (s *Server) HTTPHandler() http.Handler {
 		authHandlerWithUser(func(user *auth.User, w http.ResponseWriter, r *http.Request) {
 			cluster := serverutils.GetCluster(r)
 			r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
-			proxyConfig := s.getK8sProxyConfig(cluster)
-			k8sProxy := proxy.NewProxy(proxyConfig)
-			k8sProxy.ServeHTTP(w, r)
+			s.getK8sProxy(cluster).ServeHTTP(w, r)
 		})),
 	)
 
@@ -342,8 +367,8 @@ func (s *Server) HTTPHandler() http.Handler {
 
 	terminalProxy := terminal.NewProxy(
 		s.TerminalProxyTLSConfig,
-		localK8sProxyConfig.TLSClientConfig,
-		localK8sProxyConfig.Endpoint)
+		s.LocalK8sProxyConfig.TLSClientConfig,
+		s.LocalK8sProxyConfig.Endpoint)
 
 	handle(terminal.ProxyEndpoint, authHandlerWithUser(terminalProxy.HandleProxy))
 	handleFunc(terminal.AvailableEndpoint, terminalProxy.HandleProxyEnabled)
@@ -384,60 +409,63 @@ func (s *Server) HTTPHandler() http.Handler {
 			tenancyQueryRangeSourcePath = prometheusTenancyProxyEndpoint + "/api/v1/query_range"
 			tenancyRulesSourcePath      = prometheusTenancyProxyEndpoint + "/api/v1/rules"
 			tenancyTargetAPIPath        = prometheusTenancyProxyEndpoint + "/api/"
-
-			thanosProxy                = proxy.NewProxy(s.ThanosProxyConfig)
-			thanosTenancyProxy         = proxy.NewProxy(s.ThanosTenancyProxyConfig)
-			thanosTenancyForRulesProxy = proxy.NewProxy(s.ThanosTenancyProxyForRulesConfig)
 		)
 
 		// global label, query, and query_range requests have to be proxied via thanos
 		handle(querySourcePath, http.StripPrefix(
 			proxy.SingleJoiningSlash(s.BaseURL.Path, targetAPIPath),
 			authHandlerWithUser(func(user *auth.User, w http.ResponseWriter, r *http.Request) {
+				cluster := serverutils.GetCluster(r)
 				r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
-				thanosProxy.ServeHTTP(w, r)
+				s.getThanosProxy(cluster).ServeHTTP(w, r)
 			})),
 		)
 		handle(queryRangeSourcePath, http.StripPrefix(
 			proxy.SingleJoiningSlash(s.BaseURL.Path, targetAPIPath),
 			authHandlerWithUser(func(user *auth.User, w http.ResponseWriter, r *http.Request) {
+				cluster := serverutils.GetCluster(r)
 				r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
-				thanosProxy.ServeHTTP(w, r)
+				s.getThanosProxy(cluster).ServeHTTP(w, r)
 			})),
 		)
 		handle(labelSourcePath, http.StripPrefix(
 			proxy.SingleJoiningSlash(s.BaseURL.Path, targetAPIPath),
 			authHandlerWithUser(func(user *auth.User, w http.ResponseWriter, r *http.Request) {
+				cluster := serverutils.GetCluster(r)
 				r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
-				thanosProxy.ServeHTTP(w, r)
+				s.getThanosProxy(cluster).ServeHTTP(w, r)
 			})),
 		)
 		handle(targetsSourcePath, http.StripPrefix(
 			proxy.SingleJoiningSlash(s.BaseURL.Path, targetAPIPath),
 			authHandlerWithUser(func(user *auth.User, w http.ResponseWriter, r *http.Request) {
+				cluster := serverutils.GetCluster(r)
 				r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
-				thanosProxy.ServeHTTP(w, r)
+				s.getThanosProxy(cluster).ServeHTTP(w, r)
 			})),
 		)
 		handle(metadataSourcePath, http.StripPrefix(
 			proxy.SingleJoiningSlash(s.BaseURL.Path, targetAPIPath),
 			authHandlerWithUser(func(user *auth.User, w http.ResponseWriter, r *http.Request) {
+				cluster := serverutils.GetCluster(r)
 				r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
-				thanosProxy.ServeHTTP(w, r)
+				s.getThanosProxy(cluster).ServeHTTP(w, r)
 			})),
 		)
 		handle(seriesSourcePath, http.StripPrefix(
 			proxy.SingleJoiningSlash(s.BaseURL.Path, targetAPIPath),
 			authHandlerWithUser(func(user *auth.User, w http.ResponseWriter, r *http.Request) {
+				cluster := serverutils.GetCluster(r)
 				r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
-				thanosProxy.ServeHTTP(w, r)
+				s.getThanosProxy(cluster).ServeHTTP(w, r)
 			})),
 		)
 		handle(labelsSourcePath, http.StripPrefix(
 			proxy.SingleJoiningSlash(s.BaseURL.Path, targetAPIPath),
 			authHandlerWithUser(func(user *auth.User, w http.ResponseWriter, r *http.Request) {
+				cluster := serverutils.GetCluster(r)
 				r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
-				thanosProxy.ServeHTTP(w, r)
+				s.getThanosProxy(cluster).ServeHTTP(w, r)
 			})),
 		)
 
@@ -446,8 +474,9 @@ func (s *Server) HTTPHandler() http.Handler {
 		handle(rulesSourcePath, http.StripPrefix(
 			proxy.SingleJoiningSlash(s.BaseURL.Path, targetAPIPath),
 			authHandlerWithUser(func(user *auth.User, w http.ResponseWriter, r *http.Request) {
+				cluster := serverutils.GetCluster(r)
 				r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
-				thanosProxy.ServeHTTP(w, r)
+				s.getThanosProxy(cluster).ServeHTTP(w, r)
 			})),
 		)
 
@@ -455,23 +484,26 @@ func (s *Server) HTTPHandler() http.Handler {
 		handle(tenancyQuerySourcePath, http.StripPrefix(
 			proxy.SingleJoiningSlash(s.BaseURL.Path, tenancyTargetAPIPath),
 			authHandlerWithUser(func(user *auth.User, w http.ResponseWriter, r *http.Request) {
+				cluster := serverutils.GetCluster(r)
 				r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
-				thanosTenancyProxy.ServeHTTP(w, r)
+				s.getThanosTenancyProxy(cluster).ServeHTTP(w, r)
 			})),
 		)
 		handle(tenancyQueryRangeSourcePath, http.StripPrefix(
 			proxy.SingleJoiningSlash(s.BaseURL.Path, tenancyTargetAPIPath),
 			authHandlerWithUser(func(user *auth.User, w http.ResponseWriter, r *http.Request) {
+				cluster := serverutils.GetCluster(r)
 				r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
-				thanosTenancyProxy.ServeHTTP(w, r)
+				s.getThanosTenancyProxy(cluster).ServeHTTP(w, r)
 			})),
 		)
 		// tenancy rules have to be proxied via thanos
 		handle(tenancyRulesSourcePath, http.StripPrefix(
 			proxy.SingleJoiningSlash(s.BaseURL.Path, tenancyTargetAPIPath),
 			authHandlerWithUser(func(user *auth.User, w http.ResponseWriter, r *http.Request) {
+				cluster := serverutils.GetCluster(r)
 				r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
-				thanosTenancyForRulesProxy.ServeHTTP(w, r)
+				s.getThanosTenancyForRulesProxy(cluster).ServeHTTP(w, r)
 			})),
 		)
 	}
@@ -552,15 +584,15 @@ func (s *Server) HTTPHandler() http.Handler {
 
 	// User settings
 	userSettingHandler := usersettings.UserSettingsHandler{
-		K8sProxyConfig:      localK8sProxyConfig,
+		K8sProxyConfig:      s.LocalK8sProxyConfig,
 		Client:              s.LocalK8sClient,
-		Endpoint:            localK8sProxyConfig.Endpoint.String(),
+		Endpoint:            s.LocalK8sProxyConfig.Endpoint.String(),
 		ServiceAccountToken: s.ServiceAccountToken,
 	}
 	handle("/api/console/user-settings", authHandlerWithUser(userSettingHandler.HandleUserSettings))
 
-	helmHandlers := helmhandlerspkg.New(localK8sProxyConfig.Endpoint.String(), s.LocalK8sClient.Transport, s)
-	verifierHandler := helmhandlerspkg.NewVerifierHandler(localK8sProxyConfig.Endpoint.String(), s.LocalK8sClient.Transport, s)
+	helmHandlers := helmhandlerspkg.New(s.LocalK8sProxyConfig.Endpoint.String(), s.LocalK8sClient.Transport, s)
+	verifierHandler := helmhandlerspkg.NewVerifierHandler(s.LocalK8sProxyConfig.Endpoint.String(), s.LocalK8sClient.Transport, s)
 	handle("/api/helm/verify", authHandlerWithUser(func(user *auth.User, w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPost:
@@ -831,18 +863,22 @@ func (s *Server) handleOpenShiftTokenDeletion(user *auth.User, w http.ResponseWr
 		return
 	}
 
-	// Proxy request to correct cluster
-	cluster := serverutils.GetCluster(r)
-	k8sProxy := s.getK8sProxyConfig(cluster)
-	k8sClient := s.getK8sClient(cluster)
 	tokenName := user.Token
 	if strings.HasPrefix(tokenName, sha256Prefix) {
 		tokenName = tokenToObjectName(tokenName)
 	}
 
+	cluster := serverutils.GetCluster(r)
+	proxyConfig := s.LocalK8sProxyConfig
+	path := fmt.Sprintf("/apis/oauth.openshift.io/v1/oauthaccesstokens/%s", tokenName)
+
+	if cluster != serverutils.LocalClusterName {
+		proxyConfig = s.ManagedClusterProxyConfig
+		path = fmt.Sprintf("/%s/apis/oauth.openshift.io/v1/oauthaccesstokens/%s", cluster, tokenName)
+	}
+
 	// Delete the OpenShift OAuthAccessToken.
-	path := "/apis/oauth.openshift.io/v1/oauthaccesstokens/" + tokenName
-	url := proxy.SingleJoiningSlash(k8sProxy.Endpoint.String(), path)
+	url := proxy.SingleJoiningSlash(proxyConfig.Endpoint.String(), path)
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
 		serverutils.SendResponse(w, http.StatusInternalServerError, serverutils.ApiError{Err: fmt.Sprintf("Failed to create token DELETE request: %v", err)})
@@ -850,6 +886,8 @@ func (s *Server) handleOpenShiftTokenDeletion(user *auth.User, w http.ResponseWr
 	}
 
 	r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
+	// Proxy request to correct cluster
+	k8sClient := s.getK8sClient(cluster)
 	resp, err := k8sClient.Do(req)
 	if err != nil {
 		serverutils.SendResponse(w, http.StatusBadGateway, serverutils.ApiError{Err: fmt.Sprintf("Failed to delete token: %v", err)})
