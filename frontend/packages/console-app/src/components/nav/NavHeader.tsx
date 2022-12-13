@@ -5,27 +5,21 @@ import * as cx from 'classnames';
 import { useTranslation } from 'react-i18next';
 // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
 // @ts-ignore
-import { useDispatch } from 'react-redux';
 import isMultiClusterEnabled from '@console/app/src/utils/isMultiClusterEnabled';
 import { Perspective, useActivePerspective } from '@console/dynamic-plugin-sdk';
 import { useK8sWatchResource } from '@console/dynamic-plugin-sdk/src/utils/k8s/hooks/useK8sWatchResource';
-import { detectFeatures, clearSSARFlags } from '@console/internal/actions/features';
-import { formatNamespaceRoute } from '@console/internal/actions/ui';
 import { history } from '@console/internal/components/utils';
 import * as acmIcon from '@console/internal/imgs/ACM-icon.svg';
 import { ConsoleLinkModel } from '@console/internal/models';
 import { K8sResourceKind, referenceForModel } from '@console/internal/module/k8s';
-import {
-  useActiveCluster,
-  useActiveNamespace,
-  ACM_LINK_ID,
-  usePerspectives,
-} from '@console/shared';
+import { ACM_LINK_ID, usePerspectives } from '@console/shared';
 import { useTelemetry } from '@console/shared/src/hooks/useTelemetry';
+import ClusterMenu from './ClusterMenu';
 import './NavHeader.scss';
 
 export type NavHeaderProps = {
   onPerspectiveSelected: () => void;
+  selected?: string;
 };
 
 type PerspectiveDropdownItemProps = {
@@ -63,16 +57,10 @@ const PerspectiveDropdownItem: React.FC<PerspectiveDropdownItemProps> = ({
   );
 };
 
-const ClusterIcon: React.FC = () => <span className="co-m-resource-icon">C</span>;
-
 const NavHeader: React.FC<NavHeaderProps> = ({ onPerspectiveSelected }) => {
   const { t } = useTranslation();
-  const dispatch = useDispatch();
   const fireTelemetryEvent = useTelemetry();
-  const [activeCluster, setActiveCluster] = useActiveCluster();
-  const [activeNamespace] = useActiveNamespace();
   const [activePerspective, setActivePerspective] = useActivePerspective();
-  const [isClusterDropdownOpen, setClusterDropdownOpen] = React.useState(false);
   const [isPerspectiveDropdownOpen, setPerspectiveDropdownOpen] = React.useState(false);
   const perspectiveExtensions = usePerspectives();
   const [consoleLinks] = useK8sWatchResource<K8sResourceKind[]>({
@@ -113,39 +101,6 @@ const NavHeader: React.FC<NavHeaderProps> = ({ onPerspectiveSelected }) => {
     [activePerspective, fireTelemetryEvent, onPerspectiveSelected, setActivePerspective],
   );
 
-  const onClusterSelect = React.useCallback(
-    (event, cluster: string): void => {
-      event.preventDefault();
-      setClusterDropdownOpen(false);
-      setActiveCluster(cluster);
-      // TODO: Move this logic into `setActiveCluster`?
-      dispatch(clearSSARFlags());
-      dispatch(detectFeatures());
-      if (activePerspective === 'acm') {
-        onPerspectiveSelect('admin');
-      } else {
-        const oldPath = window.location.pathname;
-        const newPath = formatNamespaceRoute(activeNamespace, oldPath, window.location, true);
-        if (newPath !== oldPath) {
-          history.pushPath(newPath);
-        }
-      }
-    },
-    [activeNamespace, activePerspective, dispatch, onPerspectiveSelect, setActiveCluster],
-  );
-
-  const clusterItems = (window.SERVER_FLAGS.clusters ?? []).map((managedCluster: string) => (
-    <DropdownItem
-      key={managedCluster}
-      component="button"
-      onClick={(e) => onClusterSelect(e, managedCluster)}
-      title={managedCluster}
-    >
-      <ClusterIcon />
-      {managedCluster}
-    </DropdownItem>
-  ));
-
   const perspectiveItems = perspectiveExtensions.reduce(
     (acc, perspective) =>
       perspective.uid === acmPerspectiveExtension?.uid
@@ -185,7 +140,7 @@ const NavHeader: React.FC<NavHeaderProps> = ({ onPerspectiveSelected }) => {
               <span className="oc-nav-header__icon">
                 <img src={acmIcon} height="12em" width="12em" alt="" />
               </span>
-              {t('public~Advanced Cluster Management')}
+              {t('console-app~Advanced Cluster Management')}
             </Title>
           </DropdownItem>,
         ]
@@ -196,38 +151,7 @@ const NavHeader: React.FC<NavHeaderProps> = ({ onPerspectiveSelected }) => {
     <>
       {showMultiClusterDropdown && (
         <div className="oc-nav-header">
-          <Dropdown
-            isOpen={isClusterDropdownOpen}
-            toggle={
-              <DropdownToggle onToggle={() => setClusterDropdownOpen(!isClusterDropdownOpen)}>
-                <Title headingLevel="h2" size="md">
-                  {activePerspective === 'acm' ? (
-                    t('console-app~All Clusters')
-                  ) : (
-                    <>
-                      <ClusterIcon /> {activeCluster}
-                    </>
-                  )}
-                </Title>
-              </DropdownToggle>
-            }
-            dropdownItems={[
-              ...(acmPerspectiveExtension
-                ? [
-                    <DropdownItem
-                      key={acmPerspectiveExtension.uid}
-                      onClick={() => {
-                        onPerspectiveSelect(acmPerspectiveExtension.properties.id);
-                        setClusterDropdownOpen(false);
-                      }}
-                    >
-                      {t('console-app~All Clusters')}
-                    </DropdownItem>,
-                  ]
-                : []),
-              ...clusterItems,
-            ]}
-          />
+          <ClusterMenu />
         </div>
       )}
       {activePerspective !== 'acm' && (
