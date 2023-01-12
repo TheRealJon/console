@@ -16,14 +16,9 @@ import {
 } from '@patternfly/react-core';
 import fuzzysearch from 'fuzzysearch';
 import { useTranslation } from 'react-i18next';
-// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-// @ts-ignore
-import { useDispatch } from 'react-redux';
 import { useActivePerspective } from '@console/dynamic-plugin-sdk';
-import { detectFeatures, clearSSARFlags } from '@console/internal/actions/features';
-import { formatNamespaceRoute } from '@console/internal/actions/ui';
-import { history } from '@console/internal/components/utils';
-import { useActiveCluster, useActiveNamespace, usePerspectives } from '@console/shared';
+import { useActiveCluster, usePerspectiveExtension } from '@console/shared';
+import { ACM_PERSPECTIVE_ID } from '../../consts';
 import ClusterMenuToggle from './ClusterMenuToggle';
 
 const ClusterCIcon: React.FC = () => <span className="co-m-resource-icon">C</span>;
@@ -101,55 +96,33 @@ const ClusterMenu = () => {
   const { t } = useTranslation();
   const [filterText, setFilterText] = React.useState('');
   const filterRef = React.useRef(null);
-  const dispatch = useDispatch();
   const menuRef = React.useRef(null);
   const [activePerspective, setActivePerspective] = useActivePerspective();
-  const [activeNamespace] = useActiveNamespace();
+  const acmPerspectiveExtension = usePerspectiveExtension(ACM_PERSPECTIVE_ID);
   const [activeCluster, setActiveCluster] = useActiveCluster();
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
-  const perspectiveExtensions = usePerspectives();
-  const acmPerspectiveExtension = React.useMemo(
-    () => perspectiveExtensions.find((p) => p.properties.id === 'acm'),
-    [perspectiveExtensions],
-  );
 
   const onClusterClick = React.useCallback(
     (cluster: string): void => {
-      if (cluster !== activeCluster) {
-        setActiveCluster(cluster);
-        // TODO: Move this logic into `setActiveCluster`?
-        dispatch(clearSSARFlags());
-        dispatch(detectFeatures());
-      }
-      if (activePerspective === 'acm') {
-        setActivePerspective('admin');
-      } else {
-        const oldPath = window.location.pathname;
-        const newPath = formatNamespaceRoute(activeNamespace, oldPath, window.location, true);
-        if (newPath !== oldPath) {
-          history.pushPath(newPath);
-        }
-      }
+      setActiveCluster(cluster);
       setDropdownOpen(false);
     },
-    [
-      activeCluster,
-      activeNamespace,
-      activePerspective,
-      dispatch,
-      setActiveCluster,
-      setActivePerspective,
-    ],
+    [setActiveCluster],
   );
+
+  const onAllClustersClick = React.useCallback(() => {
+    setActivePerspective(ACM_PERSPECTIVE_ID);
+    setDropdownOpen(false);
+  }, [setActivePerspective]);
 
   const optionItems = React.useMemo<ClusterMenuItem[]>(
     () => [
       ...(acmPerspectiveExtension
         ? [
             {
-              key: acmPerspectiveExtension.properties.id,
+              key: ACM_PERSPECTIVE_ID,
               title: 'All Clusters',
-              onClick: () => setActivePerspective(acmPerspectiveExtension.properties.id),
+              onClick: onAllClustersClick,
             },
           ]
         : []),
@@ -160,7 +133,7 @@ const ClusterMenu = () => {
         onClick: () => onClusterClick(cluster),
       })),
     ],
-    [acmPerspectiveExtension, onClusterClick, setActivePerspective],
+    [acmPerspectiveExtension, onAllClustersClick, onClusterClick],
   );
 
   const isOptionShown = React.useCallback(
@@ -196,7 +169,6 @@ const ClusterMenu = () => {
       </MenuContent>
     </Menu>
   );
-  const onToggle = (isOpen: boolean) => setDropdownOpen(isOpen);
 
   return (
     <ClusterMenuToggle
@@ -204,9 +176,9 @@ const ClusterMenu = () => {
       menu={clusterMenu}
       menuRef={menuRef}
       isOpen={dropdownOpen}
-      onToggle={onToggle}
+      onToggle={setDropdownOpen}
       title={
-        `${activePerspective}` === 'acm' ? (
+        `${activePerspective}` === ACM_PERSPECTIVE_ID ? (
           t('console-app~All Clusters')
         ) : (
           <>

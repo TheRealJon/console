@@ -8,12 +8,11 @@ import { useTranslation } from 'react-i18next';
 import isMultiClusterEnabled from '@console/app/src/utils/isMultiClusterEnabled';
 import { Perspective, useActivePerspective } from '@console/dynamic-plugin-sdk';
 import { useK8sWatchResource } from '@console/dynamic-plugin-sdk/src/utils/k8s/hooks/useK8sWatchResource';
-import { history } from '@console/internal/components/utils';
 import * as acmIcon from '@console/internal/imgs/ACM-icon.svg';
 import { ConsoleLinkModel } from '@console/internal/models';
 import { K8sResourceKind, referenceForModel } from '@console/internal/module/k8s';
-import { ACM_LINK_ID, usePerspectives } from '@console/shared';
-import { useTelemetry } from '@console/shared/src/hooks/useTelemetry';
+import { ACM_LINK_ID, usePerspectiveExtension, usePerspectives } from '@console/shared';
+import { ACM_PERSPECTIVE_ID } from '../../consts';
 import ClusterMenu from './ClusterMenu';
 import './NavHeader.scss';
 
@@ -59,10 +58,10 @@ const PerspectiveDropdownItem: React.FC<PerspectiveDropdownItemProps> = ({
 
 const NavHeader: React.FC<NavHeaderProps> = ({ onPerspectiveSelected }) => {
   const { t } = useTranslation();
-  const fireTelemetryEvent = useTelemetry();
   const [activePerspective, setActivePerspective] = useActivePerspective();
   const [isPerspectiveDropdownOpen, setPerspectiveDropdownOpen] = React.useState(false);
   const perspectiveExtensions = usePerspectives();
+  const acmPerspectiveExtension = usePerspectiveExtension(ACM_PERSPECTIVE_ID);
   const [consoleLinks] = useK8sWatchResource<K8sResourceKind[]>({
     isList: true,
     kind: referenceForModel(ConsoleLinkModel),
@@ -81,24 +80,15 @@ const NavHeader: React.FC<NavHeaderProps> = ({ onPerspectiveSelected }) => {
       ),
     [consoleLinks],
   );
-  const acmPerspectiveExtension = React.useMemo(
-    () => perspectiveExtensions.find((p) => p.properties.id === 'acm'),
-    [perspectiveExtensions],
-  );
   const showMultiClusterDropdown = acmPerspectiveExtension || isMultiClusterEnabled();
 
   const onPerspectiveSelect = React.useCallback(
     (perspective: string): void => {
-      if (perspective !== activePerspective) {
-        setActivePerspective(perspective);
-        // Navigate to root and let the default page determine where to go to next
-        history.push('/');
-        fireTelemetryEvent('Perspective Changed', { perspective });
-      }
+      setActivePerspective(perspective);
       setPerspectiveDropdownOpen(false);
       onPerspectiveSelected?.();
     },
-    [activePerspective, fireTelemetryEvent, onPerspectiveSelected, setActivePerspective],
+    [onPerspectiveSelected, setActivePerspective],
   );
 
   const perspectiveItems = perspectiveExtensions.reduce(
@@ -154,7 +144,7 @@ const NavHeader: React.FC<NavHeaderProps> = ({ onPerspectiveSelected }) => {
           <ClusterMenu />
         </div>
       )}
-      {activePerspective !== 'acm' && (
+      {activePerspective !== ACM_PERSPECTIVE_ID && (
         <div
           className="oc-nav-header"
           data-tour-id="tour-perspective-dropdown"

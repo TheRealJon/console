@@ -1,11 +1,12 @@
 import { Perspective } from '@console/dynamic-plugin-sdk';
 import { LoadedExtension } from '@console/plugin-sdk';
+import { ACM_PERSPECTIVE_ID } from 'packages/console-app/src/consts';
 
 export const mockPerspectiveExtensions: LoadedExtension<Perspective>[] = [
   {
     type: 'console.perspective',
     properties: {
-      id: 'acm',
+      id: ACM_PERSPECTIVE_ID,
       name: 'ACM',
       icon: null,
       landingPageURL: async () => () => '',
