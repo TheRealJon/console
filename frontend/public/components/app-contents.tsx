@@ -1,4 +1,3 @@
-import * as _ from 'lodash-es';
 import * as React from 'react';
 import { Redirect, Route, Switch } from 'react-router-dom';
 
@@ -9,7 +8,13 @@ import {
   isRoutePage as isDynamicRoutePage,
 } from '@console/dynamic-plugin-sdk';
 import { useDynamicPluginInfo } from '@console/plugin-sdk/src/api/useDynamicPluginInfo';
-import { FLAGS, useUserSettings, getPerspectiveVisitedKey, usePerspectives } from '@console/shared';
+import {
+  FLAGS,
+  useUserSettings,
+  getPerspectiveVisitedKey,
+  usePerspectives,
+  CLUSTER_ROUTE_PREFIX,
+} from '@console/shared';
 import { ErrorBoundaryPage } from '@console/shared/src/components/error';
 import { connectToFlags } from '../reducers/connectToFlags';
 import { flagPending, FlagsObject } from '../reducers/features';
@@ -52,11 +57,16 @@ function NamespaceFromURL(Component) {
   return C;
 }
 
-const namespacedRoutes = [];
-_.each(namespacedPrefixes, (p) => {
-  namespacedRoutes.push(`${p}/ns/:ns`);
-  namespacedRoutes.push(`${p}/all-namespaces`);
-});
+const namespacedRoutes = namespacedPrefixes.reduce<string[]>(
+  (acc, p) => [
+    ...acc,
+    `${p}/ns/:ns`,
+    `${p}/all-namespaces`,
+    `${CLUSTER_ROUTE_PREFIX}${p}/ns/:ns`,
+    `${CLUSTER_ROUTE_PREFIX}${p}/all-namespaces`,
+  ],
+  [],
+);
 
 const DefaultPageRedirect: React.FC<{
   url: Perspective['properties']['landingPageURL'];
@@ -309,8 +319,20 @@ const AppContents: React.FC<{}> = () => {
 
       <Redirect
         exact
+        from="/c/:cluster/k8s/ns/:ns/batch~v1beta1~CronJob/:name"
+        to={`/c/:cluster/k8s/ns/:ns/${CronJobModel.plural}/:name`}
+      />
+
+      <Redirect
+        exact
         from="/k8s/ns/:ns/autoscaling~v2beta2~HorizontalPodAutoscaler/:name"
         to={`/k8s/ns/:ns/${HorizontalPodAutoscalerModel.plural}/:name`}
+      />
+
+      <Redirect
+        exact
+        from="/c/:cluster/k8s/ns/:ns/autoscaling~v2beta2~HorizontalPodAutoscaler/:name"
+        to={`/c/:cluster/k8s/ns/:ns/${HorizontalPodAutoscalerModel.plural}/:name`}
       />
 
       <LazyRoute
@@ -366,7 +388,7 @@ const AppContents: React.FC<{}> = () => {
       }
 
       <LazyRoute
-        path="/k8s/ns/:ns/secrets/~new/:type"
+        path={['/c/:cluster/k8s/ns/:ns/secrets/~new/:type', '/k8s/ns/:ns/secrets/~new/:type']}
         exact
         kind="Secret"
         loader={() =>
@@ -376,7 +398,7 @@ const AppContents: React.FC<{}> = () => {
         }
       />
       <LazyRoute
-        path="/k8s/ns/:ns/configmaps/~new"
+        path={['/c/:cluster/k8s/ns/:ns/configmaps/~new', '/k8s/ns/:ns/configmaps/~new']}
         exact
         kind="ConfigMap"
         loader={() =>
@@ -386,7 +408,7 @@ const AppContents: React.FC<{}> = () => {
         }
       />
       <LazyRoute
-        path="/k8s/ns/:ns/configmaps/:name/edit"
+        path={['/c/:cluster/k8s/ns/:ns/configmaps/:name/edit', '/k8s/ns/:ns/configmaps/:name/edit']}
         exact
         kind="ConfigMap"
         loader={() =>
@@ -396,7 +418,7 @@ const AppContents: React.FC<{}> = () => {
         }
       />
       <LazyRoute
-        path="/k8s/ns/:ns/secrets/:name/edit"
+        path={['/c/:cluster/k8s/ns/:ns/secrets/:name/edit', '/k8s/ns/:ns/secrets/:name/edit']}
         exact
         kind="Secret"
         loader={() =>
@@ -406,14 +428,20 @@ const AppContents: React.FC<{}> = () => {
         }
       />
       <LazyRoute
-        path="/k8s/ns/:ns/secrets/:name/edit-yaml"
+        path={[
+          '/c/:cluster/k8s/ns/:ns/secrets/:name/edit-yaml',
+          '/k8s/ns/:ns/secrets/:name/edit-yaml',
+        ]}
         exact
         kind="Secret"
         loader={() => import('./create-yaml').then((m) => m.EditYAMLPage)}
       />
 
       <LazyRoute
-        path="/k8s/ns/:ns/networkpolicies/~new/form"
+        path={[
+          '/c/:cluster/k8s/ns/:ns/networkpolicies/~new/form',
+          '/k8s/ns/:ns/networkpolicies/~new/form',
+        ]}
         exact
         kind="NetworkPolicy"
         loader={() =>
@@ -424,7 +452,7 @@ const AppContents: React.FC<{}> = () => {
       />
 
       <LazyRoute
-        path="/k8s/ns/:ns/routes/~new"
+        path={['/c/:cluster/k8s/ns/:ns/routes/~new', '/k8s/ns/:ns/routes/~new']}
         exact
         kind="Route"
         loader={() =>
@@ -435,7 +463,7 @@ const AppContents: React.FC<{}> = () => {
       />
 
       <LazyRoute
-        path="/k8s/ns/:ns/routes/:name/edit"
+        path={['/c/:cluster/k8s/ns/:ns/routes/:name/edit', '/k8s/ns/:ns/routes/:name/edit']}
         exact
         kind="Route"
         loader={() =>
@@ -444,7 +472,7 @@ const AppContents: React.FC<{}> = () => {
       />
 
       <LazyRoute
-        path="/k8s/cluster/rolebindings/~new"
+        path={['/c/:cluster/k8s/cluster/rolebindings/~new', '/k8s/cluster/rolebindings/~new']}
         exact
         loader={() =>
           import('./RBAC' /* webpackChunkName: "rbac" */).then((m) => m.CreateRoleBinding)
@@ -452,7 +480,7 @@ const AppContents: React.FC<{}> = () => {
         kind="RoleBinding"
       />
       <LazyRoute
-        path="/k8s/ns/:ns/rolebindings/~new"
+        path={['/c/:cluster/k8s/ns/:ns/rolebindings/~new', '/k8s/ns/:ns/rolebindings/~new']}
         exact
         loader={() =>
           import('./RBAC' /* webpackChunkName: "rbac" */).then((m) => m.CreateRoleBinding)
@@ -460,7 +488,10 @@ const AppContents: React.FC<{}> = () => {
         kind="RoleBinding"
       />
       <LazyRoute
-        path="/k8s/ns/:ns/rolebindings/:name/copy"
+        path={[
+          '/c/:cluster/k8s/ns/:ns/rolebindings/:name/copy',
+          '/k8s/ns/:ns/rolebindings/:name/copy',
+        ]}
         exact
         kind="RoleBinding"
         loader={() =>
@@ -468,7 +499,10 @@ const AppContents: React.FC<{}> = () => {
         }
       />
       <LazyRoute
-        path="/k8s/ns/:ns/rolebindings/:name/edit"
+        path={[
+          '/c/:cluster/k8s/ns/:ns/rolebindings/:name/edit',
+          '/k8s/ns/:ns/rolebindings/:name/edit',
+        ]}
         exact
         kind="RoleBinding"
         loader={() =>
@@ -476,7 +510,10 @@ const AppContents: React.FC<{}> = () => {
         }
       />
       <LazyRoute
-        path="/k8s/cluster/clusterrolebindings/:name/copy"
+        path={[
+          '/c/:cluster/k8s/cluster/clusterrolebindings/:name/copy',
+          '/k8s/cluster/clusterrolebindings/:name/copy',
+        ]}
         exact
         kind="ClusterRoleBinding"
         loader={() =>
@@ -484,7 +521,10 @@ const AppContents: React.FC<{}> = () => {
         }
       />
       <LazyRoute
-        path="/k8s/cluster/clusterrolebindings/:name/edit"
+        path={[
+          '/c/:cluster/k8s/cluster/clusterrolebindings/:name/edit',
+          '/k8s/cluster/clusterrolebindings/:name/edit',
+        ]}
         exact
         kind="ClusterRoleBinding"
         loader={() =>
@@ -492,7 +532,10 @@ const AppContents: React.FC<{}> = () => {
         }
       />
       <LazyRoute
-        path="/k8s/ns/:ns/:plural/:name/attach-storage"
+        path={[
+          '/c/:cluster/k8s/ns/:ns/:plural/:name/attach-storage',
+          '/k8s/ns/:ns/:plural/:name/attach-storage',
+        ]}
         exact
         loader={() =>
           import('./storage/attach-storage' /* webpackChunkName: "attach-storage" */).then(
@@ -502,7 +545,10 @@ const AppContents: React.FC<{}> = () => {
       />
 
       <LazyRoute
-        path="/k8s/ns/:ns/persistentvolumeclaims/~new/form"
+        path={[
+          '/c/:cluster/k8s/ns/:ns/persistentvolumeclaims/~new/form',
+          '/k8s/ns/:ns/persistentvolumeclaims/~new/form',
+        ]}
         exact
         kind="PersistentVolumeClaim"
         loader={() =>
@@ -513,7 +559,10 @@ const AppContents: React.FC<{}> = () => {
       />
 
       <LazyRoute
-        path={`/k8s/ns/:ns/${VolumeSnapshotModel.plural}/~new/form`}
+        path={[
+          `/c/:cluster/k8s/ns/:ns/${VolumeSnapshotModel.plural}/~new/form`,
+          `/k8s/ns/:ns/${VolumeSnapshotModel.plural}/~new/form`,
+        ]}
         exact
         loader={() =>
           import(
@@ -605,7 +654,7 @@ const AppContents: React.FC<{}> = () => {
       />
 
       <LazyRoute
-        path="/settings/idp/github"
+        path={['/c/:cluster/settings/idp/github', '/settings/idp/github']}
         exact
         loader={() =>
           import(
@@ -614,7 +663,7 @@ const AppContents: React.FC<{}> = () => {
         }
       />
       <LazyRoute
-        path="/settings/idp/gitlab"
+        path={['/c/:cluster/settings/idp/gitlab', '/settings/idp/gitlab']}
         exact
         loader={() =>
           import(
@@ -623,7 +672,7 @@ const AppContents: React.FC<{}> = () => {
         }
       />
       <LazyRoute
-        path="/settings/idp/google"
+        path={['/c/:cluster/settings/idp/google', '/settings/idp/google']}
         exact
         loader={() =>
           import(
@@ -632,7 +681,7 @@ const AppContents: React.FC<{}> = () => {
         }
       />
       <LazyRoute
-        path="/settings/idp/htpasswd"
+        path={['/c/:cluster/settings/idp/htpasswd', '/settings/idp/htpasswd']}
         exact
         loader={() =>
           import(
@@ -641,7 +690,7 @@ const AppContents: React.FC<{}> = () => {
         }
       />
       <LazyRoute
-        path="/settings/idp/keystone"
+        path={['/c/:cluster/settings/idp/keystone', '/settings/idp/keystone']}
         exact
         loader={() =>
           import(
@@ -650,7 +699,7 @@ const AppContents: React.FC<{}> = () => {
         }
       />
       <LazyRoute
-        path="/settings/idp/ldap"
+        path={['/c/:cluster/settings/idp/ldap', '/settings/idp/ldap']}
         exact
         loader={() =>
           import('./cluster-settings/ldap-idp-form' /* webpackChunkName: "ldap-idp-form" */).then(
@@ -659,7 +708,7 @@ const AppContents: React.FC<{}> = () => {
         }
       />
       <LazyRoute
-        path="/settings/idp/oidconnect"
+        path={['/c/:cluster/settings/idp/oidconnect', '/settings/idp/oidconnect']}
         exact
         loader={() =>
           import(
@@ -668,7 +717,7 @@ const AppContents: React.FC<{}> = () => {
         }
       />
       <LazyRoute
-        path="/settings/idp/basicauth"
+        path={['/c/:cluster/settings/idp/basicauth', '/settings/idp/basicauth']}
         exact
         loader={() =>
           import(
@@ -677,7 +726,7 @@ const AppContents: React.FC<{}> = () => {
         }
       />
       <LazyRoute
-        path="/settings/idp/requestheader"
+        path={['/c/:cluster/settings/idp/requestheader', '/settings/idp/requestheader']}
         exact
         loader={() =>
           import(
@@ -686,7 +735,7 @@ const AppContents: React.FC<{}> = () => {
         }
       />
       <LazyRoute
-        path="/settings/cluster"
+        path={['/c/:cluster/settings/cluster', '/settings/cluster']}
         loader={() =>
           import(
             './cluster-settings/cluster-settings' /* webpackChunkName: "cluster-settings" */
@@ -695,7 +744,10 @@ const AppContents: React.FC<{}> = () => {
       />
 
       <LazyRoute
-        path={'/k8s/cluster/storageclasses/~new/form'}
+        path={[
+          '/k8s/cluster/storageclasses/~new/form',
+          '/c/:cluster/k8s/cluster/storageclasses/~new/form',
+        ]}
         exact
         loader={() =>
           import('./storage-class-form' /* webpackChunkName: "storage-class-form" */).then(
@@ -704,7 +756,7 @@ const AppContents: React.FC<{}> = () => {
         }
       />
       <LazyRoute
-        path="/k8s/ns/:ns/:resourceRef/form"
+        path={['/c/:cluster/k8s/ns/:ns/:resourceRef/form', '/k8s/ns/:ns/:resourceRef/form']}
         exact
         kind="PodDisruptionBudgets"
         loader={() =>
@@ -713,11 +765,25 @@ const AppContents: React.FC<{}> = () => {
           ).then((m) => m.PDBFormPage)
         }
       />
-      <Route path="/k8s/cluster/:plural" exact component={ResourceListPage} />
-      <Route path="/k8s/cluster/:plural/~new" exact component={CreateResource} />
-      <Route path="/k8s/cluster/:plural/:name" component={ResourceDetailsPage} />
+      <Route
+        path={['/c/:cluster/k8s/cluster/:plural', '/k8s/cluster/:plural']}
+        exact
+        component={ResourceListPage}
+      />
+      <Route
+        path={['/c/:cluster/k8s/cluster/:plural/~new', '/k8s/cluster/:plural/~new']}
+        exact
+        component={CreateResource}
+      />
+      <Route
+        path={['/c/:cluster/k8s/cluster/:plural/:name', '/k8s/cluster/:plural/:name']}
+        component={ResourceDetailsPage}
+      />
       <LazyRoute
-        path="/k8s/ns/:ns/pods/:podName/containers/:name/debug"
+        path={[
+          '/c/:cluster/k8s/ns/:ns/pods/:podName/containers/:name/debug',
+          '/k8s/ns/:ns/pods/:podName/containers/:name/debug',
+        ]}
         loader={() =>
           import('./debug-terminal' /* webpackChunkName: "debug-terminal" */).then(
             (m) => m.DebugTerminalPage,
@@ -725,24 +791,43 @@ const AppContents: React.FC<{}> = () => {
         }
       />
       <LazyRoute
-        path="/k8s/ns/:ns/pods/:podName/containers/:name"
+        path={[
+          '/c/:cluster/k8s/ns/:ns/pods/:podName/containers/:name',
+          '/k8s/ns/:ns/pods/:podName/containers/:name',
+        ]}
         loader={() => import('./container').then((m) => m.ContainersDetailsPage)}
       />
-      <Route path="/k8s/ns/:ns/:plural/~new" component={CreateResource} />
-      <Route path="/k8s/ns/:ns/:plural/:name" component={ResourceDetailsPage} />
-      <Route path="/k8s/ns/:ns/:plural" exact component={ResourceListPage} />
+      <Route
+        path={['/c/:cluster/k8s/ns/:ns/:plural/~new', '/k8s/ns/:ns/:plural/~new']}
+        component={CreateResource}
+      />
+      <Route
+        path={['/c/:cluster/k8s/ns/:ns/:plural/:name', '/k8s/ns/:ns/:plural/:name']}
+        component={ResourceDetailsPage}
+      />
+      <Route
+        path={['/c/:cluster/k8s/ns/:ns/:plural', '/k8s/ns/:ns/:plural']}
+        exact
+        component={ResourceListPage}
+      />
 
-      <Route path="/k8s/all-namespaces/:plural" exact component={ResourceListPage} />
-      <Route path="/k8s/all-namespaces/:plural/:name" component={ResourceDetailsPage} />
-
+      <Route
+        path={['/c/:cluster/k8s/all-namespaces/:plural', '/k8s/all-namespaces/:plural']}
+        exact
+        component={ResourceListPage}
+      />
+      <Route
+        path={['/c/:cluster/k8s/all-namespaces/:plural/:name', '/k8s/all-namespaces/:plural/:name']}
+        component={ResourceDetailsPage}
+      />
       {inactivePluginPageRoutes}
 
       <LazyRoute
-        path="/error"
+        path={['/c/:cluster/error', '/error']}
         exact
         loader={() => import('./error' /* webpackChunkName: "error" */).then((m) => m.ErrorPage)}
       />
-      <Route path="/" exact component={DefaultPage} />
+      <Route path={['/c/:cluster', '/']} exact component={DefaultPage} />
 
       {allPluginsProcessed ? (
         <LazyRoute
