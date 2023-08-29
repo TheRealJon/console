@@ -292,18 +292,18 @@ func (s *Server) HTTPHandler() http.Handler {
 		}
 	}
 
-	authHandler := func(hf http.HandlerFunc) http.Handler {
-		return authMiddleware(s.Authers, hf)
+	authHandler := func(hf http.HandlerFunc) http.HandlerFunc {
+		return authMiddleware(s.getLocalAuther(), hf)
 	}
-	authHandlerWithUser := func(hf func(*auth.User, http.ResponseWriter, *http.Request)) http.Handler {
-		return authMiddlewareWithUser(s.Authers, hf)
+	authHandlerWithUser := func(hf HandlerWithUser) http.HandlerFunc {
+		return authMiddlewareWithUser(s.getLocalAuther(), hf)
 	}
 
 	if s.authDisabled() {
-		authHandler = func(hf http.HandlerFunc) http.Handler {
+		authHandler = func(hf http.HandlerFunc) http.HandlerFunc {
 			return hf
 		}
-		authHandlerWithUser = func(hf func(*auth.User, http.ResponseWriter, *http.Request)) http.Handler {
+		authHandlerWithUser = func(hf HandlerWithUser) http.HandlerFunc {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				hf(s.StaticUser, w, r)
 			})
@@ -312,13 +312,13 @@ func (s *Server) HTTPHandler() http.Handler {
 
 	if !s.authDisabled() {
 		handleFunc(authLoginEndpoint, localAuther.LoginFunc)
-		handleFunc(authLogoutEndpoint, localAuther.LogoutFunc)
+		handleFunc(authLogoutEndpoint, allowMethod(http.MethodPost, s.handleLogout))
 		handleFunc(authLogoutMulticlusterEndpoint, s.handleLogoutMulticluster)
 		handleFunc(AuthLoginCallbackEndpoint, localAuther.CallbackFunc(fn))
 
 		handle("/api/request-token", authHandler(s.handleClusterTokenURL))
 
-		handle("/api/openshift/delete-token", authHandlerWithUser(s.handleOpenShiftTokenDeletion))
+		handleFunc("/api/openshift/delete-token", allowMethod(http.MethodPost, authHandlerWithUser(s.handleOpenShiftTokenDeletion)))
 		for clusterName, clusterAuther := range s.Authers {
 			if clusterAuther != nil {
 				handleFunc(fmt.Sprintf("%s/%s", authLoginEndpoint, clusterName), clusterAuther.LoginFunc)
@@ -910,15 +910,6 @@ func (s *Server) handleClusterTokenURL(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleOpenShiftTokenDeletion(user *auth.User, w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		serverutils.SendResponse(w, http.StatusMethodNotAllowed, serverutils.ApiError{Err: "Invalid method: only POST is allowed"})
-		return
-	}
-
-	// Proxy request to correct cluster
-	cluster := serverutils.GetCluster(r)
-	k8sProxy := s.getK8sProxyConfig(cluster)
-	k8sClient := s.getK8sClient(cluster)
 	tokenName := user.Token
 	if strings.HasPrefix(tokenName, sha256Prefix) {
 		tokenName = tokenToObjectName(tokenName)
@@ -926,7 +917,7 @@ func (s *Server) handleOpenShiftTokenDeletion(user *auth.User, w http.ResponseWr
 
 	// Delete the OpenShift OAuthAccessToken.
 	path := "/apis/oauth.openshift.io/v1/oauthaccesstokens/" + tokenName
-	url := proxy.SingleJoiningSlash(k8sProxy.Endpoint.String(), path)
+	url := proxy.SingleJoiningSlash(s.LocalK8sProxyConfig.Endpoint.String(), path)
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
 		serverutils.SendResponse(w, http.StatusInternalServerError, serverutils.ApiError{Err: fmt.Sprintf("Failed to create token DELETE request: %v", err)})
@@ -934,12 +925,12 @@ func (s *Server) handleOpenShiftTokenDeletion(user *auth.User, w http.ResponseWr
 	}
 
 	r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user.Token))
-	resp, err := k8sClient.Do(req)
+	resp, err := s.LocalK8sClient.Do(req)
 	if err != nil {
 		serverutils.SendResponse(w, http.StatusBadGateway, serverutils.ApiError{Err: fmt.Sprintf("Failed to delete token: %v", err)})
 		return
 	}
-
+	s.getLocalAuther().DeleteCookie(w, r)
 	w.WriteHeader(resp.StatusCode)
 	io.Copy(w, resp.Body)
 	resp.Body.Close()
@@ -951,20 +942,8 @@ func (s *Server) handleLogoutMulticluster(w http.ResponseWriter, r *http.Request
 		s.AuthMetrics.LogoutRequested(auth.UnknownLogoutReason)
 	}
 
-	for cluster, auther := range s.Authers {
-		cookieName := auth.GetCookieName(cluster)
-		if cookie, _ := r.Cookie(cookieName); cookie != nil {
-			clearedCookie := http.Cookie{
-				Name:     cookie.Name,
-				Value:    "",
-				MaxAge:   0,
-				HttpOnly: cookie.HttpOnly,
-				Path:     auther.GetCookiePath(),
-				Secure:   cookie.Secure,
-			}
-			klog.Infof("Deleting cookie %v", cookie.Name)
-			http.SetCookie(w, &clearedCookie)
-		}
+	for _, auther := range s.Authers {
+		auther.DeleteCookie(w, r)
 	}
 
 	jsg := struct {
@@ -988,6 +967,11 @@ func (s *Server) handleLogoutMulticluster(w http.ResponseWriter, r *http.Request
 		fmt.Printf("%v", err)
 		os.Exit(1)
 	}
+}
+
+func (s *Server) handleLogout(w http.ResponseWriter, r *http.Request) {
+	authenticator := s.getLocalAuther()
+	verifyCSRF(authenticator, authenticator.LogoutFunc).ServeHTTP(w, r)
 }
 
 // tokenToObjectName returns the oauthaccesstokens object name for the given raw token,
