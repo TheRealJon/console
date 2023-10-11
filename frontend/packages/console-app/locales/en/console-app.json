@@ -165,6 +165,7 @@
   "Default filesystem type to request": "Default filesystem type to request",
   "Name of the secret to use for obtaining the StorageOS API credentials": "Name of the secret to use for obtaining the StorageOS API credentials",
   "Namespace where the API configuration secret is located": "Namespace where the API configuration secret is located",
+  "Management State": "Management State",
   "Delete {{kind}}": "Delete {{kind}}",
   "Edit {{kind}}": "Edit {{kind}}",
   "Edit labels": "Edit labels",

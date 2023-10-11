@@ -466,7 +466,8 @@
         "label": "%console-app~Enable exact string match%",
         "trueValue": true,
         "falseValue": false,
-        "defaultValue": false      }
+        "defaultValue": false
+      }
     }
   },
   {
@@ -1737,7 +1738,6 @@
       }
     }
   },
-
   {
     "type": "console.storage-class/provisioner",
     "properties": {
@@ -1770,6 +1770,54 @@
           }
         }
       }
+    }
+  },
+  {
+    "type": "console.resource/details-item",
+    "properties": {
+      "model": {
+        "group": "operator.openshift.io",
+        "version": "v1",
+        "kind": "Console"
+      },
+      "id": "management-state",
+      "title": "%console-app~Management State%",
+      "path": "spec.managementState",
+      "component": {
+        "$codeRef": "consoleOperatorConfig.ConsoleOperatorConfigManagementStateDetailsItemValue"
+      },
+      "sortWeight": 0,
+      "column": "left"
+    }
+  },
+  {
+    "type": "console.resource/details-item",
+    "properties": {
+      "id": "log-level",
+      "model": {
+        "group": "operator.openshift.io",
+        "version": "v1",
+        "kind": "Console"
+      },
+      "title": "%console-app~Console log level%",
+      "path": "spec.logLevel",
+      "sortWeight": 1,
+      "column": "right"
+    }
+  },
+  {
+    "type": "console.resource/details-item",
+    "properties": {
+      "id": "operator-log-level",
+      "model": {
+        "group": "operator.openshift.io",
+        "version": "v1",
+        "kind": "Console"
+      },
+      "title": "%console-app~Console operator log level%",
+      "path": "spec.operatorLogLevel",
+      "sortWeight": 2,
+      "column": "right"
     }
   }
 ]
