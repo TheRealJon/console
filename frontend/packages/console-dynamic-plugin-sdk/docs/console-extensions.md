@@ -1382,4 +1382,3 @@ This extension can be used to specify extra build environment variable fields un
 | `name` | `string` | no | The name of the tab. |
 | `href` | `string` | yes | The optional href for the tab link. If not provided, the first `path` is used. |
 | `exact` | `boolean` | yes | When true, will only match if the path matches the `location.pathname` exactly. |
-
