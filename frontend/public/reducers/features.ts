@@ -18,11 +18,13 @@ import {
   ConsoleLinkModel,
   ConsoleNotificationModel,
   ConsoleYAMLSampleModel,
+  GroupModel,
   MachineAutoscalerModel,
   MachineConfigModel,
   MachineHealthCheckModel,
   MachineModel,
   PrometheusModel,
+  UserModel,
 } from '../models';
 import { referenceForGroupVersionKind, referenceForModel } from '../module/k8s/k8s-ref';
 import { RootState } from '../redux';
@@ -116,7 +118,15 @@ export const featureReducer = (state: FeatureState, action: FeatureAction): Feat
       _.each(CRDs, (v) => (state = state.set(v, false)));
 
       return action.payload.resources.models
-        .filter((model) => CRDs[referenceForModel(model)] !== undefined)
+        .filter((model) => {
+          const modelRef = referenceForModel(model);
+          return (
+            CRDs[modelRef] !== undefined &&
+            // Mock cluster does not support User and Group APIs
+            modelRef !== referenceForModel(UserModel) &&
+            modelRef !== referenceForModel(GroupModel)
+          );
+        })
         .reduce((nextState, model) => {
           const flag = CRDs[referenceForModel(model)];
           // eslint-disable-next-line no-console
