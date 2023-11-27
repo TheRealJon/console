@@ -20,10 +20,10 @@ type Config struct {
 	Providers      `yaml:"providers"`
 	Helm           `yaml:"helm"`
 	MonitoringInfo `yaml:"monitoringInfo,omitempty"`
-	Plugins        MultiKeyValue `yaml:"plugins,omitempty"`
-	I18nNamespaces []string      `yaml:"i18nNamespaces,omitempty"`
-	Proxy          Proxy         `yaml:"proxy,omitempty"`
-	Telemetry      MultiKeyValue `yaml:"telemetry,omitempty"`
+	Plugins        map[string]string `yaml:"plugins,omitempty"`
+	I18nNamespaces []string          `yaml:"i18nNamespaces,omitempty"`
+	Proxy          Proxy             `yaml:"proxy,omitempty"`
+	Telemetry      map[string]string `yaml:"telemetry,omitempty"`
 }
 
 type Proxy struct {

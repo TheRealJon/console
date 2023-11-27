@@ -82,50 +82,50 @@ const (
 )
 
 type jsGlobals struct {
-	AddPage                         string                     `json:"addPage"`
-	AlertManagerBaseURL             string                     `json:"alertManagerBaseURL"`
-	AlertManagerPublicURL           string                     `json:"alertManagerPublicURL"`
-	AlertmanagerUserWorkloadBaseURL string                     `json:"alertmanagerUserWorkloadBaseURL"`
-	AuthDisabled                    bool                       `json:"authDisabled"`
-	BasePath                        string                     `json:"basePath"`
-	Branding                        string                     `json:"branding"`
-	ConsolePlugins                  []string                   `json:"consolePlugins"`
-	ConsoleVersion                  string                     `json:"consoleVersion"`
-	ControlPlaneTopology            string                     `json:"controlPlaneTopology"`
-	CopiedCSVsDisabled              bool                       `json:"copiedCSVsDisabled"`
-	CustomLogoURL                   string                     `json:"customLogoURL"`
-	CustomProductName               string                     `json:"customProductName"`
-	DevCatalogCategories            string                     `json:"developerCatalogCategories"`
-	DevCatalogTypes                 string                     `json:"developerCatalogTypes"`
-	DocumentationBaseURL            string                     `json:"documentationBaseURL"`
-	GOARCH                          string                     `json:"GOARCH"`
-	GOOS                            string                     `json:"GOOS"`
-	GrafanaPublicURL                string                     `json:"grafanaPublicURL"`
-	GraphQLBaseURL                  string                     `json:"graphqlBaseURL"`
-	I18nNamespaces                  []string                   `json:"i18nNamespaces"`
-	InactivityTimeout               int                        `json:"inactivityTimeout"`
-	KubeAdminLogoutURL              string                     `json:"kubeAdminLogoutURL"`
-	KubeAPIServerURL                string                     `json:"kubeAPIServerURL"`
-	LoadTestFactor                  int                        `json:"loadTestFactor"`
-	LoginErrorURL                   string                     `json:"loginErrorURL"`
-	LoginSuccessURL                 string                     `json:"loginSuccessURL"`
-	LoginURL                        string                     `json:"loginURL"`
-	LogoutRedirect                  string                     `json:"logoutRedirect"`
-	LogoutURL                       string                     `json:"logoutURL"`
-	NodeArchitectures               []string                   `json:"nodeArchitectures"`
-	NodeOperatingSystems            []string                   `json:"nodeOperatingSystems"`
-	Perspectives                    string                     `json:"perspectives"`
-	ProjectAccessClusterRoles       string                     `json:"projectAccessClusterRoles"`
-	PrometheusBaseURL               string                     `json:"prometheusBaseURL"`
-	PrometheusPublicURL             string                     `json:"prometheusPublicURL"`
-	PrometheusTenancyBaseURL        string                     `json:"prometheusTenancyBaseURL"`
-	QuickStarts                     string                     `json:"quickStarts"`
-	ReleaseVersion                  string                     `json:"releaseVersion"`
-	StatuspageID                    string                     `json:"statuspageID"`
-	Telemetry                       serverconfig.MultiKeyValue `json:"telemetry"`
-	ThanosPublicURL                 string                     `json:"thanosPublicURL"`
-	UserSettingsLocation            string                     `json:"userSettingsLocation"`
-	K8sMode                         string                     `json:"k8sMode"`
+	AddPage                         string            `json:"addPage"`
+	AlertManagerBaseURL             string            `json:"alertManagerBaseURL"`
+	AlertManagerPublicURL           string            `json:"alertManagerPublicURL"`
+	AlertmanagerUserWorkloadBaseURL string            `json:"alertmanagerUserWorkloadBaseURL"`
+	AuthDisabled                    bool              `json:"authDisabled"`
+	BasePath                        string            `json:"basePath"`
+	Branding                        string            `json:"branding"`
+	ConsolePlugins                  []string          `json:"consolePlugins"`
+	ConsoleVersion                  string            `json:"consoleVersion"`
+	ControlPlaneTopology            string            `json:"controlPlaneTopology"`
+	CopiedCSVsDisabled              bool              `json:"copiedCSVsDisabled"`
+	CustomLogoURL                   string            `json:"customLogoURL"`
+	CustomProductName               string            `json:"customProductName"`
+	DevCatalogCategories            string            `json:"developerCatalogCategories"`
+	DevCatalogTypes                 string            `json:"developerCatalogTypes"`
+	DocumentationBaseURL            string            `json:"documentationBaseURL"`
+	GOARCH                          string            `json:"GOARCH"`
+	GOOS                            string            `json:"GOOS"`
+	GrafanaPublicURL                string            `json:"grafanaPublicURL"`
+	GraphQLBaseURL                  string            `json:"graphqlBaseURL"`
+	I18nNamespaces                  []string          `json:"i18nNamespaces"`
+	InactivityTimeout               int               `json:"inactivityTimeout"`
+	KubeAdminLogoutURL              string            `json:"kubeAdminLogoutURL"`
+	KubeAPIServerURL                string            `json:"kubeAPIServerURL"`
+	LoadTestFactor                  int               `json:"loadTestFactor"`
+	LoginErrorURL                   string            `json:"loginErrorURL"`
+	LoginSuccessURL                 string            `json:"loginSuccessURL"`
+	LoginURL                        string            `json:"loginURL"`
+	LogoutRedirect                  string            `json:"logoutRedirect"`
+	LogoutURL                       string            `json:"logoutURL"`
+	NodeArchitectures               []string          `json:"nodeArchitectures"`
+	NodeOperatingSystems            []string          `json:"nodeOperatingSystems"`
+	Perspectives                    string            `json:"perspectives"`
+	ProjectAccessClusterRoles       string            `json:"projectAccessClusterRoles"`
+	PrometheusBaseURL               string            `json:"prometheusBaseURL"`
+	PrometheusPublicURL             string            `json:"prometheusPublicURL"`
+	PrometheusTenancyBaseURL        string            `json:"prometheusTenancyBaseURL"`
+	QuickStarts                     string            `json:"quickStarts"`
+	ReleaseVersion                  string            `json:"releaseVersion"`
+	StatuspageID                    string            `json:"statuspageID"`
+	Telemetry                       map[string]string `json:"telemetry"`
+	ThanosPublicURL                 string            `json:"thanosPublicURL"`
+	UserSettingsLocation            string            `json:"userSettingsLocation"`
+	K8sMode                         string            `json:"k8sMode"`
 }
 
 type Server struct {
@@ -147,7 +147,7 @@ type Server struct {
 	DevCatalogCategories                string
 	DevCatalogTypes                     string
 	DocumentationBaseURL                *url.URL
-	EnabledConsolePlugins               serverconfig.MultiKeyValue
+	EnabledConsolePlugins               map[string]string
 	GitOpsProxyConfig                   *proxy.Config
 	GOARCH                              string
 	GOOS                                string
@@ -179,7 +179,7 @@ type Server struct {
 	StaticUser                          *auth.User
 	StatuspageID                        string
 	TectonicVersion                     string
-	Telemetry                           serverconfig.MultiKeyValue
+	Telemetry                           map[string]string
 	TerminalProxyTLSConfig              *tls.Config
 	ThanosProxyConfig                   *proxy.Config
 	ThanosPublicURL                     *url.URL

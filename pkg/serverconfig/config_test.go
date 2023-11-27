@@ -8,80 +8,9 @@ import (
 	"os"
 	"reflect"
 	"testing"
+
+	"github.com/openshift/console/pkg/flags"
 )
-
-func TestMultiKeyValueSetter(t *testing.T) {
-	tests := []struct {
-		name          string
-		input         string
-		expected      MultiKeyValue
-		expectedError error
-	}{
-		{
-			name:          "Should ignore an empty string",
-			input:         "",
-			expected:      MultiKeyValue{},
-			expectedError: nil,
-		},
-		{
-			name:  "Should accept and split key=value pair",
-			input: "key=value",
-			expected: MultiKeyValue{
-				"key": "value",
-			},
-			expectedError: nil,
-		},
-		{
-			name:  "Should accept multiple comma-separated key=value pairs",
-			input: "key1=value1,key2=value2",
-			expected: MultiKeyValue{
-				"key1": "value1",
-				"key2": "value2",
-			},
-			expectedError: nil,
-		},
-		{
-			name:  "Should automatically trim spaces between key=value pairs",
-			input: "key1=value1, key2=value2, ",
-			expected: MultiKeyValue{
-				"key1": "value1",
-				"key2": "value2",
-			},
-			expectedError: nil,
-		},
-	}
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			actual := MultiKeyValue{}
-			actualError := actual.Set(test.input)
-			if !reflect.DeepEqual(test.expected, actual) {
-				t.Errorf("Data does not match expectation:\n%v\nbut got\n%v", test.expected, actual)
-			}
-			if test.expectedError == nil && actualError != nil {
-				t.Errorf("Error does not match expectation:\n%v\nbut got\n%v", test.expectedError, actualError)
-			} else if test.expectedError != nil && (actualError == nil || test.expectedError.Error() != actualError.Error()) {
-				t.Errorf("Error does not match expectation:\n%v\nbut got\n%v", test.expectedError, actualError)
-			}
-		})
-	}
-}
-
-// Set is called multiple times when parsing the config file
-func TestCallingMultiKeyValueSetterMultipleTimes(t *testing.T) {
-	actual := MultiKeyValue{}
-	actual.Set("plugin-a=Service1")
-	actual.Set("plugin-b=Service2 ")
-	actual.Set("plugin-c=Service3, plugin-d=Service4, ")
-	expected := MultiKeyValue{
-		"plugin-a": "Service1",
-		"plugin-b": "Service2",
-		"plugin-c": "Service3",
-		"plugin-d": "Service4",
-	}
-	if !reflect.DeepEqual(expected, actual) {
-		t.Errorf("Data does not match expectation:\n%v\nbut got\n%v", expected, actual)
-	}
-}
 
 func TestDefaultValue(t *testing.T) {
 	prefix := fmt.Sprintf("TEST_PREFIX_%d", rand.Int())
@@ -263,7 +192,7 @@ func TestSetFlagsFromConfig(t *testing.T) {
 			config: Config{
 				APIVersion: "console.openshift.io/v1",
 				Kind:       "ConsoleConfig",
-				Plugins: MultiKeyValue{
+				Plugins: flags.MapFlag{
 					"plugin-a": "ServiceA",
 					"plugin-b": "ServiceB",
 				},
@@ -278,7 +207,7 @@ func TestSetFlagsFromConfig(t *testing.T) {
 			config: Config{
 				APIVersion: "console.openshift.io/v1",
 				Kind:       "ConsoleConfig",
-				Telemetry: MultiKeyValue{
+				Telemetry: flags.MapFlag{
 					"A_CONFIG_KEY":       "value1",
 					"ANOTHER_CONFIG_KEY": "value2",
 					"disabled":           "true",
@@ -294,8 +223,8 @@ func TestSetFlagsFromConfig(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			fs := &flag.FlagSet{}
 			fs.String("config", "", "")
-			fs.Var(&MultiKeyValue{}, "plugins", "")
-			fs.Var(&MultiKeyValue{}, "telemetry", "")
+			fs.Var(&flags.MapFlag{}, "plugins", "")
+			fs.Var(&flags.MapFlag{}, "telemetry", "")
 
 			actualError := SetFlagsFromConfig(fs, &test.config)
 			actual := make(map[string]string)

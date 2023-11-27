@@ -16,7 +16,7 @@ import (
 func createPluginConfiguration(pluginNames []string) *Config {
 	config := &Config{}
 	if pluginNames != nil {
-		config.Plugins = MultiKeyValue{}
+		config.Plugins = map[string]string{}
 		for _, pluginName := range pluginNames {
 			config.Plugins[pluginName] = fmt.Sprintf("https://%s-mock-endpoint", pluginName)
 		}

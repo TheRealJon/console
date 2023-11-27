@@ -6,7 +6,6 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -14,35 +13,6 @@ import (
 	"gopkg.in/yaml.v2"
 	"k8s.io/klog"
 )
-
-// MultiKeyValue is used for setting multiple key-value entries of a specific flag, eg.:
-// ... --plugins plugin-name=plugin-endpoint plugin-name2=plugin-endpoint2
-type MultiKeyValue map[string]string
-
-func (mkv *MultiKeyValue) String() string {
-	keyValuePairs := []string{}
-	for k, v := range *mkv {
-		keyValuePairs = append(keyValuePairs, fmt.Sprintf("%s=%s", k, v))
-	}
-	sort.Strings(keyValuePairs)
-	return strings.Join(keyValuePairs, ", ")
-}
-
-func (mkv *MultiKeyValue) Set(value string) error {
-	keyValuePairs := strings.Split(value, ",")
-	for _, keyValuePair := range keyValuePairs {
-		keyValuePair = strings.TrimSpace(keyValuePair)
-		if len(keyValuePair) == 0 {
-			continue
-		}
-		splitted := strings.SplitN(keyValuePair, "=", 2)
-		if len(splitted) != 2 {
-			return fmt.Errorf("invalid key value pair %s", keyValuePair)
-		}
-		(*mkv)[splitted[0]] = splitted[1]
-	}
-	return nil
-}
 
 // Parse configuration from
 // 1. Config file
@@ -348,13 +318,13 @@ func isAlreadySet(fs *flag.FlagSet, name string) bool {
 	return alreadySet
 }
 
-func addPlugins(fs *flag.FlagSet, plugins MultiKeyValue) {
+func addPlugins(fs *flag.FlagSet, plugins map[string]string) {
 	for pluginName, pluginEndpoint := range plugins {
 		fs.Set("plugins", fmt.Sprintf("%s=%s", pluginName, pluginEndpoint))
 	}
 }
 
-func addTelemetry(fs *flag.FlagSet, telemetry MultiKeyValue) {
+func addTelemetry(fs *flag.FlagSet, telemetry map[string]string) {
 	for key, value := range telemetry {
 		fs.Set("telemetry", fmt.Sprintf("%s=%s", key, value))
 	}
