@@ -27,82 +27,11 @@ import (
 
 func main() {
 	fs := flag.NewFlagSet("bridge", flag.ExitOnError)
+	initFlags(fs)
 	klog.InitFlags(fs)
 	defer klog.Flush()
-
 	authOptions := authopts.NewAuthOptions()
 	authOptions.AddFlags(fs)
-
-	// Define commandline / env / config options
-	fs.String("config", "", "The YAML config file.")
-
-	fListen := fs.String("listen", "http://0.0.0.0:9000", "")
-
-	fBaseAddress := fs.String("base-address", "", "Format: <http | https>://domainOrIPAddress[:port]. Example: https://openshift.example.com.")
-	fBasePath := fs.String("base-path", "/", "")
-
-	// See https://github.com/openshift/service-serving-cert-signer
-	fServiceCAFile := fs.String("service-ca-file", "", "CA bundle for OpenShift services signed with the service signing certificates.")
-
-	fK8sMode := fs.String("k8s-mode", "in-cluster", "in-cluster | off-cluster")
-	fK8sModeOffClusterEndpoint := fs.String("k8s-mode-off-cluster-endpoint", "", "URL of the Kubernetes API server.")
-	fK8sModeOffClusterSkipVerifyTLS := fs.Bool("k8s-mode-off-cluster-skip-verify-tls", false, "DEV ONLY. When true, skip verification of certs presented by k8s API server.")
-	fK8sModeOffClusterThanos := fs.String("k8s-mode-off-cluster-thanos", "", "DEV ONLY. URL of the cluster's Thanos server.")
-	fK8sModeOffClusterAlertmanager := fs.String("k8s-mode-off-cluster-alertmanager", "", "DEV ONLY. URL of the cluster's AlertManager server.")
-
-	fK8sAuth := fs.String("k8s-auth", "service-account", "service-account | bearer-token | oidc | openshift")
-	fK8sAuthBearerToken := fs.String("k8s-auth-bearer-token", "", "Authorization token to send with proxied Kubernetes API requests.")
-
-	fK8sModeOffClusterGitOps := fs.String("k8s-mode-off-cluster-gitops", "", "DEV ONLY. URL of the GitOps backend service")
-
-	fRedirectPort := fs.Int("redirect-port", 0, "Port number under which the console should listen for custom hostname redirect.")
-	fLogLevel := fs.String("log-level", "", "level of logging information by package (pkg=level).")
-	fPublicDir := fs.String("public-dir", "./frontend/public/dist", "directory containing static web assets.")
-	fTlSCertFile := fs.String("tls-cert-file", "", "TLS certificate. If the certificate is signed by a certificate authority, the certFile should be the concatenation of the server's certificate followed by the CA's certificate.")
-	fTlSKeyFile := fs.String("tls-key-file", "", "The TLS certificate key.")
-	fCAFile := fs.String("ca-file", "", "PEM File containing trusted certificates of trusted CAs. If not present, the system's Root CAs will be used.")
-
-	_ = fs.String("kubectl-client-id", "", "DEPRECATED: setting this does not do anything.")
-	_ = fs.String("kubectl-client-secret", "", "DEPRECATED: setting this does not do anything.")
-	_ = fs.String("kubectl-client-secret-file", "", "DEPRECATED: setting this does not do anything.")
-
-	fK8sPublicEndpoint := fs.String("k8s-public-endpoint", "", "Endpoint to use to communicate to the API server.")
-
-	fBranding := fs.String("branding", "okd", "Console branding for the masthead logo and title. One of okd, openshift, ocp, online, dedicated, azure, or rosa. Defaults to okd.")
-	fCustomProductName := fs.String("custom-product-name", "", "Custom product name for console branding.")
-	fCustomLogoFile := fs.String("custom-logo-file", "", "Custom product image for console branding.")
-	fStatuspageID := fs.String("statuspage-id", "", "Unique ID assigned by statuspage.io page that provides status info.")
-	fDocumentationBaseURL := fs.String("documentation-base-url", "", "The base URL for documentation links.")
-
-	fAlertmanagerUserWorkloadHost := fs.String("alermanager-user-workload-host", openshiftAlertManagerHost, "Location of the Alertmanager service for user-defined alerts.")
-	fAlertmanagerTenancyHost := fs.String("alermanager-tenancy-host", openshiftAlertManagerTenancyHost, "Location of the tenant-aware Alertmanager service.")
-	fAlermanagerPublicURL := fs.String("alermanager-public-url", "", "Public URL of the cluster's AlertManager server.")
-	fGrafanaPublicURL := fs.String("grafana-public-url", "", "Public URL of the cluster's Grafana server.")
-	fPrometheusPublicURL := fs.String("prometheus-public-url", "", "Public URL of the cluster's Prometheus server.")
-	fThanosPublicURL := fs.String("thanos-public-url", "", "Public URL of the cluster's Thanos server.")
-
-	consolePluginsFlags := flags.MapFlag{}
-	fs.Var(&consolePluginsFlags, "plugins", "List of plugin entries that are enabled for the console. Each entry consist of plugin-name as a key and plugin-endpoint as a value.")
-	fPluginProxy := fs.String("plugin-proxy", "", "Defines various service types to which will console proxy plugins requests. (JSON as string)")
-	fI18NamespacesFlags := fs.String("i18n-namespaces", "", "List of namespaces separated by comma. Example --i18n-namespaces=plugin__acm,plugin__kubevirt")
-
-	telemetryFlags := flags.MapFlag{}
-	fs.Var(&telemetryFlags, "telemetry", "Telemetry configuration that can be used by console plugins. Each entry should be a key=value pair.")
-
-	fLoadTestFactor := fs.Int("load-test-factor", 0, "DEV ONLY. The factor used to multiply k8s API list responses for load testing purposes.")
-
-	fDevCatalogCategories := fs.String("developer-catalog-categories", "", "Allow catalog categories customization. (JSON as string)")
-	fDevCatalogTypes := fs.String("developer-catalog-types", "", "Allow enabling/disabling of sub-catalog types from the developer catalog. (JSON as string)")
-	fUserSettingsLocation := fs.String("user-settings-location", "configmap", "DEV ONLY. Define where the user settings should be stored. (configmap | localstorage).")
-	fQuickStarts := fs.String("quick-starts", "", "Allow customization of available ConsoleQuickStart resources in console. (JSON as string)")
-	fAddPage := fs.String("add-page", "", "DEV ONLY. Allow add page customization. (JSON as string)")
-	fProjectAccessClusterRoles := fs.String("project-access-cluster-roles", "", "The list of Cluster Roles assignable for the project access page. (JSON as string)")
-	fPerspectives := fs.String("perspectives", "", "Allow enabling/disabling of perspectives in the console. (JSON as string)")
-	fControlPlaneTopology := fs.String("control-plane-topology-mode", "", "Defines the topology mode of the control/infra nodes (External | HighlyAvailable | SingleReplica)")
-	fReleaseVersion := fs.String("release-version", "", "Defines the release version of the cluster")
-	fNodeArchitectures := fs.String("node-architectures", "", "List of node architectures. Example --node-architecture=amd64,arm64")
-	fNodeOperatingSystems := fs.String("node-operating-systems", "", "List of node operating systems. Example --node-operating-system=linux,windows")
-	fCopiedCSVsDisabled := fs.Bool("copied-csvs-disabled", false, "Flag to indicate if OLM copied CSVs are disabled.")
 
 	cfg, err := serverconfig.Parse(fs, os.Args[1:], "BRIDGE")
 	if err != nil {
@@ -117,36 +46,36 @@ func main() {
 
 	authOptions.ApplyConfig(&cfg.Auth)
 
-	baseURL, err := flags.ValidateFlagIsURL("base-address", *fBaseAddress, true)
+	baseURL, err := flags.ValidateFlagIsURL("base-address", fBaseAddress, true)
 	flags.FatalIfFailed(err)
 
-	if !strings.HasPrefix(*fBasePath, "/") || !strings.HasSuffix(*fBasePath, "/") {
+	if !strings.HasPrefix(fBasePath, "/") || !strings.HasSuffix(fBasePath, "/") {
 		flags.FatalIfFailed(flags.NewInvalidFlagError("base-path", "value must start and end with slash"))
 	}
-	baseURL.Path = *fBasePath
+	baseURL.Path = fBasePath
 
 	documentationBaseURL := &url.URL{}
-	if *fDocumentationBaseURL != "" {
-		if !strings.HasSuffix(*fDocumentationBaseURL, "/") {
+	if fDocumentationBaseURL != "" {
+		if !strings.HasSuffix(fDocumentationBaseURL, "/") {
 			flags.FatalIfFailed(flags.NewInvalidFlagError("documentation-base-url", "value must end with slash"))
 		}
-		documentationBaseURL, err = flags.ValidateFlagIsURL("documentation-base-url", *fDocumentationBaseURL, false)
+		documentationBaseURL, err = flags.ValidateFlagIsURL("documentation-base-url", fDocumentationBaseURL, false)
 		flags.FatalIfFailed(err)
 	}
 
-	alertManagerPublicURL, err := flags.ValidateFlagIsURL("alermanager-public-url", *fAlermanagerPublicURL, true)
+	alertManagerPublicURL, err := flags.ValidateFlagIsURL("alermanager-public-url", fAlermanagerPublicURL, true)
 	flags.FatalIfFailed(err)
 
-	grafanaPublicURL, err := flags.ValidateFlagIsURL("grafana-public-url", *fGrafanaPublicURL, true)
+	grafanaPublicURL, err := flags.ValidateFlagIsURL("grafana-public-url", fGrafanaPublicURL, true)
 	flags.FatalIfFailed(err)
 
-	prometheusPublicURL, err := flags.ValidateFlagIsURL("prometheus-public-url", *fPrometheusPublicURL, true)
+	prometheusPublicURL, err := flags.ValidateFlagIsURL("prometheus-public-url", fPrometheusPublicURL, true)
 	flags.FatalIfFailed(err)
 
-	thanosPublicURL, err := flags.ValidateFlagIsURL("thanos-public-url", *fThanosPublicURL, true)
+	thanosPublicURL, err := flags.ValidateFlagIsURL("thanos-public-url", fThanosPublicURL, true)
 	flags.FatalIfFailed(err)
 
-	branding := *fBranding
+	branding := fBranding
 	if branding == "origin" {
 		branding = "okd"
 	}
@@ -162,8 +91,8 @@ func main() {
 		flags.FatalIfFailed(flags.NewInvalidFlagError("branding", "value must be one of okd, openshift, ocp, online, dedicated, azure, or rosa"))
 	}
 
-	if *fCustomLogoFile != "" {
-		if _, err := os.Stat(*fCustomLogoFile); err != nil {
+	if fCustomLogoFile != "" {
+		if _, err := os.Stat(fCustomLogoFile); err != nil {
 			klog.Fatalf("could not read logo file: %v", err)
 		}
 	}
@@ -176,8 +105,8 @@ func main() {
 	}
 
 	i18nNamespaces := []string{}
-	if *fI18NamespacesFlags != "" {
-		for _, str := range strings.Split(*fI18NamespacesFlags, ",") {
+	if fI18NamespacesFlags != "" {
+		for _, str := range strings.Split(fI18NamespacesFlags, ",") {
 			str = strings.TrimSpace(str)
 			if str == "" {
 				flags.FatalIfFailed(flags.NewInvalidFlagError("i18n-namespaces", "list must contain name of i18n namespaces separated by comma"))
@@ -187,8 +116,8 @@ func main() {
 	}
 
 	nodeArchitectures := []string{}
-	if *fNodeArchitectures != "" {
-		for _, str := range strings.Split(*fNodeArchitectures, ",") {
+	if fNodeArchitectures != "" {
+		for _, str := range strings.Split(fNodeArchitectures, ",") {
 			str = strings.TrimSpace(str)
 			if str == "" {
 				flags.FatalIfFailed(flags.NewInvalidFlagError("node-architectures", "list must contain name of node architectures separated by comma"))
@@ -198,8 +127,8 @@ func main() {
 	}
 
 	nodeOperatingSystems := []string{}
-	if *fNodeOperatingSystems != "" {
-		for _, str := range strings.Split(*fNodeOperatingSystems, ",") {
+	if fNodeOperatingSystems != "" {
+		for _, str := range strings.Split(fNodeOperatingSystems, ",") {
 			str = strings.TrimSpace(str)
 			if str == "" {
 				flags.FatalIfFailed(flags.NewInvalidFlagError("node-operating-systems", "list must contain name of node architectures separated by comma"))
@@ -209,40 +138,40 @@ func main() {
 	}
 
 	srv := &server.Server{
-		PublicDir:                    *fPublicDir,
+		PublicDir:                    fPublicDir,
 		BaseURL:                      baseURL,
 		Branding:                     branding,
-		CustomProductName:            *fCustomProductName,
-		CustomLogoFile:               *fCustomLogoFile,
-		ControlPlaneTopology:         *fControlPlaneTopology,
-		StatuspageID:                 *fStatuspageID,
+		CustomProductName:            fCustomProductName,
+		CustomLogoFile:               fCustomLogoFile,
+		ControlPlaneTopology:         fControlPlaneTopology,
+		StatuspageID:                 fStatuspageID,
 		DocumentationBaseURL:         documentationBaseURL,
-		AlertManagerUserWorkloadHost: *fAlertmanagerUserWorkloadHost,
-		AlertManagerTenancyHost:      *fAlertmanagerTenancyHost,
+		AlertManagerUserWorkloadHost: fAlertmanagerUserWorkloadHost,
+		AlertManagerTenancyHost:      fAlertmanagerTenancyHost,
 		AlertManagerPublicURL:        alertManagerPublicURL,
 		GrafanaPublicURL:             grafanaPublicURL,
 		PrometheusPublicURL:          prometheusPublicURL,
 		ThanosPublicURL:              thanosPublicURL,
-		LoadTestFactor:               *fLoadTestFactor,
-		DevCatalogCategories:         *fDevCatalogCategories,
-		DevCatalogTypes:              *fDevCatalogTypes,
-		UserSettingsLocation:         *fUserSettingsLocation,
+		LoadTestFactor:               fLoadTestFactor,
+		DevCatalogCategories:         fDevCatalogCategories,
+		DevCatalogTypes:              fDevCatalogTypes,
+		UserSettingsLocation:         fUserSettingsLocation,
 		EnabledConsolePlugins:        consolePluginsFlags,
 		I18nNamespaces:               i18nNamespaces,
-		PluginProxy:                  *fPluginProxy,
-		QuickStarts:                  *fQuickStarts,
-		AddPage:                      *fAddPage,
-		ProjectAccessClusterRoles:    *fProjectAccessClusterRoles,
-		Perspectives:                 *fPerspectives,
+		PluginProxy:                  fPluginProxy,
+		QuickStarts:                  fQuickStarts,
+		AddPage:                      fAddPage,
+		ProjectAccessClusterRoles:    fProjectAccessClusterRoles,
+		Perspectives:                 fPerspectives,
 		Telemetry:                    telemetryFlags,
-		ReleaseVersion:               *fReleaseVersion,
+		ReleaseVersion:               fReleaseVersion,
 		NodeArchitectures:            nodeArchitectures,
 		NodeOperatingSystems:         nodeOperatingSystems,
-		K8sMode:                      *fK8sMode,
-		CopiedCSVsDisabled:           *fCopiedCSVsDisabled,
+		K8sMode:                      fK8sMode,
+		CopiedCSVsDisabled:           fCopiedCSVsDisabled,
 	}
 
-	completedAuthnOptions, err := authOptions.Complete(*fK8sAuth)
+	completedAuthnOptions, err := authOptions.Complete(fK8sAuth)
 	if err != nil {
 		klog.Fatalf("failed to complete authentication options: %v", err)
 		os.Exit(1)
@@ -250,12 +179,12 @@ func main() {
 
 	// if !in-cluster (dev) we should not pass these values to the frontend
 	// is used by catalog-utils.ts
-	if *fK8sMode == "in-cluster" {
+	if fK8sMode == "in-cluster" {
 		srv.GOARCH = runtime.GOARCH
 		srv.GOOS = runtime.GOOS
 	}
 
-	if *fLogLevel != "" {
+	if fLogLevel != "" {
 		klog.Warningf("DEPRECATED: --log-level is now deprecated, use verbosity flag --v=Level instead")
 	}
 
@@ -269,7 +198,7 @@ func main() {
 	)
 
 	var k8sEndpoint *url.URL
-	switch *fK8sMode {
+	switch fK8sMode {
 	case "in-cluster":
 		k8sEndpoint = &url.URL{Scheme: "https", Host: "kubernetes.default.svc"}
 		var err error
@@ -299,8 +228,8 @@ func main() {
 		k8sAuthServiceAccountBearerToken = string(bearerToken)
 
 		// If running in an OpenShift cluster, set up a proxy to the prometheus-k8s service running in the openshift-monitoring namespace.
-		if *fServiceCAFile != "" {
-			serviceCertPEM, err := ioutil.ReadFile(*fServiceCAFile)
+		if fServiceCAFile != "" {
+			serviceCertPEM, err := ioutil.ReadFile(fServiceCAFile)
 			if err != nil {
 				klog.Fatalf("failed to read service-ca.crt file: %v", err)
 			}
@@ -342,12 +271,12 @@ func main() {
 			srv.AlertManagerUserWorkloadProxyConfig = &proxy.Config{
 				TLSClientConfig: serviceProxyTLSConfig,
 				HeaderBlacklist: []string{"Cookie", "X-CSRFToken"},
-				Endpoint:        &url.URL{Scheme: "https", Host: *fAlertmanagerUserWorkloadHost, Path: "/api"},
+				Endpoint:        &url.URL{Scheme: "https", Host: fAlertmanagerUserWorkloadHost, Path: "/api"},
 			}
 			srv.AlertManagerTenancyProxyConfig = &proxy.Config{
 				TLSClientConfig: serviceProxyTLSConfig,
 				HeaderBlacklist: []string{"Cookie", "X-CSRFToken"},
-				Endpoint:        &url.URL{Scheme: "https", Host: *fAlertmanagerTenancyHost, Path: "/api"},
+				Endpoint:        &url.URL{Scheme: "https", Host: fAlertmanagerTenancyHost, Path: "/api"},
 			}
 			srv.TerminalProxyTLSConfig = serviceProxyTLSConfig
 			srv.PluginsProxyTLSConfig = serviceProxyTLSConfig
@@ -360,11 +289,11 @@ func main() {
 		}
 
 	case "off-cluster":
-		k8sEndpoint, err = flags.ValidateFlagIsURL("k8s-mode-off-cluster-endpoint", *fK8sModeOffClusterEndpoint, false)
+		k8sEndpoint, err = flags.ValidateFlagIsURL("k8s-mode-off-cluster-endpoint", fK8sModeOffClusterEndpoint, false)
 		flags.FatalIfFailed(err)
 
 		serviceProxyTLSConfig := oscrypto.SecureTLSConfig(&tls.Config{
-			InsecureSkipVerify: *fK8sModeOffClusterSkipVerifyTLS,
+			InsecureSkipVerify: fK8sModeOffClusterSkipVerifyTLS,
 		})
 
 		srv.ServiceClient = &http.Client{
@@ -380,8 +309,8 @@ func main() {
 			UseProxyFromEnvironment: true,
 		}
 
-		if *fK8sModeOffClusterThanos != "" {
-			offClusterThanosURL, err := flags.ValidateFlagIsURL("k8s-mode-off-cluster-thanos", *fK8sModeOffClusterThanos, false)
+		if fK8sModeOffClusterThanos != "" {
+			offClusterThanosURL, err := flags.ValidateFlagIsURL("k8s-mode-off-cluster-thanos", fK8sModeOffClusterThanos, false)
 			flags.FatalIfFailed(err)
 
 			offClusterThanosURL.Path += "/api"
@@ -402,8 +331,8 @@ func main() {
 			}
 		}
 
-		if *fK8sModeOffClusterAlertmanager != "" {
-			offClusterAlertManagerURL, err := flags.ValidateFlagIsURL("k8s-mode-off-cluster-alertmanager", *fK8sModeOffClusterAlertmanager, false)
+		if fK8sModeOffClusterAlertmanager != "" {
+			offClusterAlertManagerURL, err := flags.ValidateFlagIsURL("k8s-mode-off-cluster-alertmanager", fK8sModeOffClusterAlertmanager, false)
 			flags.FatalIfFailed(err)
 
 			offClusterAlertManagerURL.Path += "/api"
@@ -427,8 +356,8 @@ func main() {
 		srv.TerminalProxyTLSConfig = serviceProxyTLSConfig
 		srv.PluginsProxyTLSConfig = serviceProxyTLSConfig
 
-		if *fK8sModeOffClusterGitOps != "" {
-			offClusterGitOpsURL, err := flags.ValidateFlagIsURL("k8s-mode-off-cluster-gitops", *fK8sModeOffClusterGitOps, false)
+		if fK8sModeOffClusterGitOps != "" {
+			offClusterGitOpsURL, err := flags.ValidateFlagIsURL("k8s-mode-off-cluster-gitops", fK8sModeOffClusterGitOps, false)
 			flags.FatalIfFailed(err)
 
 			srv.GitOpsProxyConfig = &proxy.Config{
@@ -441,7 +370,7 @@ func main() {
 		flags.FatalIfFailed(flags.NewInvalidFlagError("k8s-mode", "must be one of: in-cluster, off-cluster"))
 	}
 
-	apiServerEndpoint := *fK8sPublicEndpoint
+	apiServerEndpoint := fK8sPublicEndpoint
 	if apiServerEndpoint == "" {
 		apiServerEndpoint = srv.K8sProxyConfig.Endpoint.String()
 	}
@@ -462,20 +391,20 @@ func main() {
 		Endpoint:        clusterManagementURL,
 	}
 
-	switch *fK8sAuth {
+	switch fK8sAuth {
 	case "service-account":
-		flags.FatalIfFailed(flags.ValidateFlagIs("k8s-mode", *fK8sMode, "in-cluster"))
+		flags.FatalIfFailed(flags.ValidateFlagIs("k8s-mode", fK8sMode, "in-cluster"))
 		srv.StaticUser = &auth.User{
 			Token: k8sAuthServiceAccountBearerToken,
 		}
 		srv.ServiceAccountToken = k8sAuthServiceAccountBearerToken
 	case "bearer-token":
-		flags.FatalIfFailed(flags.ValidateFlagNotEmpty("k8s-auth-bearer-token", *fK8sAuthBearerToken))
+		flags.FatalIfFailed(flags.ValidateFlagNotEmpty("k8s-auth-bearer-token", fK8sAuthBearerToken))
 
 		srv.StaticUser = &auth.User{
-			Token: *fK8sAuthBearerToken,
+			Token: fK8sAuthBearerToken,
 		}
-		srv.ServiceAccountToken = *fK8sAuthBearerToken
+		srv.ServiceAccountToken = fK8sAuthBearerToken
 	case "oidc", "openshift":
 		flags.FatalIfFailed(flags.ValidateFlagIs("user-auth", authOptions.AuthType, "oidc", "openshift"))
 		srv.ServiceAccountToken = k8sAuthServiceAccountBearerToken
@@ -486,7 +415,7 @@ func main() {
 	monitoringDashboardHttpClientTransport := &http.Transport{
 		TLSClientConfig: srv.K8sProxyConfig.TLSClientConfig,
 	}
-	if *fK8sMode == "off-cluster" {
+	if fK8sMode == "off-cluster" {
 		monitoringDashboardHttpClientTransport.Proxy = http.ProxyFromEnvironment
 	}
 	srv.MonitoringDashboardConfigMapLister = server.NewResourceLister(
@@ -541,8 +470,8 @@ func main() {
 		knative.ChannelFilter,
 	)
 
-	caCertFilePath := *fCAFile
-	if *fK8sMode == "in-cluster" {
+	caCertFilePath := fCAFile
+	if fK8sMode == "in-cluster" {
 		caCertFilePath = k8sInClusterCA
 	}
 
@@ -551,14 +480,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	listenURL, err := flags.ValidateFlagIsURL("listen", *fListen, false)
+	listenURL, err := flags.ValidateFlagIsURL("listen", fListen, false)
 	flags.FatalIfFailed(err)
 
 	switch listenURL.Scheme {
 	case "http":
 	case "https":
-		flags.FatalIfFailed(flags.ValidateFlagNotEmpty("tls-cert-file", *fTlSCertFile))
-		flags.FatalIfFailed(flags.ValidateFlagNotEmpty("tls-key-file", *fTlSKeyFile))
+		flags.FatalIfFailed(flags.ValidateFlagNotEmpty("tls-cert-file", fTlSCertFile))
+		flags.FatalIfFailed(flags.ValidateFlagNotEmpty("tls-key-file", fTlSKeyFile))
 	default:
 		flags.FatalIfFailed(flags.NewInvalidFlagError("listen", "scheme must be one of: http, https"))
 	}
@@ -571,7 +500,7 @@ func main() {
 		TLSConfig:    oscrypto.SecureTLSConfig(&tls.Config{}),
 	}
 
-	if *fRedirectPort != 0 {
+	if fRedirectPort != 0 {
 		go func() {
 			// Listen on passed port number to be redirected to the console
 			redirectServer := http.NewServeMux()
@@ -584,7 +513,7 @@ func main() {
 				}
 				http.Redirect(res, req, redirectURL.String(), http.StatusMovedPermanently)
 			})
-			redirectPort := fmt.Sprintf(":%d", *fRedirectPort)
+			redirectPort := fmt.Sprintf(":%d", fRedirectPort)
 			klog.Infof("Listening on %q for custom hostname redirect...", redirectPort)
 			klog.Fatal(http.ListenAndServe(redirectPort, redirectServer))
 		}()
@@ -593,7 +522,7 @@ func main() {
 	klog.Infof("Binding to %s...", httpsrv.Addr)
 	if listenURL.Scheme == "https" {
 		klog.Info("using TLS")
-		klog.Fatal(httpsrv.ListenAndServeTLS(*fTlSCertFile, *fTlSKeyFile))
+		klog.Fatal(httpsrv.ListenAndServeTLS(fTlSCertFile, fTlSKeyFile))
 	} else {
 		klog.Info("not using TLS")
 		klog.Fatal(httpsrv.ListenAndServe())
