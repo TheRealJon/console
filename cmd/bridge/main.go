@@ -104,71 +104,38 @@ func main() {
 		}
 	}
 
-	i18nNamespaces := []string{}
-	if fI18NamespacesFlags != "" {
-		for _, str := range strings.Split(fI18NamespacesFlags, ",") {
-			str = strings.TrimSpace(str)
-			if str == "" {
-				flags.FatalIfFailed(flags.NewInvalidFlagError("i18n-namespaces", "list must contain name of i18n namespaces separated by comma"))
-			}
-			i18nNamespaces = append(i18nNamespaces, str)
-		}
-	}
-
-	nodeArchitectures := []string{}
-	if fNodeArchitectures != "" {
-		for _, str := range strings.Split(fNodeArchitectures, ",") {
-			str = strings.TrimSpace(str)
-			if str == "" {
-				flags.FatalIfFailed(flags.NewInvalidFlagError("node-architectures", "list must contain name of node architectures separated by comma"))
-			}
-			nodeArchitectures = append(nodeArchitectures, str)
-		}
-	}
-
-	nodeOperatingSystems := []string{}
-	if fNodeOperatingSystems != "" {
-		for _, str := range strings.Split(fNodeOperatingSystems, ",") {
-			str = strings.TrimSpace(str)
-			if str == "" {
-				flags.FatalIfFailed(flags.NewInvalidFlagError("node-operating-systems", "list must contain name of node architectures separated by comma"))
-			}
-			nodeOperatingSystems = append(nodeOperatingSystems, str)
-		}
-	}
-
 	srv := &server.Server{
-		PublicDir:                    fPublicDir,
+		AddPage:                      fAddPage,
+		AlertManagerPublicURL:        alertManagerPublicURL,
+		AlertManagerTenancyHost:      fAlertmanagerTenancyHost,
+		AlertManagerUserWorkloadHost: fAlertmanagerUserWorkloadHost,
 		BaseURL:                      baseURL,
 		Branding:                     branding,
-		CustomProductName:            fCustomProductName,
-		CustomLogoFile:               fCustomLogoFile,
 		ControlPlaneTopology:         fControlPlaneTopology,
-		StatuspageID:                 fStatuspageID,
-		DocumentationBaseURL:         documentationBaseURL,
-		AlertManagerUserWorkloadHost: fAlertmanagerUserWorkloadHost,
-		AlertManagerTenancyHost:      fAlertmanagerTenancyHost,
-		AlertManagerPublicURL:        alertManagerPublicURL,
-		GrafanaPublicURL:             grafanaPublicURL,
-		PrometheusPublicURL:          prometheusPublicURL,
-		ThanosPublicURL:              thanosPublicURL,
-		LoadTestFactor:               fLoadTestFactor,
+		CopiedCSVsDisabled:           fCopiedCSVsDisabled,
+		CustomLogoFile:               fCustomLogoFile,
+		CustomProductName:            fCustomProductName,
 		DevCatalogCategories:         fDevCatalogCategories,
 		DevCatalogTypes:              fDevCatalogTypes,
-		UserSettingsLocation:         fUserSettingsLocation,
+		DocumentationBaseURL:         documentationBaseURL,
 		EnabledConsolePlugins:        consolePluginsFlags,
-		I18nNamespaces:               i18nNamespaces,
-		PluginProxy:                  fPluginProxy,
-		QuickStarts:                  fQuickStarts,
-		AddPage:                      fAddPage,
-		ProjectAccessClusterRoles:    fProjectAccessClusterRoles,
-		Perspectives:                 fPerspectives,
-		Telemetry:                    telemetryFlags,
-		ReleaseVersion:               fReleaseVersion,
-		NodeArchitectures:            nodeArchitectures,
-		NodeOperatingSystems:         nodeOperatingSystems,
+		GrafanaPublicURL:             grafanaPublicURL,
+		I18nNamespaces:               []string(fI18nNamespaces),
 		K8sMode:                      fK8sMode,
-		CopiedCSVsDisabled:           fCopiedCSVsDisabled,
+		LoadTestFactor:               fLoadTestFactor,
+		NodeArchitectures:            []string(fNodeArchitectures),
+		NodeOperatingSystems:         []string(fNodeOperatingSystems),
+		Perspectives:                 fPerspectives,
+		PluginProxy:                  fPluginProxy,
+		ProjectAccessClusterRoles:    fProjectAccessClusterRoles,
+		PrometheusPublicURL:          prometheusPublicURL,
+		PublicDir:                    fPublicDir,
+		QuickStarts:                  fQuickStarts,
+		ReleaseVersion:               fReleaseVersion,
+		StatuspageID:                 fStatuspageID,
+		Telemetry:                    telemetryFlags,
+		ThanosPublicURL:              thanosPublicURL,
+		UserSettingsLocation:         fUserSettingsLocation,
 	}
 
 	completedAuthnOptions, err := authOptions.Complete(fK8sAuth)

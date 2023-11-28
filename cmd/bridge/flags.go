@@ -28,7 +28,6 @@ var (
 	fDevCatalogTypes               string
 	fDocumentationBaseURL          string
 	fGrafanaPublicURL              string
-	fI18NamespacesFlags            string
 	fK8sAuth                       string
 	fK8sAuthBearerToken            string
 	fK8sMode                       string
@@ -39,8 +38,6 @@ var (
 	fK8sPublicEndpoint             string
 	fListen                        string
 	fLogLevel                      string
-	fNodeArchitectures             string
-	fNodeOperatingSystems          string
 	fPerspectives                  string
 	fPluginProxy                   string
 	fProjectAccessClusterRoles     string
@@ -54,6 +51,10 @@ var (
 	fTlSCertFile                   string
 	fTlSKeyFile                    string
 	fUserSettingsLocation          string
+
+	fI18nNamespaces       = flags.SliceFlag{}
+	fNodeArchitectures    = flags.SliceFlag{}
+	fNodeOperatingSystems = flags.SliceFlag{}
 
 	consolePluginsFlags = flags.MapFlag{}
 	telemetryFlags      = flags.MapFlag{}
@@ -85,7 +86,6 @@ func initFlags(fs *flag.FlagSet) {
 	fs.StringVar(&fDevCatalogTypes, "developer-catalog-types", "", "Allow enabling/disabling of sub-catalog types from the developer catalog. (JSON as string)")
 	fs.StringVar(&fDocumentationBaseURL, "documentation-base-url", "", "The base URL for documentation links.")
 	fs.StringVar(&fGrafanaPublicURL, "grafana-public-url", "", "Public URL of the cluster's Grafana server.")
-	fs.StringVar(&fI18NamespacesFlags, "i18n-namespaces", "", "List of namespaces separated by comma. Example --i18n-namespaces=plugin__acm,plugin__kubevirt")
 	fs.StringVar(&fK8sAuth, "k8s-auth", "service-account", "service-account | bearer-token | oidc | openshift")
 	fs.StringVar(&fK8sAuthBearerToken, "k8s-auth-bearer-token", "", "Authorization token to send with proxied Kubernetes API requests.")
 	fs.StringVar(&fK8sMode, "k8s-mode", "in-cluster", "in-cluster | off-cluster")
@@ -96,8 +96,6 @@ func initFlags(fs *flag.FlagSet) {
 	fs.StringVar(&fK8sPublicEndpoint, "k8s-public-endpoint", "", "Endpoint to use to communicate to the API server.")
 	fs.StringVar(&fListen, "listen", "http://0.0.0.0:9000", "")
 	fs.StringVar(&fLogLevel, "log-level", "", "level of logging information by package (pkg=level).")
-	fs.StringVar(&fNodeArchitectures, "node-architectures", "", "List of node architectures. Example --node-architecture=amd64,arm64")
-	fs.StringVar(&fNodeOperatingSystems, "node-operating-systems", "", "List of node operating systems. Example --node-operating-system=linux,windows")
 	fs.StringVar(&fPerspectives, "perspectives", "", "Allow enabling/disabling of perspectives in the console. (JSON as string)")
 	fs.StringVar(&fPluginProxy, "plugin-proxy", "", "Defines various service types to which will console proxy plugins requests. (JSON as string)")
 	fs.StringVar(&fProjectAccessClusterRoles, "project-access-cluster-roles", "", "The list of Cluster Roles assignable for the project access page. (JSON as string)")
@@ -111,6 +109,11 @@ func initFlags(fs *flag.FlagSet) {
 	fs.StringVar(&fTlSCertFile, "tls-cert-file", "", "TLS certificate. If the certificate is signed by a certificate authority, the certFile should be the concatenation of the server's certificate followed by the CA's certificate.")
 	fs.StringVar(&fTlSKeyFile, "tls-key-file", "", "The TLS certificate key.")
 	fs.StringVar(&fUserSettingsLocation, "user-settings-location", "configmap", "DEV ONLY. Define where the user settings should be stored. (configmap | localstorage).")
+
+	// Slice flags
+	fs.Var(&fI18nNamespaces, "i18n-namespaces", "List of namespaces separated by comma. Example --i18n-namespaces=plugin__acm,plugin__kubevirt")
+	fs.Var(&fNodeArchitectures, "node-architectures", "List of node architectures. Example --node-architecture=amd64,arm64")
+	fs.Var(&fNodeOperatingSystems, "node-operating-systems", "List of node operating systems. Example --node-operating-system=linux,windows")
 
 	// Map flags
 	fs.Var(&consolePluginsFlags, "plugins", "List of plugin entries that are enabled for the console. Each entry consist of plugin-name as a key and plugin-endpoint as a value.")
