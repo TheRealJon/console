@@ -46,34 +46,15 @@ func main() {
 
 	authOptions.ApplyConfig(&cfg.Auth)
 
-	baseURL, err := flags.ValidateFlagIsURL("base-address", fBaseAddress, true)
-	flags.FatalIfFailed(err)
-
 	if !strings.HasPrefix(fBasePath, "/") || !strings.HasSuffix(fBasePath, "/") {
 		flags.FatalIfFailed(flags.NewInvalidFlagError("base-path", "value must start and end with slash"))
 	}
-	baseURL.Path = fBasePath
+	fBaseAddress.Path = fBasePath
 
-	documentationBaseURL := &url.URL{}
-	if fDocumentationBaseURL != "" {
-		if !strings.HasSuffix(fDocumentationBaseURL, "/") {
-			flags.FatalIfFailed(flags.NewInvalidFlagError("documentation-base-url", "value must end with slash"))
-		}
-		documentationBaseURL, err = flags.ValidateFlagIsURL("documentation-base-url", fDocumentationBaseURL, false)
-		flags.FatalIfFailed(err)
+	documentationBaseURLString := fDocumentationBaseURL.String()
+	if documentationBaseURLString != "" && !strings.HasSuffix(documentationBaseURLString, "/") {
+		flags.FatalIfFailed(flags.NewInvalidFlagError("documentation-base-url", "value must end with slash"))
 	}
-
-	alertManagerPublicURL, err := flags.ValidateFlagIsURL("alermanager-public-url", fAlermanagerPublicURL, true)
-	flags.FatalIfFailed(err)
-
-	grafanaPublicURL, err := flags.ValidateFlagIsURL("grafana-public-url", fGrafanaPublicURL, true)
-	flags.FatalIfFailed(err)
-
-	prometheusPublicURL, err := flags.ValidateFlagIsURL("prometheus-public-url", fPrometheusPublicURL, true)
-	flags.FatalIfFailed(err)
-
-	thanosPublicURL, err := flags.ValidateFlagIsURL("thanos-public-url", fThanosPublicURL, true)
-	flags.FatalIfFailed(err)
 
 	branding := fBranding
 	if branding == "origin" {
@@ -106,10 +87,10 @@ func main() {
 
 	srv := &server.Server{
 		AddPage:                      fAddPage,
-		AlertManagerPublicURL:        alertManagerPublicURL,
+		AlertManagerPublicURL:        fAlermanagerPublicURL.Get(),
 		AlertManagerTenancyHost:      fAlertmanagerTenancyHost,
 		AlertManagerUserWorkloadHost: fAlertmanagerUserWorkloadHost,
-		BaseURL:                      baseURL,
+		BaseURL:                      fBaseAddress.Get(),
 		Branding:                     branding,
 		ControlPlaneTopology:         fControlPlaneTopology,
 		CopiedCSVsDisabled:           fCopiedCSVsDisabled,
@@ -117,9 +98,9 @@ func main() {
 		CustomProductName:            fCustomProductName,
 		DevCatalogCategories:         fDevCatalogCategories,
 		DevCatalogTypes:              fDevCatalogTypes,
-		DocumentationBaseURL:         documentationBaseURL,
+		DocumentationBaseURL:         fDocumentationBaseURL.Get(),
 		EnabledConsolePlugins:        consolePluginsFlags,
-		GrafanaPublicURL:             grafanaPublicURL,
+		GrafanaPublicURL:             fGrafanaPublicURL.Get(),
 		I18nNamespaces:               []string(fI18nNamespaces),
 		K8sMode:                      fK8sMode,
 		LoadTestFactor:               fLoadTestFactor,
@@ -128,13 +109,13 @@ func main() {
 		Perspectives:                 fPerspectives,
 		PluginProxy:                  fPluginProxy,
 		ProjectAccessClusterRoles:    fProjectAccessClusterRoles,
-		PrometheusPublicURL:          prometheusPublicURL,
+		PrometheusPublicURL:          fPrometheusPublicURL.Get(),
 		PublicDir:                    fPublicDir,
 		QuickStarts:                  fQuickStarts,
 		ReleaseVersion:               fReleaseVersion,
 		StatuspageID:                 fStatuspageID,
 		Telemetry:                    telemetryFlags,
-		ThanosPublicURL:              thanosPublicURL,
+		ThanosPublicURL:              fThanosPublicURL.Get(),
 		UserSettingsLocation:         fUserSettingsLocation,
 	}
 
@@ -157,14 +138,11 @@ func main() {
 
 	var (
 		// Hold on to raw certificates so we can render them in kubeconfig files.
-		k8sCertPEM []byte
-	)
-
-	var (
+		k8sCertPEM                       []byte
 		k8sAuthServiceAccountBearerToken string
+		k8sEndpoint                      *url.URL
 	)
 
-	var k8sEndpoint *url.URL
 	switch fK8sMode {
 	case "in-cluster":
 		k8sEndpoint = &url.URL{Scheme: "https", Host: "kubernetes.default.svc"}
@@ -185,14 +163,13 @@ func main() {
 		if err != nil {
 			klog.Fatalf("failed to read bearer token: %v", err)
 		}
+		k8sAuthServiceAccountBearerToken = string(bearerToken)
 
 		srv.K8sProxyConfig = &proxy.Config{
 			TLSClientConfig: tlsConfig,
 			HeaderBlacklist: []string{"Cookie", "X-CSRFToken"},
 			Endpoint:        k8sEndpoint,
 		}
-
-		k8sAuthServiceAccountBearerToken = string(bearerToken)
 
 		// If running in an OpenShift cluster, set up a proxy to the prometheus-k8s service running in the openshift-monitoring namespace.
 		if fServiceCAFile != "" {
@@ -256,9 +233,7 @@ func main() {
 		}
 
 	case "off-cluster":
-		k8sEndpoint, err = flags.ValidateFlagIsURL("k8s-mode-off-cluster-endpoint", fK8sModeOffClusterEndpoint, false)
-		flags.FatalIfFailed(err)
-
+		k8sEndpoint = fK8sModeOffClusterEndpoint.Get()
 		serviceProxyTLSConfig := oscrypto.SecureTLSConfig(&tls.Config{
 			InsecureSkipVerify: fK8sModeOffClusterSkipVerifyTLS,
 		})
@@ -276,10 +251,8 @@ func main() {
 			UseProxyFromEnvironment: true,
 		}
 
-		if fK8sModeOffClusterThanos != "" {
-			offClusterThanosURL, err := flags.ValidateFlagIsURL("k8s-mode-off-cluster-thanos", fK8sModeOffClusterThanos, false)
-			flags.FatalIfFailed(err)
-
+		if fK8sModeOffClusterThanos.String() != "" {
+			offClusterThanosURL := fK8sModeOffClusterThanos.Get()
 			offClusterThanosURL.Path += "/api"
 			srv.ThanosTenancyProxyConfig = &proxy.Config{
 				TLSClientConfig: serviceProxyTLSConfig,
@@ -298,10 +271,8 @@ func main() {
 			}
 		}
 
-		if fK8sModeOffClusterAlertmanager != "" {
-			offClusterAlertManagerURL, err := flags.ValidateFlagIsURL("k8s-mode-off-cluster-alertmanager", fK8sModeOffClusterAlertmanager, false)
-			flags.FatalIfFailed(err)
-
+		if fK8sModeOffClusterAlertmanager.String() != "" {
+			offClusterAlertManagerURL := fK8sModeOffClusterAlertmanager.Get()
 			offClusterAlertManagerURL.Path += "/api"
 			srv.AlertManagerProxyConfig = &proxy.Config{
 				TLSClientConfig: serviceProxyTLSConfig,
@@ -323,21 +294,18 @@ func main() {
 		srv.TerminalProxyTLSConfig = serviceProxyTLSConfig
 		srv.PluginsProxyTLSConfig = serviceProxyTLSConfig
 
-		if fK8sModeOffClusterGitOps != "" {
-			offClusterGitOpsURL, err := flags.ValidateFlagIsURL("k8s-mode-off-cluster-gitops", fK8sModeOffClusterGitOps, false)
-			flags.FatalIfFailed(err)
-
+		if fK8sModeOffClusterGitOps.String() != "" {
 			srv.GitOpsProxyConfig = &proxy.Config{
 				TLSClientConfig: serviceProxyTLSConfig,
 				HeaderBlacklist: []string{"Cookie", "X-CSRFToken"},
-				Endpoint:        offClusterGitOpsURL,
+				Endpoint:        fK8sModeOffClusterGitOps.Get(),
 			}
 		}
 	default:
 		flags.FatalIfFailed(flags.NewInvalidFlagError("k8s-mode", "must be one of: in-cluster, off-cluster"))
 	}
 
-	apiServerEndpoint := fK8sPublicEndpoint
+	apiServerEndpoint := fK8sPublicEndpoint.String()
 	if apiServerEndpoint == "" {
 		apiServerEndpoint = srv.K8sProxyConfig.Endpoint.String()
 	}
@@ -447,10 +415,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	listenURL, err := flags.ValidateFlagIsURL("listen", fListen, false)
-	flags.FatalIfFailed(err)
-
-	switch listenURL.Scheme {
+	switch fListen.Scheme {
 	case "http":
 	case "https":
 		flags.FatalIfFailed(flags.ValidateFlagNotEmpty("tls-cert-file", fTlSCertFile))
@@ -460,7 +425,7 @@ func main() {
 	}
 
 	httpsrv := &http.Server{
-		Addr:    listenURL.Host,
+		Addr:    fListen.Host,
 		Handler: srv.HTTPHandler(),
 		// Disable HTTP/2, which breaks WebSockets.
 		TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler)),
@@ -487,7 +452,7 @@ func main() {
 	}
 
 	klog.Infof("Binding to %s...", httpsrv.Addr)
-	if listenURL.Scheme == "https" {
+	if fListen.Scheme == "https" {
 		klog.Info("using TLS")
 		klog.Fatal(httpsrv.ListenAndServeTLS(fTlSCertFile, fTlSKeyFile))
 	} else {
