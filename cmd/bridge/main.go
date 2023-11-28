@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"strings"
 
 	authopts "github.com/openshift/console/cmd/bridge/config/auth"
 	"github.com/openshift/console/pkg/auth"
@@ -46,38 +45,6 @@ func main() {
 
 	authOptions.ApplyConfig(&cfg.Auth)
 
-	if !strings.HasPrefix(fBasePath, "/") || !strings.HasSuffix(fBasePath, "/") {
-		flags.FatalIfFailed(flags.NewInvalidFlagError("base-path", "value must start and end with slash"))
-	}
-	fBaseAddress.Path = fBasePath
-
-	documentationBaseURLString := fDocumentationBaseURL.String()
-	if documentationBaseURLString != "" && !strings.HasSuffix(documentationBaseURLString, "/") {
-		flags.FatalIfFailed(flags.NewInvalidFlagError("documentation-base-url", "value must end with slash"))
-	}
-
-	branding := fBranding
-	if branding == "origin" {
-		branding = "okd"
-	}
-	switch branding {
-	case "okd":
-	case "openshift":
-	case "ocp":
-	case "online":
-	case "dedicated":
-	case "azure":
-	case "rosa":
-	default:
-		flags.FatalIfFailed(flags.NewInvalidFlagError("branding", "value must be one of okd, openshift, ocp, online, dedicated, azure, or rosa"))
-	}
-
-	if fCustomLogoFile != "" {
-		if _, err := os.Stat(fCustomLogoFile); err != nil {
-			klog.Fatalf("could not read logo file: %v", err)
-		}
-	}
-
 	if len(consolePluginsFlags) > 0 {
 		klog.Infoln("The following console plugins are enabled:")
 		for pluginName := range consolePluginsFlags {
@@ -90,8 +57,7 @@ func main() {
 		AlertManagerPublicURL:        fAlermanagerPublicURL.Get(),
 		AlertManagerTenancyHost:      fAlertmanagerTenancyHost,
 		AlertManagerUserWorkloadHost: fAlertmanagerUserWorkloadHost,
-		BaseURL:                      fBaseAddress.Get(),
-		Branding:                     branding,
+		Branding:                     fBranding,
 		ControlPlaneTopology:         fControlPlaneTopology,
 		CopiedCSVsDisabled:           fCopiedCSVsDisabled,
 		CustomLogoFile:               fCustomLogoFile,
@@ -119,6 +85,9 @@ func main() {
 		UserSettingsLocation:         fUserSettingsLocation,
 	}
 
+	fBaseAddress.Path = fBasePath
+	srv.BaseURL = fBaseAddress.Get()
+
 	completedAuthnOptions, err := authOptions.Complete(fK8sAuth)
 	if err != nil {
 		klog.Fatalf("failed to complete authentication options: %v", err)
@@ -130,10 +99,6 @@ func main() {
 	if fK8sMode == "in-cluster" {
 		srv.GOARCH = runtime.GOARCH
 		srv.GOOS = runtime.GOOS
-	}
-
-	if fLogLevel != "" {
-		klog.Warningf("DEPRECATED: --log-level is now deprecated, use verbosity flag --v=Level instead")
 	}
 
 	var (

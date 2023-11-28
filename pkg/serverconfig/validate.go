@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"os"
 	"strings"
 
 	configv1 "github.com/openshift/api/config/v1"
 	"github.com/openshift/console/pkg/flags"
+	"k8s.io/klog"
 )
 
 func Validate(fs *flag.FlagSet) error {
@@ -41,7 +43,69 @@ func Validate(fs *flag.FlagSet) error {
 		return err
 	}
 
+	if _, err := validateBasePath(fs.Lookup("base-path").Value.String()); err != nil {
+		return err
+	}
+
+	if branding, err := validateBranding(fs.Lookup("branding").Value.String()); err != nil {
+		return err
+	} else if branding == "origin" {
+		klog.Warningf("DEPRECATED: --branding=origin is now deprecated, use --branding=okd instead")
+		fs.Set("branding", "okd")
+	}
+
+	if _, err := validateCustomLogoFile(fs.Lookup("custom-logo-file").Value.String()); err != nil {
+		return err
+	}
+
+	if _, err := validateDocumentationBaseURL(fs.Lookup("documentation-base-url").Value.String()); err != nil {
+		return err
+	}
+
+	if fs.Lookup("log-level").Value.String() != "" {
+		klog.Warningf("DEPRECATED: --log-level is now deprecated, use verbosity flag --v=Level instead")
+	}
+
 	return nil
+}
+
+func validateBasePath(value string) (string, error) {
+	if !strings.HasPrefix(value, "/") || !strings.HasSuffix(value, "/") {
+		return "", flags.NewInvalidFlagError("base-path", "value must start and end with slash")
+	}
+	return value, nil
+}
+
+func validateDocumentationBaseURL(value string) (string, error) {
+	if value != "" && !strings.HasSuffix(value, "/") {
+		return "", flags.NewInvalidFlagError("documentation-base-url", "value must end with slash")
+	}
+	return value, nil
+}
+
+func validateBranding(value string) (string, error) {
+	switch value {
+	case "origin":
+	case "okd":
+	case "openshift":
+	case "ocp":
+	case "online":
+	case "dedicated":
+	case "azure":
+	case "rosa":
+	default:
+		return "", flags.NewInvalidFlagError("branding", "value must be one of okd, openshift, ocp, online, dedicated, azure, or rosa")
+	}
+	return value, nil
+}
+
+func validateCustomLogoFile(value string) (string, error) {
+	if value != "" {
+		if _, err := os.Stat(value); err != nil {
+			return "", flags.NewInvalidFlagError("custom-logo-file", "could not read logo file: %v", err)
+		}
+	}
+	return value, nil
 }
 
 func validateDeveloperCatalogCategories(value string) ([]DeveloperConsoleCatalogCategory, error) {
