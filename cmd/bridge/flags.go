@@ -39,7 +39,6 @@ var (
 	devCatalogCategories         string
 	devCatalogTypes              string
 	k8sAuthBearerToken           string
-	logLevel                     string
 	perspectives                 string
 	pluginProxy                  string
 	projectAccessClusterRoles    string
@@ -103,7 +102,6 @@ func initFlags(fs *flag.FlagSet) {
 	fs.StringVar(&devCatalogCategories, "developer-catalog-categories", "", "Allow catalog categories customization. (JSON as string)")
 	fs.StringVar(&devCatalogTypes, "developer-catalog-types", "", "Allow enabling/disabling of sub-catalog types from the developer catalog. (JSON as string)")
 	fs.StringVar(&k8sAuthBearerToken, "k8s-auth-bearer-token", "", "Authorization token to send with proxied Kubernetes API requests.")
-	fs.StringVar(&logLevel, "log-level", "", "level of logging information by package (pkg=level).")
 	fs.StringVar(&perspectives, "perspectives", "", "Allow enabling/disabling of perspectives in the console. (JSON as string)")
 	fs.StringVar(&pluginProxy, "plugin-proxy", "", "Defines various service types to which will console proxy plugins requests. (JSON as string)")
 	fs.StringVar(&projectAccessClusterRoles, "project-access-cluster-roles", "", "The list of Cluster Roles assignable for the project access page. (JSON as string)")
@@ -150,6 +148,7 @@ func initFlags(fs *flag.FlagSet) {
 	fs.String("kubectl-client-id", "", "DEPRECATED: setting this does not do anything.")
 	fs.String("kubectl-client-secret", "", "DEPRECATED: setting this does not do anything.")
 	fs.String("kubectl-client-secret-file", "", "DEPRECATED: setting this does not do anything.")
+	fs.String("log-level", "", "DEPRECATED: --log-level is now deprecated, use verbosity flag --v=Level instead")
 
 	// Set default values using set functions so that validation is always performed
 	basePath.Set(defaultBasePath)

@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/openshift/console/pkg/flags"
-	"k8s.io/klog"
 )
 
 func Validate(fs *flag.FlagSet) error {
@@ -40,10 +39,6 @@ func Validate(fs *flag.FlagSet) error {
 
 	if _, err := validateCustomLogoFile(fs.Lookup("custom-logo-file").Value.String()); err != nil {
 		return err
-	}
-
-	if fs.Lookup("log-level").Value.String() != "" {
-		klog.Warningf("DEPRECATED: --log-level is now deprecated, use verbosity flag --v=Level instead")
 	}
 
 	return nil
