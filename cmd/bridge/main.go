@@ -132,7 +132,6 @@ func main() {
 
 		srv.K8sProxyConfig = &proxy.Config{
 			TLSClientConfig: tlsConfig,
-			HeaderBlacklist: []string{"Cookie", "X-CSRFToken"},
 			Endpoint:        k8sEndpoint,
 		}
 
@@ -158,33 +157,27 @@ func main() {
 
 			srv.ThanosProxyConfig = &proxy.Config{
 				TLSClientConfig: serviceProxyTLSConfig,
-				HeaderBlacklist: []string{"Cookie", "X-CSRFToken"},
 				Endpoint:        &url.URL{Scheme: "https", Host: openshiftThanosHost, Path: "/api"},
 			}
 			srv.ThanosTenancyProxyConfig = &proxy.Config{
 				TLSClientConfig: serviceProxyTLSConfig,
-				HeaderBlacklist: []string{"Cookie", "X-CSRFToken"},
 				Endpoint:        &url.URL{Scheme: "https", Host: openshiftThanosTenancyHost, Path: "/api"},
 			}
 			srv.ThanosTenancyProxyForRulesConfig = &proxy.Config{
 				TLSClientConfig: serviceProxyTLSConfig,
-				HeaderBlacklist: []string{"Cookie", "X-CSRFToken"},
 				Endpoint:        &url.URL{Scheme: "https", Host: openshiftThanosTenancyForRulesHost, Path: "/api"},
 			}
 
 			srv.AlertManagerProxyConfig = &proxy.Config{
 				TLSClientConfig: serviceProxyTLSConfig,
-				HeaderBlacklist: []string{"Cookie", "X-CSRFToken"},
 				Endpoint:        &url.URL{Scheme: "https", Host: openshiftAlertManagerHost, Path: "/api"},
 			}
 			srv.AlertManagerUserWorkloadProxyConfig = &proxy.Config{
 				TLSClientConfig: serviceProxyTLSConfig,
-				HeaderBlacklist: []string{"Cookie", "X-CSRFToken"},
 				Endpoint:        &url.URL{Scheme: "https", Host: alertmanagerUserWorkloadHost, Path: "/api"},
 			}
 			srv.AlertManagerTenancyProxyConfig = &proxy.Config{
 				TLSClientConfig: serviceProxyTLSConfig,
-				HeaderBlacklist: []string{"Cookie", "X-CSRFToken"},
 				Endpoint:        &url.URL{Scheme: "https", Host: alertmanagerTenancyHost, Path: "/api"},
 			}
 			srv.TerminalProxyTLSConfig = serviceProxyTLSConfig
@@ -192,7 +185,6 @@ func main() {
 
 			srv.GitOpsProxyConfig = &proxy.Config{
 				TLSClientConfig: serviceProxyTLSConfig,
-				HeaderBlacklist: []string{"Cookie", "X-CSRFToken"},
 				Endpoint:        &url.URL{Scheme: "https", Host: openshiftGitOpsHost},
 			}
 		}
@@ -211,7 +203,6 @@ func main() {
 
 		srv.K8sProxyConfig = &proxy.Config{
 			TLSClientConfig:         serviceProxyTLSConfig,
-			HeaderBlacklist:         []string{"Cookie", "X-CSRFToken"},
 			Endpoint:                k8sEndpoint,
 			UseProxyFromEnvironment: true,
 		}
@@ -221,17 +212,14 @@ func main() {
 			offClusterThanosURL.Path += "/api"
 			srv.ThanosTenancyProxyConfig = &proxy.Config{
 				TLSClientConfig: serviceProxyTLSConfig,
-				HeaderBlacklist: []string{"Cookie", "X-CSRFToken"},
 				Endpoint:        offClusterThanosURL,
 			}
 			srv.ThanosTenancyProxyForRulesConfig = &proxy.Config{
 				TLSClientConfig: serviceProxyTLSConfig,
-				HeaderBlacklist: []string{"Cookie", "X-CSRFToken"},
 				Endpoint:        offClusterThanosURL,
 			}
 			srv.ThanosProxyConfig = &proxy.Config{
 				TLSClientConfig: serviceProxyTLSConfig,
-				HeaderBlacklist: []string{"Cookie", "X-CSRFToken"},
 				Endpoint:        offClusterThanosURL,
 			}
 		}
@@ -241,17 +229,14 @@ func main() {
 			offClusterAlertManagerURL.Path += "/api"
 			srv.AlertManagerProxyConfig = &proxy.Config{
 				TLSClientConfig: serviceProxyTLSConfig,
-				HeaderBlacklist: []string{"Cookie", "X-CSRFToken"},
 				Endpoint:        offClusterAlertManagerURL,
 			}
 			srv.AlertManagerTenancyProxyConfig = &proxy.Config{
 				TLSClientConfig: serviceProxyTLSConfig,
-				HeaderBlacklist: []string{"Cookie", "X-CSRFToken"},
 				Endpoint:        offClusterAlertManagerURL,
 			}
 			srv.AlertManagerUserWorkloadProxyConfig = &proxy.Config{
 				TLSClientConfig: serviceProxyTLSConfig,
-				HeaderBlacklist: []string{"Cookie", "X-CSRFToken"},
 				Endpoint:        offClusterAlertManagerURL,
 			}
 		}
@@ -262,7 +247,6 @@ func main() {
 		if k8sModeOffClusterGitOps.String() != "" {
 			srv.GitOpsProxyConfig = &proxy.Config{
 				TLSClientConfig: serviceProxyTLSConfig,
-				HeaderBlacklist: []string{"Cookie", "X-CSRFToken"},
 				Endpoint:        k8sModeOffClusterGitOps.Get(),
 			}
 		}
@@ -281,7 +265,6 @@ func main() {
 
 	srv.ClusterManagementProxyConfig = &proxy.Config{
 		TLSClientConfig: oscrypto.SecureTLSConfig(&tls.Config{}),
-		HeaderBlacklist: []string{"Cookie", "X-CSRFToken"},
 		Endpoint: &url.URL{
 			Scheme: "https",
 			Host:   "api.openshift.com",

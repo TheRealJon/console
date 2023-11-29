@@ -21,7 +21,6 @@ var websocketPingInterval = 30 * time.Second
 var websocketTimeout = 30 * time.Second
 
 type Config struct {
-	HeaderBlacklist         []string
 	Endpoint                *url.URL
 	TLSClientConfig         *tls.Config
 	Origin                  string
@@ -99,15 +98,12 @@ func decodeSubprotocol(encodedProtocol string) (string, error) {
 	return string(decodedProtocol), err
 }
 
-var HeaderBlacklist = []string{"Cookie", "X-CSRFToken"}
-
 // pass through headers that are needed for browser caching and content negotiation,
 // except "Cookie" and "X-CSRFToken" headers.
 func CopyRequestHeaders(originalRequest, newRequest *http.Request) {
 	newRequest.Header = originalRequest.Header.Clone()
-	for _, h := range HeaderBlacklist {
-		newRequest.Header.Del(h)
-	}
+	newRequest.Header.Del("Cookie")
+	newRequest.Header.Del("X-CSRFToken")
 }
 
 func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -131,9 +127,8 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	for _, h := range HeaderBlacklist {
-		r.Header.Del(h)
-	}
+	r.Header.Del("Cookie")
+	r.Header.Del("X-CSRFToken")
 
 	// Include `system:authenticated` when impersonating groups so that basic requests that all
 	// users can run like self-subject access reviews work.

@@ -36,7 +36,6 @@ func NewPluginsProxyServiceHandler(consoleEndpoint string, serviceEndpoint *url.
 		ConsoleEndpoint: consoleEndpoint,
 		ProxyConfig: &proxy.Config{
 			TLSClientConfig: tlsClientConfig,
-			HeaderBlacklist: proxy.HeaderBlacklist,
 			Endpoint:        serviceEndpoint,
 		},
 		Authorize: authorize,
