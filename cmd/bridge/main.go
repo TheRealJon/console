@@ -68,7 +68,7 @@ func main() {
 		EnabledConsolePlugins:        consolePluginsFlags,
 		GrafanaPublicURL:             grafanaPublicURL.Get(),
 		I18nNamespaces:               []string(i18nNamespaces),
-		K8sMode:                      k8sMode,
+		K8sMode:                      k8sMode.String(),
 		LoadTestFactor:               loadTestFactor,
 		NodeArchitectures:            []string(nodeArchitectures),
 		NodeOperatingSystems:         []string(nodeOperatingSystems),
@@ -96,7 +96,7 @@ func main() {
 
 	// if !in-cluster (dev) we should not pass these values to the frontend
 	// is used by catalog-utils.ts
-	if k8sMode == "in-cluster" {
+	if k8sMode == flags.K8sModeInCluster {
 		srv.GOARCH = runtime.GOARCH
 		srv.GOOS = runtime.GOOS
 	}
@@ -109,7 +109,7 @@ func main() {
 	)
 
 	switch k8sMode {
-	case "in-cluster":
+	case flags.K8sModeInCluster:
 		k8sEndpoint = &url.URL{Scheme: "https", Host: "kubernetes.default.svc"}
 		var err error
 		k8sCertPEM, err = ioutil.ReadFile(k8sInClusterCA)
@@ -197,7 +197,7 @@ func main() {
 			}
 		}
 
-	case "off-cluster":
+	case flags.K8sModeOffCluster:
 		k8sEndpoint = k8sModeOffClusterEndpoint.Get()
 		serviceProxyTLSConfig := oscrypto.SecureTLSConfig(&tls.Config{
 			InsecureSkipVerify: k8sModeOffClusterSkipVerifyTLS,
@@ -266,8 +266,6 @@ func main() {
 				Endpoint:        k8sModeOffClusterGitOps.Get(),
 			}
 		}
-	default:
-		flags.FatalIfFailed(flags.NewInvalidFlagError("k8s-mode", "must be one of: in-cluster, off-cluster"))
 	}
 
 	apiServerEndpoint := k8sPublicEndpoint.String()
@@ -292,24 +290,22 @@ func main() {
 	}
 
 	switch k8sAuth {
-	case "service-account":
-		flags.FatalIfFailed(flags.ValidateFlagIs("k8s-mode", k8sMode, "in-cluster"))
+	case flags.K8sAuthServiceAccount:
+		flags.FatalIfFailed(flags.ValidateFlagIs("k8s-mode", k8sMode.String(), "in-cluster"))
 		srv.StaticUser = &auth.User{
 			Token: k8sAuthServiceAccountBearerToken,
 		}
 		srv.ServiceAccountToken = k8sAuthServiceAccountBearerToken
-	case "bearer-token":
+	case flags.K8sAuthBearerToken:
 		flags.FatalIfFailed(flags.ValidateFlagNotEmpty("k8s-auth-bearer-token", k8sAuthBearerToken))
 
 		srv.StaticUser = &auth.User{
 			Token: k8sAuthBearerToken,
 		}
 		srv.ServiceAccountToken = k8sAuthBearerToken
-	case "oidc", "openshift":
+	case flags.K8sAuthOIDC, flags.K8sAuthOpenShift:
 		flags.FatalIfFailed(flags.ValidateFlagIs("user-auth", authOptions.AuthType, "oidc", "openshift"))
 		srv.ServiceAccountToken = k8sAuthServiceAccountBearerToken
-	default:
-		flags.FatalIfFailed(flags.NewInvalidFlagError("k8s-mode", "must be one of: service-account, bearer-token, oidc, openshift"))
 	}
 
 	monitoringDashboardHttpClientTransport := &http.Transport{
@@ -371,7 +367,7 @@ func main() {
 	)
 
 	caCertFilePath := caFile
-	if k8sMode == "in-cluster" {
+	if k8sMode == flags.K8sModeInCluster {
 		caCertFilePath = k8sInClusterCA
 	}
 

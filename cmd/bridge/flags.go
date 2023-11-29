@@ -39,7 +39,6 @@ var (
 	devCatalogCategories         string
 	devCatalogTypes              string
 	k8sAuthBearerToken           string
-	k8sMode                      string
 	logLevel                     string
 	perspectives                 string
 	pluginProxy                  string
@@ -58,6 +57,7 @@ var (
 	branding             flags.Brand
 	controlPlaneTopology flags.ControlPlaneTopology
 	k8sAuth              flags.K8sAuth
+	k8sMode              flags.K8sMode
 
 	// URL flags
 	alermanagerPublicURL          flags.URL
@@ -103,7 +103,6 @@ func initFlags(fs *flag.FlagSet) {
 	fs.StringVar(&devCatalogCategories, "developer-catalog-categories", "", "Allow catalog categories customization. (JSON as string)")
 	fs.StringVar(&devCatalogTypes, "developer-catalog-types", "", "Allow enabling/disabling of sub-catalog types from the developer catalog. (JSON as string)")
 	fs.StringVar(&k8sAuthBearerToken, "k8s-auth-bearer-token", "", "Authorization token to send with proxied Kubernetes API requests.")
-	fs.StringVar(&k8sMode, "k8s-mode", defaultK8sMode, "in-cluster | off-cluster")
 	fs.StringVar(&logLevel, "log-level", "", "level of logging information by package (pkg=level).")
 	fs.StringVar(&perspectives, "perspectives", "", "Allow enabling/disabling of perspectives in the console. (JSON as string)")
 	fs.StringVar(&pluginProxy, "plugin-proxy", "", "Defines various service types to which will console proxy plugins requests. (JSON as string)")
@@ -122,6 +121,7 @@ func initFlags(fs *flag.FlagSet) {
 	fs.Var(&branding, "branding", "Console branding for the masthead logo and title. One of okd, openshift, ocp, online, dedicated, azure, or rosa. Defaults to okd.")
 	fs.Var(&controlPlaneTopology, "control-plane-topology-mode", "Defines the topology mode of the control/infra nodes (External | HighlyAvailable | SingleReplica)")
 	fs.Var(&k8sAuth, "k8s-auth", "service-account | bearer-token | oidc | openshift")
+	fs.Var(&k8sMode, "k8s-mode", "in-cluster | off-cluster")
 
 	// URL flags
 	fs.Var(&alermanagerPublicURL, "alermanager-public-url", "Public URL of the cluster's AlertManager server.")
@@ -156,4 +156,5 @@ func initFlags(fs *flag.FlagSet) {
 	branding.Set(defaultBranding)
 	listen.Set(defaultListen)
 	k8sAuth.Set(defaultK8sAuth)
+	k8sMode.Set(defaultK8sMode)
 }

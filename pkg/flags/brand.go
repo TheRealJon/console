@@ -31,13 +31,13 @@ func (b *Brand) Set(value string) error {
 	}
 
 	switch value {
-	case "azure":
-	case "dedicated":
-	case "ocp":
-	case "okd":
-	case "online":
-	case "openshift":
-	case "rosa":
+	case string(BrandAzure):
+	case string(BrandDedicated):
+	case string(BrandOCP):
+	case string(BrandOKD):
+	case string(BrandOnline):
+	case string(BrandOpenShift):
+	case string(BrandROSA):
 	default:
 		return fmt.Errorf("value must be one of azure, dedicated, ocp, okd, online, openshift, or rosa.")
 	}
