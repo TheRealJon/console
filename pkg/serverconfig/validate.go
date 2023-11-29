@@ -7,7 +7,6 @@ import (
 	"os"
 	"strings"
 
-	configv1 "github.com/openshift/api/config/v1"
 	"github.com/openshift/console/pkg/flags"
 	"k8s.io/klog"
 )
@@ -39,14 +38,6 @@ func Validate(fs *flag.FlagSet) error {
 		return err
 	}
 
-	if _, err := validateControlPlaneTopology(fs.Lookup("control-plane-topology-mode").Value.String()); err != nil {
-		return err
-	}
-
-	if _, err := validateBasePath(fs.Lookup("base-path").Value.String()); err != nil {
-		return err
-	}
-
 	if _, err := validateCustomLogoFile(fs.Lookup("custom-logo-file").Value.String()); err != nil {
 		return err
 	}
@@ -60,13 +51,6 @@ func Validate(fs *flag.FlagSet) error {
 	}
 
 	return nil
-}
-
-func validateBasePath(value string) (string, error) {
-	if !strings.HasPrefix(value, "/") || !strings.HasSuffix(value, "/") {
-		return "", flags.NewInvalidFlagError("base-path", "value must start and end with slash")
-	}
-	return value, nil
 }
 
 func validateDocumentationBaseURL(value string) (string, error) {
@@ -160,20 +144,6 @@ func validateAddPage(value string) (*AddPage, error) {
 	}
 
 	return &addPage, nil
-}
-
-func validateControlPlaneTopology(value string) (string, error) {
-	if value == "" {
-		return value, nil
-	}
-
-	if !(value == string(configv1.SingleReplicaTopologyMode) ||
-		value == string(configv1.HighlyAvailableTopologyMode) ||
-		value == string(configv1.ExternalTopologyMode)) {
-		return value, fmt.Errorf("ControlPlaneTopologyMode %s is not valid; valid options are External, HighlyAvailable, or SingleReplica", value)
-	}
-
-	return value, nil
 }
 
 func validateProjectAccessClusterRolesJSON(value string) ([]string, error) {
