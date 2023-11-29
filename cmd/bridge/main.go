@@ -82,7 +82,7 @@ func main() {
 		StatuspageID:                 statuspageID,
 		Telemetry:                    telemetryFlags,
 		ThanosPublicURL:              thanosPublicURL.Get(),
-		UserSettingsLocation:         userSettingsLocation,
+		UserSettingsLocation:         userSettingsLocation.String(),
 	}
 
 	baseAddress.Path = basePath.String()

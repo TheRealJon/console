@@ -50,7 +50,6 @@ var (
 	statuspageID                 string
 	tlsCertFile                  string
 	tlsKeyFile                   string
-	userSettingsLocation         string
 
 	// Unique string flags
 	basePath             flags.BasePath
@@ -58,6 +57,7 @@ var (
 	controlPlaneTopology flags.ControlPlaneTopology
 	k8sAuth              flags.K8sAuth
 	k8sMode              flags.K8sMode
+	userSettingsLocation flags.UserSettingsLocation
 
 	// URL flags
 	alermanagerPublicURL          flags.URL
@@ -114,7 +114,6 @@ func initFlags(fs *flag.FlagSet) {
 	fs.StringVar(&statuspageID, "statuspage-id", "", "Unique ID assigned by statuspage.io page that provides status info.")
 	fs.StringVar(&tlsCertFile, "tls-cert-file", "", "TLS certificate. If the certificate is signed by a certificate authority, the certFile should be the concatenation of the server's certificate followed by the CA's certificate.")
 	fs.StringVar(&tlsKeyFile, "tls-key-file", "", "The TLS certificate key.")
-	fs.StringVar(&userSettingsLocation, "user-settings-location", defaultUserSettingsLocation, "DEV ONLY. Define where the user settings should be stored. (configmap | localstorage).")
 
 	// Unique string flags
 	fs.Var(&basePath, "base-path", "")
@@ -122,6 +121,7 @@ func initFlags(fs *flag.FlagSet) {
 	fs.Var(&controlPlaneTopology, "control-plane-topology-mode", "Defines the topology mode of the control/infra nodes (External | HighlyAvailable | SingleReplica)")
 	fs.Var(&k8sAuth, "k8s-auth", "service-account | bearer-token | oidc | openshift")
 	fs.Var(&k8sMode, "k8s-mode", "in-cluster | off-cluster")
+	fs.Var(&userSettingsLocation, "user-settings-location", "DEV ONLY. Define where the user settings should be stored. (configmap | localstorage).")
 
 	// URL flags
 	fs.Var(&alermanagerPublicURL, "alermanager-public-url", "Public URL of the cluster's AlertManager server.")
@@ -157,4 +157,5 @@ func initFlags(fs *flag.FlagSet) {
 	listen.Set(defaultListen)
 	k8sAuth.Set(defaultK8sAuth)
 	k8sMode.Set(defaultK8sMode)
+	userSettingsLocation.Set(defaultUserSettingsLocation)
 }
