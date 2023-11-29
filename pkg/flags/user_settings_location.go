@@ -6,7 +6,7 @@ type UserSettingsLocation string
 
 const (
 	UserSettingsLocationConfigMap    UserSettingsLocation = "configmap"
-	UserSettingsLocationLocalStorage UserSettingsLocation = "local-storage"
+	UserSettingsLocationLocalStorage UserSettingsLocation = "localstorage"
 )
 
 func (u UserSettingsLocation) String() string {
@@ -18,7 +18,7 @@ func (u *UserSettingsLocation) Set(value string) error {
 	case string(UserSettingsLocationConfigMap):
 	case string(UserSettingsLocationLocalStorage):
 	default:
-		return fmt.Errorf("UserSettingsLocation %s is not valid; valid options are configmap or local-storage", value)
+		return fmt.Errorf("UserSettingsLocation %s is not valid; valid options are configmap or localstorage", value)
 	}
 	*u = UserSettingsLocation(value)
 	return nil
