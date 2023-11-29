@@ -6,6 +6,17 @@ import (
 	"github.com/openshift/console/pkg/flags"
 )
 
+const (
+	defaultBasePath                       = "/"
+	defaultBranding                       = "okd"
+	defaultCopyCSVsDisabled               = false
+	defaultK8sModeOffClusterSkipVerifyTLS = false
+	defaultListen                         = "http://0.0.0.0:9000"
+	defaultLoadTestFactor                 = 0
+	defaultRedirectPort                   = 0
+	defaultUserSettingsLocation           = "configmap"
+)
+
 var (
 	// Bool flags
 	copiedCSVsDisabled             bool
@@ -43,36 +54,36 @@ var (
 	userSettingsLocation         string
 
 	// Unique string flags
-	branding = flags.BrandOKD
+	branding flags.Brand
 
 	// URL flags
-	alermanagerPublicURL          = flags.URL{}
-	baseAddress                   = flags.URL{}
-	documentationBaseURL          = flags.URL{}
-	grafanaPublicURL              = flags.URL{}
-	k8sModeOffClusterAlertmanager = flags.URL{}
-	k8sModeOffClusterEndpoint     = flags.URL{}
-	k8sModeOffClusterGitOps       = flags.URL{}
-	k8sModeOffClusterThanos       = flags.URL{}
-	k8sPublicEndpoint             = flags.URL{}
-	listen                        = flags.URL{Scheme: "http", Host: "0.0.0.0:9000"}
-	prometheusPublicURL           = flags.URL{}
-	thanosPublicURL               = flags.URL{}
+	alermanagerPublicURL          flags.URL
+	baseAddress                   flags.URL
+	documentationBaseURL          flags.URL
+	grafanaPublicURL              flags.URL
+	k8sModeOffClusterAlertmanager flags.URL
+	k8sModeOffClusterEndpoint     flags.URL
+	k8sModeOffClusterGitOps       flags.URL
+	k8sModeOffClusterThanos       flags.URL
+	k8sPublicEndpoint             flags.URL
+	listen                        flags.URL
+	prometheusPublicURL           flags.URL
+	thanosPublicURL               flags.URL
 
 	// Slice flags
-	i18nNamespaces       = flags.Slice{}
-	nodeArchitectures    = flags.Slice{}
-	nodeOperatingSystems = flags.Slice{}
+	i18nNamespaces       flags.Slice
+	nodeArchitectures    flags.Slice
+	nodeOperatingSystems flags.Slice
 
 	// Map flags
-	consolePluginsFlags = flags.Map{}
-	telemetryFlags      = flags.Map{}
+	consolePluginsFlags flags.Map
+	telemetryFlags      flags.Map
 )
 
 func initFlags(fs *flag.FlagSet) {
 	// Bool flags
-	fs.BoolVar(&copiedCSVsDisabled, "copied-csvs-disabled", false, "Flag to indicate if OLM copied CSVs are disabled.")
-	fs.BoolVar(&k8sModeOffClusterSkipVerifyTLS, "k8s-mode-off-cluster-skip-verify-tls", false, "DEV ONLY. When true, skip verification of certs presented by k8s API server.")
+	fs.BoolVar(&copiedCSVsDisabled, "copied-csvs-disabled", defaultCopyCSVsDisabled, "Flag to indicate if OLM copied CSVs are disabled.")
+	fs.BoolVar(&k8sModeOffClusterSkipVerifyTLS, "k8s-mode-off-cluster-skip-verify-tls", defaultK8sModeOffClusterSkipVerifyTLS, "DEV ONLY. When true, skip verification of certs presented by k8s API server.")
 
 	// Int flags
 	fs.IntVar(&loadTestFactor, "load-test-factor", 0, "DEV ONLY. The factor used to multiply k8s API list responses for load testing purposes.")
@@ -136,4 +147,8 @@ func initFlags(fs *flag.FlagSet) {
 	fs.String("kubectl-client-id", "", "DEPRECATED: setting this does not do anything.")
 	fs.String("kubectl-client-secret", "", "DEPRECATED: setting this does not do anything.")
 	fs.String("kubectl-client-secret-file", "", "DEPRECATED: setting this does not do anything.")
+
+	// Set default values using set functions so that validation is always performed
+	branding.Set(defaultBranding)
+	listen.Set(defaultListen)
 }
