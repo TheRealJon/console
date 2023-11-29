@@ -20,32 +20,14 @@ import (
 )
 
 type AuthOptions struct {
-	AuthType string
-
-	IssuerURL            string
-	ClientID             string
-	ClientSecret         string
-	ClientSecretFilePath string
-	CAFilePath           string
-
+	AuthType                 flags.AuthType
+	CAFile                   flags.File
+	ClientID                 string
+	ClientSecret             string
+	ClientSecretFile         flags.File
 	InactivityTimeoutSeconds int
-	LogoutRedirect           string
-}
-
-type CompletedOptions struct {
-	*completedOptions
-}
-
-type completedOptions struct {
-	AuthType string
-
-	IssuerURL    *url.URL
-	ClientID     string
-	ClientSecret string
-	CAFilePath   string
-
-	InactivityTimeoutSeconds int
-	LogoutRedirectURL        *url.URL
+	IssuerURL                flags.URL
+	LogoutRedirect           flags.URL
 }
 
 func NewAuthOptions() *AuthOptions {
@@ -53,32 +35,31 @@ func NewAuthOptions() *AuthOptions {
 }
 
 func (c *AuthOptions) AddFlags(fs *flag.FlagSet) {
-	fs.StringVar(&c.AuthType, "user-auth", "", "User authentication provider type. Possible values: disabled, oidc, openshift. Defaults to 'openshift'")
-	fs.StringVar(&c.IssuerURL, "user-auth-oidc-issuer-url", "", "The OIDC/OAuth2 issuer URL.")
+	fs.IntVar(&c.InactivityTimeoutSeconds, "inactivity-timeout", 0, "Number of seconds, after which user will be logged out if inactive. Ignored if less than 300 seconds (5 minutes).")
 	fs.StringVar(&c.ClientID, "user-auth-oidc-client-id", "", "The OIDC OAuth2 Client ID.")
 	fs.StringVar(&c.ClientSecret, "user-auth-oidc-client-secret", "", "The OIDC OAuth2 Client Secret.")
-	fs.StringVar(&c.ClientSecretFilePath, "user-auth-oidc-client-secret-file", "", "File containing the OIDC OAuth2 Client Secret.")
-	fs.StringVar(&c.CAFilePath, "user-auth-oidc-ca-file", "", "Path to a PEM file for the OIDC/OAuth2 issuer CA.")
-
-	fs.IntVar(&c.InactivityTimeoutSeconds, "inactivity-timeout", 0, "Number of seconds, after which user will be logged out if inactive. Ignored if less than 300 seconds (5 minutes).")
-	fs.StringVar(&c.LogoutRedirect, "user-auth-logout-redirect", "", "Optional redirect URL on logout needed for some single sign-on identity providers.")
+	fs.Var(&c.AuthType, "user-auth", "User authentication provider type. Possible values: disabled, oidc, openshift. Defaults to 'openshift'")
+	fs.Var(&c.CAFile, "user-auth-oidc-ca-file", "Path to a PEM file for the OIDC/OAuth2 issuer CA.")
+	fs.Var(&c.ClientSecretFile, "user-auth-oidc-client-secret-file", "File containing the OIDC OAuth2 Client Secret.")
+	fs.Var(&c.IssuerURL, "user-auth-oidc-issuer-url", "The OIDC/OAuth2 issuer URL.")
+	fs.Var(&c.LogoutRedirect, "user-auth-logout-redirect", "Optional redirect URL on logout needed for some single sign-on identity providers.")
 }
 
 func (c *AuthOptions) ApplyConfig(config *serverconfig.Auth) {
 	setIfUnset(&c.ClientID, config.ClientID)
-	setIfUnset(&c.ClientSecretFilePath, config.ClientSecretFile)
-	setIfUnset(&c.CAFilePath, config.OAuthEndpointCAFile)
-	setIfUnset(&c.LogoutRedirect, config.LogoutRedirect)
+	flags.SetFlagIfEmpty(&c.ClientSecretFile, config.ClientSecretFile)
+	flags.SetFlagIfEmpty(&c.CAFile, config.OAuthEndpointCAFile)
+	flags.SetFlagIfEmpty(&c.LogoutRedirect, config.LogoutRedirect)
 
 	if c.InactivityTimeoutSeconds == 0 {
 		c.InactivityTimeoutSeconds = config.InactivityTimeoutSeconds
 	}
 }
 
-func (c *AuthOptions) Complete(k8sAuthType string) (*CompletedOptions, error) {
+func (c *AuthOptions) Complete(k8sAuthType flags.K8sAuth) error {
 	// default values before running validation
 	if len(c.AuthType) == 0 {
-		c.AuthType = "openshift"
+		c.AuthType.Set(string(flags.AuthTypeOpenShift))
 	}
 
 	if c.InactivityTimeoutSeconds < 300 {
@@ -87,47 +68,21 @@ func (c *AuthOptions) Complete(k8sAuthType string) (*CompletedOptions, error) {
 	}
 
 	if errs := c.Validate(k8sAuthType); len(errs) > 0 {
-		return nil, utilerrors.NewAggregate(errs)
+		return utilerrors.NewAggregate(errs)
 	}
 
-	completed := &completedOptions{
-		AuthType:                 c.AuthType,
-		ClientID:                 c.ClientID,
-		ClientSecret:             c.ClientSecret,
-		CAFilePath:               c.CAFilePath,
-		InactivityTimeoutSeconds: c.InactivityTimeoutSeconds,
-	}
-
-	if len(c.IssuerURL) > 0 {
-		issuerURL, err := url.Parse(c.IssuerURL)
+	if len(c.ClientSecretFile) > 0 {
+		buf, err := os.ReadFile(c.ClientSecretFile.String())
 		if err != nil {
-			return nil, fmt.Errorf("invalid issuer URL: %w", err)
+			return fmt.Errorf("failed to read client secret file: %w", err)
 		}
-		completed.IssuerURL = issuerURL
+		c.ClientSecret = string(buf)
 	}
 
-	if len(c.LogoutRedirect) > 0 {
-		logoutURL, err := url.Parse(c.LogoutRedirect)
-		if err != nil {
-			return nil, fmt.Errorf("invalid logout redirect URL: %w", err)
-		}
-		completed.LogoutRedirectURL = logoutURL
-	}
-
-	if len(c.ClientSecretFilePath) > 0 {
-		buf, err := os.ReadFile(c.ClientSecretFilePath)
-		if err != nil {
-			return nil, fmt.Errorf("failed to read client secret file: %w", err)
-		}
-		completed.ClientSecret = string(buf)
-	}
-
-	return &CompletedOptions{
-		completedOptions: completed,
-	}, nil
+	return nil
 }
 
-func (c *AuthOptions) Validate(k8sAuthType string) []error {
+func (c *AuthOptions) Validate(k8sAuthType flags.K8sAuth) []error {
 	var errs []error
 
 	switch c.AuthType {
@@ -136,11 +91,11 @@ func (c *AuthOptions) Validate(k8sAuthType string) []error {
 			errs = append(errs, flags.NewRequiredFlagError("user-auth-oidc-client-id"))
 		}
 
-		if c.ClientSecret == "" && c.ClientSecretFilePath == "" {
+		if c.ClientSecret == "" && c.ClientSecretFile == "" {
 			errs = append(errs, fmt.Errorf("must provide either --user-auth-oidc-client-secret or --user-auth-oidc-client-secret-file"))
 		}
 
-		if c.ClientSecret != "" && c.ClientSecretFilePath != "" {
+		if c.ClientSecret != "" && c.ClientSecretFile != "" {
 			errs = append(errs, fmt.Errorf("cannot provide both --user-auth-oidc-client-secret and --user-auth-oidc-client-secret-file"))
 		}
 
@@ -151,18 +106,18 @@ func (c *AuthOptions) Validate(k8sAuthType string) []error {
 
 	switch c.AuthType {
 	case "openshift":
-		if len(c.IssuerURL) != 0 {
+		if len(c.IssuerURL.String()) != 0 {
 			errs = append(errs, flags.NewInvalidFlagError("user-auth-oidc-issuer-url", "cannot be used with --user-auth=\"openshift\""))
 		}
 
 	case "oidc":
-		if len(c.IssuerURL) == 0 {
+		if len(c.IssuerURL.String()) == 0 {
 			errs = append(errs, fmt.Errorf("--user-auth-oidc-issuer-url must be set if --user-auth=oidc"))
 		}
 	}
 
 	switch k8sAuthType {
-	case "oidc", "openshift":
+	case flags.K8sAuthOIDC, flags.K8sAuthOpenShift:
 	default:
 		if c.InactivityTimeoutSeconds > 0 {
 			errs = append(errs, flags.NewInvalidFlagError("inactivity-timeout", "in order to activate the user inactivity timout, flag --user-auth must be one of: oidc, openshift"))
@@ -172,20 +127,18 @@ func (c *AuthOptions) Validate(k8sAuthType string) []error {
 	return errs
 }
 
-func (c *completedOptions) ApplyTo(
+func (c *AuthOptions) ApplyTo(
 	srv *server.Server,
-	k8sEndpoint *url.URL,
-	pubAPIServerEndpoint string,
 	caCertFilePath string,
 ) error {
 	srv.InactivityTimeout = c.InactivityTimeoutSeconds
-	srv.LogoutRedirect = c.LogoutRedirectURL
+	srv.LogoutRedirect = c.LogoutRedirect.Get()
 
 	var err error
 	srv.Authenticator, err = c.getAuthenticator(
 		srv.BaseURL,
-		k8sEndpoint,
-		pubAPIServerEndpoint,
+		srv.K8sProxyConfig.Endpoint,
+		srv.KubeAPIServerURL,
 		caCertFilePath,
 		srv.K8sClient.Transport,
 	)
@@ -193,7 +146,7 @@ func (c *completedOptions) ApplyTo(
 	return err
 }
 
-func (c *completedOptions) getAuthenticator(
+func (c *AuthOptions) getAuthenticator(
 	baseURL *url.URL,
 	k8sEndpoint *url.URL,
 	pubAPIServerEndpoint string,
@@ -233,7 +186,7 @@ func (c *completedOptions) getAuthenticator(
 
 		userAuthOIDCIssuerURL = k8sEndpoint
 	} else {
-		userAuthOIDCIssuerURL = c.IssuerURL
+		userAuthOIDCIssuerURL = c.IssuerURL.Get()
 
 	}
 
@@ -243,7 +196,7 @@ func (c *completedOptions) getAuthenticator(
 	oidcClientConfig := &auth.Config{
 		AuthSource:   authSource,
 		IssuerURL:    userAuthOIDCIssuerURL.String(),
-		IssuerCA:     c.CAFilePath,
+		IssuerCA:     c.CAFile.String(),
 		ClientID:     c.ClientID,
 		ClientSecret: oidcClientSecret,
 		RedirectURL:  proxy.SingleJoiningSlash(baseURL.String(), server.AuthLoginCallbackEndpoint),

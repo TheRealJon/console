@@ -84,7 +84,8 @@ var (
 	telemetryFlags      flags.Map
 )
 
-func initFlags(fs *flag.FlagSet) {
+func InitFlags() *flag.FlagSet {
+	fs := flag.NewFlagSet("bridge", flag.ExitOnError)
 	// Bool flags
 	fs.BoolVar(&copiedCSVsDisabled, "copied-csvs-disabled", defaultCopyCSVsDisabled, "Flag to indicate if OLM copied CSVs are disabled.")
 	fs.BoolVar(&k8sModeOffClusterSkipVerifyTLS, "k8s-mode-off-cluster-skip-verify-tls", defaultK8sModeOffClusterSkipVerifyTLS, "DEV ONLY. When true, skip verification of certs presented by k8s API server.")
@@ -162,4 +163,5 @@ func initFlags(fs *flag.FlagSet) {
 	k8sMode.Set(defaultK8sMode)
 	userSettingsLocation.Set(defaultUserSettingsLocation)
 	publicDir.Set(defaultPublicDir)
+	return fs
 }
