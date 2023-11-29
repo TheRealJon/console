@@ -192,7 +192,7 @@ func TestSetFlagsFromConfig(t *testing.T) {
 			config: Config{
 				APIVersion: "console.openshift.io/v1",
 				Kind:       "ConsoleConfig",
-				Plugins: flags.MapFlag{
+				Plugins: flags.Map{
 					"plugin-a": "ServiceA",
 					"plugin-b": "ServiceB",
 				},
@@ -207,7 +207,7 @@ func TestSetFlagsFromConfig(t *testing.T) {
 			config: Config{
 				APIVersion: "console.openshift.io/v1",
 				Kind:       "ConsoleConfig",
-				Telemetry: flags.MapFlag{
+				Telemetry: flags.Map{
 					"A_CONFIG_KEY":       "value1",
 					"ANOTHER_CONFIG_KEY": "value2",
 					"disabled":           "true",
@@ -223,8 +223,8 @@ func TestSetFlagsFromConfig(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			fs := &flag.FlagSet{}
 			fs.String("config", "", "")
-			fs.Var(&flags.MapFlag{}, "plugins", "")
-			fs.Var(&flags.MapFlag{}, "telemetry", "")
+			fs.Var(&flags.Map{}, "plugins", "")
+			fs.Var(&flags.Map{}, "telemetry", "")
 
 			actualError := SetFlagsFromConfig(fs, &test.config)
 			actual := make(map[string]string)

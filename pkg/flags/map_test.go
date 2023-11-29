@@ -9,19 +9,19 @@ func TestMapFlagSetter(t *testing.T) {
 	tests := []struct {
 		name          string
 		input         string
-		expected      MapFlag
+		expected      Map
 		expectedError error
 	}{
 		{
 			name:          "Should ignore an empty string",
 			input:         "",
-			expected:      MapFlag{},
+			expected:      Map{},
 			expectedError: nil,
 		},
 		{
 			name:  "Should accept and split key=value pair",
 			input: "key=value",
-			expected: MapFlag{
+			expected: Map{
 				"key": "value",
 			},
 			expectedError: nil,
@@ -29,7 +29,7 @@ func TestMapFlagSetter(t *testing.T) {
 		{
 			name:  "Should accept multiple comma-separated key=value pairs",
 			input: "key1=value1,key2=value2",
-			expected: MapFlag{
+			expected: Map{
 				"key1": "value1",
 				"key2": "value2",
 			},
@@ -38,7 +38,7 @@ func TestMapFlagSetter(t *testing.T) {
 		{
 			name:  "Should automatically trim spaces between key=value pairs",
 			input: "key1=value1, key2=value2, ",
-			expected: MapFlag{
+			expected: Map{
 				"key1": "value1",
 				"key2": "value2",
 			},
@@ -47,7 +47,7 @@ func TestMapFlagSetter(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			actual := MapFlag{}
+			actual := Map{}
 			actualError := actual.Set(test.input)
 			if !reflect.DeepEqual(test.expected, actual) {
 				t.Errorf("Data does not match expectation:\n%v\nbut got\n%v", test.expected, actual)
@@ -63,11 +63,11 @@ func TestMapFlagSetter(t *testing.T) {
 
 // Set is called multiple times when parsing the config file
 func TestCallingMapFlagSetterMultipleTimes(t *testing.T) {
-	actual := MapFlag{}
+	actual := Map{}
 	actual.Set("plugin-a=Service1")
 	actual.Set("plugin-b=Service2 ")
 	actual.Set("plugin-c=Service3, plugin-d=Service4, ")
-	expected := MapFlag{
+	expected := Map{
 		"plugin-a": "Service1",
 		"plugin-b": "Service2",
 		"plugin-c": "Service3",

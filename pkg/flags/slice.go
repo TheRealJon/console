@@ -6,16 +6,16 @@ import (
 )
 
 // Slightly modified version of StringSliceFlag from github.com/coreos/pkg/flagutil.
-// SliceFlag parses a comma-delimited list of strings into a []string slice. This implememtation
+// Slice parses a comma-delimited list of strings into a []string slice. This implememtation
 // fails if an empty string is encountered when parsing the slice from a string. This type
 // implements the flag.Value interface.
-type SliceFlag []string
+type Slice []string
 
-func (s *SliceFlag) String() string {
+func (s *Slice) String() string {
 	return fmt.Sprintf("%+v", *s)
 }
 
-func (s *SliceFlag) Set(v string) error {
+func (s *Slice) Set(v string) error {
 	var val []string
 	split := strings.Split(v, ",")
 	for _, s := range split {
@@ -27,4 +27,8 @@ func (s *SliceFlag) Set(v string) error {
 	}
 	*s = val
 	return nil
+}
+
+func (s *Slice) Get() []string {
+	return []string(*s)
 }

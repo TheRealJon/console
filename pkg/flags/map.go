@@ -6,11 +6,11 @@ import (
 	"strings"
 )
 
-// MapFlag is used for defining a set of key-value pairs on a single flag, eg.:
+// Map is used for defining a set of key-value pairs on a single flag, eg.:
 // ... --plugins plugin-name=plugin-endpoint, plugin-name2=plugin-endpoint2
-type MapFlag map[string]string
+type Map map[string]string
 
-func (mf *MapFlag) String() string {
+func (mf *Map) String() string {
 	keyValuePairs := []string{}
 	for k, v := range *mf {
 		keyValuePairs = append(keyValuePairs, fmt.Sprintf("%s=%s", k, v))
@@ -19,7 +19,7 @@ func (mf *MapFlag) String() string {
 	return strings.Join(keyValuePairs, ", ")
 }
 
-func (mf *MapFlag) Set(value string) error {
+func (mf *Map) Set(value string) error {
 	keyValuePairs := strings.Split(value, ",")
 	for _, keyValuePair := range keyValuePairs {
 		keyValuePair = strings.TrimSpace(keyValuePair)
@@ -35,6 +35,6 @@ func (mf *MapFlag) Set(value string) error {
 	return nil
 }
 
-func (smf *MapFlag) Value() map[string]string {
+func (smf *Map) Get() map[string]string {
 	return map[string]string(*smf)
 }

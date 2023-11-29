@@ -5,18 +5,18 @@ import (
 	"net/url"
 )
 
-type URLFlag url.URL
+type URL url.URL
 
-func (u *URLFlag) String() string {
+func (u *URL) String() string {
 	if u == nil {
 		return ""
 	}
 	return (*url.URL)(u).String()
 }
 
-func (u *URLFlag) Set(v string) error {
+func (u *URL) Set(v string) error {
 	if len(v) == 0 {
-		*u = URLFlag(url.URL{})
+		*u = URL(url.URL{})
 		return nil
 	}
 
@@ -28,11 +28,11 @@ func (u *URLFlag) Set(v string) error {
 	if ur == nil || ur.String() == "" || ur.Scheme == "" || ur.Host == "" {
 		return fmt.Errorf("malformed URL: %s", v)
 	}
-	*u = URLFlag(*ur)
+	*u = URL(*ur)
 	return nil
 }
 
-func (u *URLFlag) Get() *url.URL {
+func (u *URL) Get() *url.URL {
 	if u == nil {
 		return nil
 	}

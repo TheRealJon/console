@@ -53,42 +53,42 @@ func main() {
 	}
 
 	srv := &server.Server{
-		AddPage:                      fAddPage,
-		AlertManagerPublicURL:        fAlermanagerPublicURL.Get(),
-		AlertManagerTenancyHost:      fAlertmanagerTenancyHost,
-		AlertManagerUserWorkloadHost: fAlertmanagerUserWorkloadHost,
-		Branding:                     fBranding,
-		ControlPlaneTopology:         fControlPlaneTopology,
-		CopiedCSVsDisabled:           fCopiedCSVsDisabled,
-		CustomLogoFile:               fCustomLogoFile,
-		CustomProductName:            fCustomProductName,
-		DevCatalogCategories:         fDevCatalogCategories,
-		DevCatalogTypes:              fDevCatalogTypes,
-		DocumentationBaseURL:         fDocumentationBaseURL.Get(),
+		AddPage:                      addPage,
+		AlertManagerPublicURL:        alermanagerPublicURL.Get(),
+		AlertManagerTenancyHost:      alertmanagerTenancyHost,
+		AlertManagerUserWorkloadHost: alertmanagerUserWorkloadHost,
+		Branding:                     branding,
+		ControlPlaneTopology:         controlPlaneTopology,
+		CopiedCSVsDisabled:           copiedCSVsDisabled,
+		CustomLogoFile:               customLogoFile,
+		CustomProductName:            customProductName,
+		DevCatalogCategories:         devCatalogCategories,
+		DevCatalogTypes:              devCatalogTypes,
+		DocumentationBaseURL:         documentationBaseURL.Get(),
 		EnabledConsolePlugins:        consolePluginsFlags,
-		GrafanaPublicURL:             fGrafanaPublicURL.Get(),
-		I18nNamespaces:               []string(fI18nNamespaces),
-		K8sMode:                      fK8sMode,
-		LoadTestFactor:               fLoadTestFactor,
-		NodeArchitectures:            []string(fNodeArchitectures),
-		NodeOperatingSystems:         []string(fNodeOperatingSystems),
-		Perspectives:                 fPerspectives,
-		PluginProxy:                  fPluginProxy,
-		ProjectAccessClusterRoles:    fProjectAccessClusterRoles,
-		PrometheusPublicURL:          fPrometheusPublicURL.Get(),
-		PublicDir:                    fPublicDir,
-		QuickStarts:                  fQuickStarts,
-		ReleaseVersion:               fReleaseVersion,
-		StatuspageID:                 fStatuspageID,
+		GrafanaPublicURL:             grafanaPublicURL.Get(),
+		I18nNamespaces:               []string(i18nNamespaces),
+		K8sMode:                      k8sMode,
+		LoadTestFactor:               loadTestFactor,
+		NodeArchitectures:            []string(nodeArchitectures),
+		NodeOperatingSystems:         []string(nodeOperatingSystems),
+		Perspectives:                 perspectives,
+		PluginProxy:                  pluginProxy,
+		ProjectAccessClusterRoles:    projectAccessClusterRoles,
+		PrometheusPublicURL:          prometheusPublicURL.Get(),
+		PublicDir:                    publicDir,
+		QuickStarts:                  quickStarts,
+		ReleaseVersion:               releaseVersion,
+		StatuspageID:                 statuspageID,
 		Telemetry:                    telemetryFlags,
-		ThanosPublicURL:              fThanosPublicURL.Get(),
-		UserSettingsLocation:         fUserSettingsLocation,
+		ThanosPublicURL:              thanosPublicURL.Get(),
+		UserSettingsLocation:         userSettingsLocation,
 	}
 
-	fBaseAddress.Path = fBasePath
-	srv.BaseURL = fBaseAddress.Get()
+	baseAddress.Path = basePath
+	srv.BaseURL = baseAddress.Get()
 
-	completedAuthnOptions, err := authOptions.Complete(fK8sAuth)
+	completedAuthnOptions, err := authOptions.Complete(k8sAuth)
 	if err != nil {
 		klog.Fatalf("failed to complete authentication options: %v", err)
 		os.Exit(1)
@@ -96,7 +96,7 @@ func main() {
 
 	// if !in-cluster (dev) we should not pass these values to the frontend
 	// is used by catalog-utils.ts
-	if fK8sMode == "in-cluster" {
+	if k8sMode == "in-cluster" {
 		srv.GOARCH = runtime.GOARCH
 		srv.GOOS = runtime.GOOS
 	}
@@ -108,7 +108,7 @@ func main() {
 		k8sEndpoint                      *url.URL
 	)
 
-	switch fK8sMode {
+	switch k8sMode {
 	case "in-cluster":
 		k8sEndpoint = &url.URL{Scheme: "https", Host: "kubernetes.default.svc"}
 		var err error
@@ -137,8 +137,8 @@ func main() {
 		}
 
 		// If running in an OpenShift cluster, set up a proxy to the prometheus-k8s service running in the openshift-monitoring namespace.
-		if fServiceCAFile != "" {
-			serviceCertPEM, err := ioutil.ReadFile(fServiceCAFile)
+		if serviceCAFile != "" {
+			serviceCertPEM, err := ioutil.ReadFile(serviceCAFile)
 			if err != nil {
 				klog.Fatalf("failed to read service-ca.crt file: %v", err)
 			}
@@ -180,12 +180,12 @@ func main() {
 			srv.AlertManagerUserWorkloadProxyConfig = &proxy.Config{
 				TLSClientConfig: serviceProxyTLSConfig,
 				HeaderBlacklist: []string{"Cookie", "X-CSRFToken"},
-				Endpoint:        &url.URL{Scheme: "https", Host: fAlertmanagerUserWorkloadHost, Path: "/api"},
+				Endpoint:        &url.URL{Scheme: "https", Host: alertmanagerUserWorkloadHost, Path: "/api"},
 			}
 			srv.AlertManagerTenancyProxyConfig = &proxy.Config{
 				TLSClientConfig: serviceProxyTLSConfig,
 				HeaderBlacklist: []string{"Cookie", "X-CSRFToken"},
-				Endpoint:        &url.URL{Scheme: "https", Host: fAlertmanagerTenancyHost, Path: "/api"},
+				Endpoint:        &url.URL{Scheme: "https", Host: alertmanagerTenancyHost, Path: "/api"},
 			}
 			srv.TerminalProxyTLSConfig = serviceProxyTLSConfig
 			srv.PluginsProxyTLSConfig = serviceProxyTLSConfig
@@ -198,9 +198,9 @@ func main() {
 		}
 
 	case "off-cluster":
-		k8sEndpoint = fK8sModeOffClusterEndpoint.Get()
+		k8sEndpoint = k8sModeOffClusterEndpoint.Get()
 		serviceProxyTLSConfig := oscrypto.SecureTLSConfig(&tls.Config{
-			InsecureSkipVerify: fK8sModeOffClusterSkipVerifyTLS,
+			InsecureSkipVerify: k8sModeOffClusterSkipVerifyTLS,
 		})
 
 		srv.ServiceClient = &http.Client{
@@ -216,8 +216,8 @@ func main() {
 			UseProxyFromEnvironment: true,
 		}
 
-		if fK8sModeOffClusterThanos.String() != "" {
-			offClusterThanosURL := fK8sModeOffClusterThanos.Get()
+		if k8sModeOffClusterThanos.String() != "" {
+			offClusterThanosURL := k8sModeOffClusterThanos.Get()
 			offClusterThanosURL.Path += "/api"
 			srv.ThanosTenancyProxyConfig = &proxy.Config{
 				TLSClientConfig: serviceProxyTLSConfig,
@@ -236,8 +236,8 @@ func main() {
 			}
 		}
 
-		if fK8sModeOffClusterAlertmanager.String() != "" {
-			offClusterAlertManagerURL := fK8sModeOffClusterAlertmanager.Get()
+		if k8sModeOffClusterAlertmanager.String() != "" {
+			offClusterAlertManagerURL := k8sModeOffClusterAlertmanager.Get()
 			offClusterAlertManagerURL.Path += "/api"
 			srv.AlertManagerProxyConfig = &proxy.Config{
 				TLSClientConfig: serviceProxyTLSConfig,
@@ -259,18 +259,18 @@ func main() {
 		srv.TerminalProxyTLSConfig = serviceProxyTLSConfig
 		srv.PluginsProxyTLSConfig = serviceProxyTLSConfig
 
-		if fK8sModeOffClusterGitOps.String() != "" {
+		if k8sModeOffClusterGitOps.String() != "" {
 			srv.GitOpsProxyConfig = &proxy.Config{
 				TLSClientConfig: serviceProxyTLSConfig,
 				HeaderBlacklist: []string{"Cookie", "X-CSRFToken"},
-				Endpoint:        fK8sModeOffClusterGitOps.Get(),
+				Endpoint:        k8sModeOffClusterGitOps.Get(),
 			}
 		}
 	default:
 		flags.FatalIfFailed(flags.NewInvalidFlagError("k8s-mode", "must be one of: in-cluster, off-cluster"))
 	}
 
-	apiServerEndpoint := fK8sPublicEndpoint.String()
+	apiServerEndpoint := k8sPublicEndpoint.String()
 	if apiServerEndpoint == "" {
 		apiServerEndpoint = srv.K8sProxyConfig.Endpoint.String()
 	}
@@ -291,20 +291,20 @@ func main() {
 		Endpoint:        clusterManagementURL,
 	}
 
-	switch fK8sAuth {
+	switch k8sAuth {
 	case "service-account":
-		flags.FatalIfFailed(flags.ValidateFlagIs("k8s-mode", fK8sMode, "in-cluster"))
+		flags.FatalIfFailed(flags.ValidateFlagIs("k8s-mode", k8sMode, "in-cluster"))
 		srv.StaticUser = &auth.User{
 			Token: k8sAuthServiceAccountBearerToken,
 		}
 		srv.ServiceAccountToken = k8sAuthServiceAccountBearerToken
 	case "bearer-token":
-		flags.FatalIfFailed(flags.ValidateFlagNotEmpty("k8s-auth-bearer-token", fK8sAuthBearerToken))
+		flags.FatalIfFailed(flags.ValidateFlagNotEmpty("k8s-auth-bearer-token", k8sAuthBearerToken))
 
 		srv.StaticUser = &auth.User{
-			Token: fK8sAuthBearerToken,
+			Token: k8sAuthBearerToken,
 		}
-		srv.ServiceAccountToken = fK8sAuthBearerToken
+		srv.ServiceAccountToken = k8sAuthBearerToken
 	case "oidc", "openshift":
 		flags.FatalIfFailed(flags.ValidateFlagIs("user-auth", authOptions.AuthType, "oidc", "openshift"))
 		srv.ServiceAccountToken = k8sAuthServiceAccountBearerToken
@@ -315,7 +315,7 @@ func main() {
 	monitoringDashboardHttpClientTransport := &http.Transport{
 		TLSClientConfig: srv.K8sProxyConfig.TLSClientConfig,
 	}
-	if fK8sMode == "off-cluster" {
+	if k8sMode == "off-cluster" {
 		monitoringDashboardHttpClientTransport.Proxy = http.ProxyFromEnvironment
 	}
 	srv.MonitoringDashboardConfigMapLister = server.NewResourceLister(
@@ -370,8 +370,8 @@ func main() {
 		knative.ChannelFilter,
 	)
 
-	caCertFilePath := fCAFile
-	if fK8sMode == "in-cluster" {
+	caCertFilePath := caFile
+	if k8sMode == "in-cluster" {
 		caCertFilePath = k8sInClusterCA
 	}
 
@@ -380,24 +380,24 @@ func main() {
 		os.Exit(1)
 	}
 
-	switch fListen.Scheme {
+	switch listen.Scheme {
 	case "http":
 	case "https":
-		flags.FatalIfFailed(flags.ValidateFlagNotEmpty("tls-cert-file", fTlSCertFile))
-		flags.FatalIfFailed(flags.ValidateFlagNotEmpty("tls-key-file", fTlSKeyFile))
+		flags.FatalIfFailed(flags.ValidateFlagNotEmpty("tls-cert-file", tlsCertFile))
+		flags.FatalIfFailed(flags.ValidateFlagNotEmpty("tls-key-file", tlsKeyFile))
 	default:
 		flags.FatalIfFailed(flags.NewInvalidFlagError("listen", "scheme must be one of: http, https"))
 	}
 
 	httpsrv := &http.Server{
-		Addr:    fListen.Host,
+		Addr:    listen.Host,
 		Handler: srv.HTTPHandler(),
 		// Disable HTTP/2, which breaks WebSockets.
 		TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler)),
 		TLSConfig:    oscrypto.SecureTLSConfig(&tls.Config{}),
 	}
 
-	if fRedirectPort != 0 {
+	if redirectPort != 0 {
 		go func() {
 			// Listen on passed port number to be redirected to the console
 			redirectServer := http.NewServeMux()
@@ -410,16 +410,16 @@ func main() {
 				}
 				http.Redirect(res, req, redirectURL.String(), http.StatusMovedPermanently)
 			})
-			redirectPort := fmt.Sprintf(":%d", fRedirectPort)
+			redirectPort := fmt.Sprintf(":%d", redirectPort)
 			klog.Infof("Listening on %q for custom hostname redirect...", redirectPort)
 			klog.Fatal(http.ListenAndServe(redirectPort, redirectServer))
 		}()
 	}
 
 	klog.Infof("Binding to %s...", httpsrv.Addr)
-	if fListen.Scheme == "https" {
+	if listen.Scheme == "https" {
 		klog.Info("using TLS")
-		klog.Fatal(httpsrv.ListenAndServeTLS(fTlSCertFile, fTlSKeyFile))
+		klog.Fatal(httpsrv.ListenAndServeTLS(tlsCertFile, tlsKeyFile))
 	} else {
 		klog.Info("not using TLS")
 		klog.Fatal(httpsrv.ListenAndServe())
