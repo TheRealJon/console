@@ -102,8 +102,6 @@ func main() {
 	}
 
 	var (
-		// Hold on to raw certificates so we can render them in kubeconfig files.
-		k8sCertPEM                       []byte
 		k8sAuthServiceAccountBearerToken string
 		k8sEndpoint                      *url.URL
 	)
@@ -112,7 +110,7 @@ func main() {
 	case flags.K8sModeInCluster:
 		k8sEndpoint = &url.URL{Scheme: "https", Host: "kubernetes.default.svc"}
 		var err error
-		k8sCertPEM, err = ioutil.ReadFile(k8sInClusterCA)
+		k8sCertPEM, err := ioutil.ReadFile(k8sInClusterCA)
 		if err != nil {
 			klog.Fatalf("Error inferring Kubernetes config from environment: %v", err)
 		}
