@@ -42,22 +42,11 @@ func Validate(fs *flag.FlagSet) error {
 		return err
 	}
 
-	if _, err := validateDocumentationBaseURL(fs.Lookup("documentation-base-url").Value.String()); err != nil {
-		return err
-	}
-
 	if fs.Lookup("log-level").Value.String() != "" {
 		klog.Warningf("DEPRECATED: --log-level is now deprecated, use verbosity flag --v=Level instead")
 	}
 
 	return nil
-}
-
-func validateDocumentationBaseURL(value string) (string, error) {
-	if value != "" && !strings.HasSuffix(value, "/") {
-		return "", flags.NewInvalidFlagError("documentation-base-url", "value must end with slash")
-	}
-	return value, nil
 }
 
 func validateCustomLogoFile(value string) (string, error) {

@@ -61,7 +61,7 @@ var (
 	// URL flags
 	alermanagerPublicURL          flags.URL
 	baseAddress                   flags.URL
-	documentationBaseURL          flags.URL
+	documentationBaseURL          flags.URLWithTrailingSlash
 	grafanaPublicURL              flags.URL
 	k8sModeOffClusterAlertmanager flags.URL
 	k8sModeOffClusterEndpoint     flags.URL
