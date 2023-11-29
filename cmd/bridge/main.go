@@ -85,7 +85,7 @@ func main() {
 		UserSettingsLocation:         userSettingsLocation,
 	}
 
-	baseAddress.Path = basePath
+	baseAddress.Path = basePath.String()
 	srv.BaseURL = baseAddress.Get()
 
 	completedAuthnOptions, err := authOptions.Complete(k8sAuth)

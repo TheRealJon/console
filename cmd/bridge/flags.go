@@ -10,9 +10,11 @@ const (
 	defaultBasePath                       = "/"
 	defaultBranding                       = "okd"
 	defaultCopyCSVsDisabled               = false
+	defaultK8sMode                        = "in-cluster"
 	defaultK8sModeOffClusterSkipVerifyTLS = false
 	defaultListen                         = "http://0.0.0.0:9000"
 	defaultLoadTestFactor                 = 0
+	defaultPublicDir                      = "./frontend/public/dist"
 	defaultRedirectPort                   = 0
 	defaultUserSettingsLocation           = "configmap"
 )
@@ -30,7 +32,6 @@ var (
 	addPage                      string
 	alertmanagerTenancyHost      string
 	alertmanagerUserWorkloadHost string
-	basePath                     string
 	caFile                       string
 	controlPlaneTopology         string
 	customLogoFile               string
@@ -54,6 +55,7 @@ var (
 	userSettingsLocation         string
 
 	// Unique string flags
+	basePath flags.BasePath
 	branding flags.Brand
 
 	// URL flags
@@ -86,15 +88,14 @@ func initFlags(fs *flag.FlagSet) {
 	fs.BoolVar(&k8sModeOffClusterSkipVerifyTLS, "k8s-mode-off-cluster-skip-verify-tls", defaultK8sModeOffClusterSkipVerifyTLS, "DEV ONLY. When true, skip verification of certs presented by k8s API server.")
 
 	// Int flags
-	fs.IntVar(&loadTestFactor, "load-test-factor", 0, "DEV ONLY. The factor used to multiply k8s API list responses for load testing purposes.")
-	fs.IntVar(&redirectPort, "redirect-port", 0, "Port number under which the console should listen for custom hostname redirect.")
+	fs.IntVar(&loadTestFactor, "load-test-factor", defaultLoadTestFactor, "DEV ONLY. The factor used to multiply k8s API list responses for load testing purposes.")
+	fs.IntVar(&redirectPort, "redirect-port", defaultRedirectPort, "Port number under which the console should listen for custom hostname redirect.")
 
 	// String flags
 	fs.String("config", "", "The YAML config file.")
 	fs.StringVar(&addPage, "add-page", "", "DEV ONLY. Allow add page customization. (JSON as string)")
 	fs.StringVar(&alertmanagerTenancyHost, "alermanager-tenancy-host", openshiftAlertManagerTenancyHost, "Location of the tenant-aware Alertmanager service.")
 	fs.StringVar(&alertmanagerUserWorkloadHost, "alermanager-user-workload-host", openshiftAlertManagerHost, "Location of the Alertmanager service for user-defined alerts.")
-	fs.StringVar(&basePath, "base-path", "/", "")
 	fs.StringVar(&caFile, "ca-file", "", "PEM File containing trusted certificates of trusted CAs. If not present, the system's Root CAs will be used.")
 	fs.StringVar(&controlPlaneTopology, "control-plane-topology-mode", "", "Defines the topology mode of the control/infra nodes (External | HighlyAvailable | SingleReplica)")
 	fs.StringVar(&customLogoFile, "custom-logo-file", "", "Custom product image for console branding.")
@@ -103,21 +104,22 @@ func initFlags(fs *flag.FlagSet) {
 	fs.StringVar(&devCatalogTypes, "developer-catalog-types", "", "Allow enabling/disabling of sub-catalog types from the developer catalog. (JSON as string)")
 	fs.StringVar(&k8sAuth, "k8s-auth", "service-account", "service-account | bearer-token | oidc | openshift")
 	fs.StringVar(&k8sAuthBearerToken, "k8s-auth-bearer-token", "", "Authorization token to send with proxied Kubernetes API requests.")
-	fs.StringVar(&k8sMode, "k8s-mode", "in-cluster", "in-cluster | off-cluster")
+	fs.StringVar(&k8sMode, "k8s-mode", defaultK8sMode, "in-cluster | off-cluster")
 	fs.StringVar(&logLevel, "log-level", "", "level of logging information by package (pkg=level).")
 	fs.StringVar(&perspectives, "perspectives", "", "Allow enabling/disabling of perspectives in the console. (JSON as string)")
 	fs.StringVar(&pluginProxy, "plugin-proxy", "", "Defines various service types to which will console proxy plugins requests. (JSON as string)")
 	fs.StringVar(&projectAccessClusterRoles, "project-access-cluster-roles", "", "The list of Cluster Roles assignable for the project access page. (JSON as string)")
-	fs.StringVar(&publicDir, "public-dir", "./frontend/public/dist", "directory containing static web assets.")
+	fs.StringVar(&publicDir, "public-dir", defaultPublicDir, "directory containing static web assets.")
 	fs.StringVar(&quickStarts, "quick-starts", "", "Allow customization of available ConsoleQuickStart resources in console. (JSON as string)")
 	fs.StringVar(&releaseVersion, "release-version", "", "Defines the release version of the cluster")
 	fs.StringVar(&serviceCAFile, "service-ca-file", "", "CA bundle for OpenShift services signed with the service signing certificates.") // See https://github.com/openshift/service-serving-cert-signer
 	fs.StringVar(&statuspageID, "statuspage-id", "", "Unique ID assigned by statuspage.io page that provides status info.")
 	fs.StringVar(&tlsCertFile, "tls-cert-file", "", "TLS certificate. If the certificate is signed by a certificate authority, the certFile should be the concatenation of the server's certificate followed by the CA's certificate.")
 	fs.StringVar(&tlsKeyFile, "tls-key-file", "", "The TLS certificate key.")
-	fs.StringVar(&userSettingsLocation, "user-settings-location", "configmap", "DEV ONLY. Define where the user settings should be stored. (configmap | localstorage).")
+	fs.StringVar(&userSettingsLocation, "user-settings-location", defaultUserSettingsLocation, "DEV ONLY. Define where the user settings should be stored. (configmap | localstorage).")
 
 	// Unique string flags
+	fs.Var(&basePath, "base-path", "")
 	fs.Var(&branding, "branding", "Console branding for the masthead logo and title. One of okd, openshift, ocp, online, dedicated, azure, or rosa. Defaults to okd.")
 
 	// URL flags
@@ -149,6 +151,7 @@ func initFlags(fs *flag.FlagSet) {
 	fs.String("kubectl-client-secret-file", "", "DEPRECATED: setting this does not do anything.")
 
 	// Set default values using set functions so that validation is always performed
+	basePath.Set(defaultBasePath)
 	branding.Set(defaultBranding)
 	listen.Set(defaultListen)
 }
