@@ -20,7 +20,6 @@ var (
 	alertmanagerTenancyHost      string
 	alertmanagerUserWorkloadHost string
 	basePath                     string
-	branding                     string
 	caFile                       string
 	controlPlaneTopology         string
 	customLogoFile               string
@@ -42,6 +41,9 @@ var (
 	tlsCertFile                  string
 	tlsKeyFile                   string
 	userSettingsLocation         string
+
+	// Unique string flags
+	branding = flags.BrandOKD
 
 	// URL flags
 	alermanagerPublicURL          = flags.URL{}
@@ -82,7 +84,6 @@ func initFlags(fs *flag.FlagSet) {
 	fs.StringVar(&alertmanagerTenancyHost, "alermanager-tenancy-host", openshiftAlertManagerTenancyHost, "Location of the tenant-aware Alertmanager service.")
 	fs.StringVar(&alertmanagerUserWorkloadHost, "alermanager-user-workload-host", openshiftAlertManagerHost, "Location of the Alertmanager service for user-defined alerts.")
 	fs.StringVar(&basePath, "base-path", "/", "")
-	fs.StringVar(&branding, "branding", "okd", "Console branding for the masthead logo and title. One of okd, openshift, ocp, online, dedicated, azure, or rosa. Defaults to okd.")
 	fs.StringVar(&caFile, "ca-file", "", "PEM File containing trusted certificates of trusted CAs. If not present, the system's Root CAs will be used.")
 	fs.StringVar(&controlPlaneTopology, "control-plane-topology-mode", "", "Defines the topology mode of the control/infra nodes (External | HighlyAvailable | SingleReplica)")
 	fs.StringVar(&customLogoFile, "custom-logo-file", "", "Custom product image for console branding.")
@@ -104,6 +105,9 @@ func initFlags(fs *flag.FlagSet) {
 	fs.StringVar(&tlsCertFile, "tls-cert-file", "", "TLS certificate. If the certificate is signed by a certificate authority, the certFile should be the concatenation of the server's certificate followed by the CA's certificate.")
 	fs.StringVar(&tlsKeyFile, "tls-key-file", "", "The TLS certificate key.")
 	fs.StringVar(&userSettingsLocation, "user-settings-location", "configmap", "DEV ONLY. Define where the user settings should be stored. (configmap | localstorage).")
+
+	// Unique string flags
+	fs.Var(&branding, "branding", "Console branding for the masthead logo and title. One of okd, openshift, ocp, online, dedicated, azure, or rosa. Defaults to okd.")
 
 	// URL flags
 	fs.Var(&alermanagerPublicURL, "alermanager-public-url", "Public URL of the cluster's AlertManager server.")

@@ -47,13 +47,6 @@ func Validate(fs *flag.FlagSet) error {
 		return err
 	}
 
-	if branding, err := validateBranding(fs.Lookup("branding").Value.String()); err != nil {
-		return err
-	} else if branding == "origin" {
-		klog.Warningf("DEPRECATED: --branding=origin is now deprecated, use --branding=okd instead")
-		fs.Set("branding", "okd")
-	}
-
 	if _, err := validateCustomLogoFile(fs.Lookup("custom-logo-file").Value.String()); err != nil {
 		return err
 	}
@@ -79,22 +72,6 @@ func validateBasePath(value string) (string, error) {
 func validateDocumentationBaseURL(value string) (string, error) {
 	if value != "" && !strings.HasSuffix(value, "/") {
 		return "", flags.NewInvalidFlagError("documentation-base-url", "value must end with slash")
-	}
-	return value, nil
-}
-
-func validateBranding(value string) (string, error) {
-	switch value {
-	case "origin":
-	case "okd":
-	case "openshift":
-	case "ocp":
-	case "online":
-	case "dedicated":
-	case "azure":
-	case "rosa":
-	default:
-		return "", flags.NewInvalidFlagError("branding", "value must be one of okd, openshift, ocp, online, dedicated, azure, or rosa")
 	}
 	return value, nil
 }
