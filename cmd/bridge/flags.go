@@ -10,6 +10,7 @@ const (
 	defaultBasePath                       = "/"
 	defaultBranding                       = "okd"
 	defaultCopyCSVsDisabled               = false
+	defaultK8sAuth                        = "service-account"
 	defaultK8sMode                        = "in-cluster"
 	defaultK8sModeOffClusterSkipVerifyTLS = false
 	defaultListen                         = "http://0.0.0.0:9000"
@@ -37,7 +38,6 @@ var (
 	customProductName            string
 	devCatalogCategories         string
 	devCatalogTypes              string
-	k8sAuth                      string
 	k8sAuthBearerToken           string
 	k8sMode                      string
 	logLevel                     string
@@ -57,6 +57,7 @@ var (
 	basePath             flags.BasePath
 	branding             flags.Brand
 	controlPlaneTopology flags.ControlPlaneTopology
+	k8sAuth              flags.K8sAuth
 
 	// URL flags
 	alermanagerPublicURL          flags.URL
@@ -101,7 +102,6 @@ func initFlags(fs *flag.FlagSet) {
 	fs.StringVar(&customProductName, "custom-product-name", "", "Custom product name for console branding.")
 	fs.StringVar(&devCatalogCategories, "developer-catalog-categories", "", "Allow catalog categories customization. (JSON as string)")
 	fs.StringVar(&devCatalogTypes, "developer-catalog-types", "", "Allow enabling/disabling of sub-catalog types from the developer catalog. (JSON as string)")
-	fs.StringVar(&k8sAuth, "k8s-auth", "service-account", "service-account | bearer-token | oidc | openshift")
 	fs.StringVar(&k8sAuthBearerToken, "k8s-auth-bearer-token", "", "Authorization token to send with proxied Kubernetes API requests.")
 	fs.StringVar(&k8sMode, "k8s-mode", defaultK8sMode, "in-cluster | off-cluster")
 	fs.StringVar(&logLevel, "log-level", "", "level of logging information by package (pkg=level).")
@@ -121,6 +121,7 @@ func initFlags(fs *flag.FlagSet) {
 	fs.Var(&basePath, "base-path", "")
 	fs.Var(&branding, "branding", "Console branding for the masthead logo and title. One of okd, openshift, ocp, online, dedicated, azure, or rosa. Defaults to okd.")
 	fs.Var(&controlPlaneTopology, "control-plane-topology-mode", "Defines the topology mode of the control/infra nodes (External | HighlyAvailable | SingleReplica)")
+	fs.Var(&k8sAuth, "k8s-auth", "service-account | bearer-token | oidc | openshift")
 
 	// URL flags
 	fs.Var(&alermanagerPublicURL, "alermanager-public-url", "Public URL of the cluster's AlertManager server.")
@@ -154,4 +155,5 @@ func initFlags(fs *flag.FlagSet) {
 	basePath.Set(defaultBasePath)
 	branding.Set(defaultBranding)
 	listen.Set(defaultListen)
+	k8sAuth.Set(defaultK8sAuth)
 }

@@ -88,7 +88,7 @@ func main() {
 	baseAddress.Path = basePath.String()
 	srv.BaseURL = baseAddress.Get()
 
-	completedAuthnOptions, err := authOptions.Complete(k8sAuth)
+	completedAuthnOptions, err := authOptions.Complete(k8sAuth.String())
 	if err != nil {
 		klog.Fatalf("failed to complete authentication options: %v", err)
 		os.Exit(1)
