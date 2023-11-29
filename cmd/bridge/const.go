@@ -28,6 +28,4 @@ const (
 
 	// Well-known location of the cluster proxy service. This is only accessible in-cluster
 	openshiftClusterProxyHost = "cluster-proxy-addon-user.multicluster-engine.svc:9092"
-
-	clusterManagementURL = "https://api.openshift.com/"
 )
