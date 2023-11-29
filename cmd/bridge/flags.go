@@ -33,8 +33,6 @@ var (
 	addPage                      string
 	alertmanagerTenancyHost      string
 	alertmanagerUserWorkloadHost string
-	caFile                       string
-	customLogoFile               string
 	customProductName            string
 	devCatalogCategories         string
 	devCatalogTypes              string
@@ -42,13 +40,17 @@ var (
 	perspectives                 string
 	pluginProxy                  string
 	projectAccessClusterRoles    string
-	publicDir                    string
 	quickStarts                  string
 	releaseVersion               string
-	serviceCAFile                string
 	statuspageID                 string
-	tlsCertFile                  string
-	tlsKeyFile                   string
+
+	// File flags
+	caFile         flags.File
+	customLogoFile flags.File
+	publicDir      flags.File
+	serviceCAFile  flags.File
+	tlsCertFile    flags.File
+	tlsKeyFile     flags.File
 
 	// Unique string flags
 	basePath             flags.BasePath
@@ -96,8 +98,6 @@ func initFlags(fs *flag.FlagSet) {
 	fs.StringVar(&addPage, "add-page", "", "DEV ONLY. Allow add page customization. (JSON as string)")
 	fs.StringVar(&alertmanagerTenancyHost, "alermanager-tenancy-host", openshiftAlertManagerTenancyHost, "Location of the tenant-aware Alertmanager service.")
 	fs.StringVar(&alertmanagerUserWorkloadHost, "alermanager-user-workload-host", openshiftAlertManagerHost, "Location of the Alertmanager service for user-defined alerts.")
-	fs.StringVar(&caFile, "ca-file", "", "PEM File containing trusted certificates of trusted CAs. If not present, the system's Root CAs will be used.")
-	fs.StringVar(&customLogoFile, "custom-logo-file", "", "Custom product image for console branding.")
 	fs.StringVar(&customProductName, "custom-product-name", "", "Custom product name for console branding.")
 	fs.StringVar(&devCatalogCategories, "developer-catalog-categories", "", "Allow catalog categories customization. (JSON as string)")
 	fs.StringVar(&devCatalogTypes, "developer-catalog-types", "", "Allow enabling/disabling of sub-catalog types from the developer catalog. (JSON as string)")
@@ -105,13 +105,17 @@ func initFlags(fs *flag.FlagSet) {
 	fs.StringVar(&perspectives, "perspectives", "", "Allow enabling/disabling of perspectives in the console. (JSON as string)")
 	fs.StringVar(&pluginProxy, "plugin-proxy", "", "Defines various service types to which will console proxy plugins requests. (JSON as string)")
 	fs.StringVar(&projectAccessClusterRoles, "project-access-cluster-roles", "", "The list of Cluster Roles assignable for the project access page. (JSON as string)")
-	fs.StringVar(&publicDir, "public-dir", defaultPublicDir, "directory containing static web assets.")
 	fs.StringVar(&quickStarts, "quick-starts", "", "Allow customization of available ConsoleQuickStart resources in console. (JSON as string)")
 	fs.StringVar(&releaseVersion, "release-version", "", "Defines the release version of the cluster")
-	fs.StringVar(&serviceCAFile, "service-ca-file", "", "CA bundle for OpenShift services signed with the service signing certificates.") // See https://github.com/openshift/service-serving-cert-signer
 	fs.StringVar(&statuspageID, "statuspage-id", "", "Unique ID assigned by statuspage.io page that provides status info.")
-	fs.StringVar(&tlsCertFile, "tls-cert-file", "", "TLS certificate. If the certificate is signed by a certificate authority, the certFile should be the concatenation of the server's certificate followed by the CA's certificate.")
-	fs.StringVar(&tlsKeyFile, "tls-key-file", "", "The TLS certificate key.")
+
+	// File flags
+	fs.Var(&caFile, "ca-file", "PEM File containing trusted certificates of trusted CAs. If not present, the system's Root CAs will be used.")
+	fs.Var(&customLogoFile, "custom-logo-file", "Custom product image for console branding.")
+	fs.Var(&publicDir, "public-dir", "directory containing static web assets.")
+	fs.Var(&serviceCAFile, "service-ca-file", "CA bundle for OpenShift services signed with the service signing certificates.") // See https://github.com/openshift/service-serving-cert-signer
+	fs.Var(&tlsCertFile, "tls-cert-file", "TLS certificate. If the certificate is signed by a certificate authority, the certFile should be the concatenation of the server's certificate followed by the CA's certificate.")
+	fs.Var(&tlsKeyFile, "tls-key-file", "The TLS certificate key.")
 
 	// Unique string flags
 	fs.Var(&basePath, "base-path", "")
@@ -157,4 +161,5 @@ func initFlags(fs *flag.FlagSet) {
 	k8sAuth.Set(defaultK8sAuth)
 	k8sMode.Set(defaultK8sMode)
 	userSettingsLocation.Set(defaultUserSettingsLocation)
+	publicDir.Set(defaultPublicDir)
 }

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/openshift/console/pkg/flags"
@@ -37,20 +36,7 @@ func Validate(fs *flag.FlagSet) error {
 		return err
 	}
 
-	if _, err := validateCustomLogoFile(fs.Lookup("custom-logo-file").Value.String()); err != nil {
-		return err
-	}
-
 	return nil
-}
-
-func validateCustomLogoFile(value string) (string, error) {
-	if value != "" {
-		if _, err := os.Stat(value); err != nil {
-			return "", flags.NewInvalidFlagError("custom-logo-file", "could not read logo file: %v", err)
-		}
-	}
-	return value, nil
 }
 
 func validateDeveloperCatalogCategories(value string) ([]DeveloperConsoleCatalogCategory, error) {

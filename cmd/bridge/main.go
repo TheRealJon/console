@@ -60,7 +60,7 @@ func main() {
 		Branding:                     branding.String(),
 		ControlPlaneTopology:         controlPlaneTopology.String(),
 		CopiedCSVsDisabled:           copiedCSVsDisabled,
-		CustomLogoFile:               customLogoFile,
+		CustomLogoFile:               customLogoFile.String(),
 		CustomProductName:            customProductName,
 		DevCatalogCategories:         devCatalogCategories,
 		DevCatalogTypes:              devCatalogTypes,
@@ -76,7 +76,7 @@ func main() {
 		PluginProxy:                  pluginProxy,
 		ProjectAccessClusterRoles:    projectAccessClusterRoles,
 		PrometheusPublicURL:          prometheusPublicURL.Get(),
-		PublicDir:                    publicDir,
+		PublicDir:                    publicDir.String(),
 		QuickStarts:                  quickStarts,
 		ReleaseVersion:               releaseVersion,
 		StatuspageID:                 statuspageID,
@@ -138,7 +138,7 @@ func main() {
 
 		// If running in an OpenShift cluster, set up a proxy to the prometheus-k8s service running in the openshift-monitoring namespace.
 		if serviceCAFile != "" {
-			serviceCertPEM, err := ioutil.ReadFile(serviceCAFile)
+			serviceCertPEM, err := ioutil.ReadFile(serviceCAFile.String())
 			if err != nil {
 				klog.Fatalf("failed to read service-ca.crt file: %v", err)
 			}
@@ -279,14 +279,14 @@ func main() {
 		},
 	}
 
-	clusterManagementURL, err := url.Parse(clusterManagementURL)
-	if err != nil {
-		klog.Fatalf("failed to parse %q", clusterManagementURL)
-	}
 	srv.ClusterManagementProxyConfig = &proxy.Config{
 		TLSClientConfig: oscrypto.SecureTLSConfig(&tls.Config{}),
 		HeaderBlacklist: []string{"Cookie", "X-CSRFToken"},
-		Endpoint:        clusterManagementURL,
+		Endpoint: &url.URL{
+			Scheme: "https",
+			Host:   "api.openshift.com",
+			Path:   "/",
+		},
 	}
 
 	switch k8sAuth {
@@ -371,7 +371,7 @@ func main() {
 		caCertFilePath = k8sInClusterCA
 	}
 
-	if err := completedAuthnOptions.ApplyTo(srv, k8sEndpoint, apiServerEndpoint, caCertFilePath); err != nil {
+	if err := completedAuthnOptions.ApplyTo(srv, k8sEndpoint, apiServerEndpoint, caCertFilePath.String()); err != nil {
 		klog.Fatalf("failed to apply configuration to server: %v", err)
 		os.Exit(1)
 	}
@@ -379,8 +379,8 @@ func main() {
 	switch listen.Scheme {
 	case "http":
 	case "https":
-		flags.FatalIfFailed(flags.ValidateFlagNotEmpty("tls-cert-file", tlsCertFile))
-		flags.FatalIfFailed(flags.ValidateFlagNotEmpty("tls-key-file", tlsKeyFile))
+		flags.FatalIfFailed(flags.ValidateFlagNotEmpty("tls-cert-file", tlsCertFile.String()))
+		flags.FatalIfFailed(flags.ValidateFlagNotEmpty("tls-key-file", tlsKeyFile.String()))
 	default:
 		flags.FatalIfFailed(flags.NewInvalidFlagError("listen", "scheme must be one of: http, https"))
 	}
@@ -415,7 +415,7 @@ func main() {
 	klog.Infof("Binding to %s...", httpsrv.Addr)
 	if listen.Scheme == "https" {
 		klog.Info("using TLS")
-		klog.Fatal(httpsrv.ListenAndServeTLS(tlsCertFile, tlsKeyFile))
+		klog.Fatal(httpsrv.ListenAndServeTLS(tlsCertFile.String(), tlsKeyFile.String()))
 	} else {
 		klog.Info("not using TLS")
 		klog.Fatal(httpsrv.ListenAndServe())
