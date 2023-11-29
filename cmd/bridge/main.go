@@ -311,7 +311,7 @@ func main() {
 	monitoringDashboardHttpClientTransport := &http.Transport{
 		TLSClientConfig: srv.K8sProxyConfig.TLSClientConfig,
 	}
-	if k8sMode == "off-cluster" {
+	if k8sMode == flags.K8sModeOffCluster {
 		monitoringDashboardHttpClientTransport.Proxy = http.ProxyFromEnvironment
 	}
 	srv.MonitoringDashboardConfigMapLister = server.NewResourceLister(
