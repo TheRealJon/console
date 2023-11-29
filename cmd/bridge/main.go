@@ -58,7 +58,7 @@ func main() {
 		AlertManagerTenancyHost:      alertmanagerTenancyHost,
 		AlertManagerUserWorkloadHost: alertmanagerUserWorkloadHost,
 		Branding:                     branding.String(),
-		ControlPlaneTopology:         controlPlaneTopology,
+		ControlPlaneTopology:         controlPlaneTopology.String(),
 		CopiedCSVsDisabled:           copiedCSVsDisabled,
 		CustomLogoFile:               customLogoFile,
 		CustomProductName:            customProductName,

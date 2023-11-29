@@ -33,7 +33,6 @@ var (
 	alertmanagerTenancyHost      string
 	alertmanagerUserWorkloadHost string
 	caFile                       string
-	controlPlaneTopology         string
 	customLogoFile               string
 	customProductName            string
 	devCatalogCategories         string
@@ -55,8 +54,9 @@ var (
 	userSettingsLocation         string
 
 	// Unique string flags
-	basePath flags.BasePath
-	branding flags.Brand
+	basePath             flags.BasePath
+	branding             flags.Brand
+	controlPlaneTopology flags.ControlPlaneTopology
 
 	// URL flags
 	alermanagerPublicURL          flags.URL
@@ -97,7 +97,6 @@ func initFlags(fs *flag.FlagSet) {
 	fs.StringVar(&alertmanagerTenancyHost, "alermanager-tenancy-host", openshiftAlertManagerTenancyHost, "Location of the tenant-aware Alertmanager service.")
 	fs.StringVar(&alertmanagerUserWorkloadHost, "alermanager-user-workload-host", openshiftAlertManagerHost, "Location of the Alertmanager service for user-defined alerts.")
 	fs.StringVar(&caFile, "ca-file", "", "PEM File containing trusted certificates of trusted CAs. If not present, the system's Root CAs will be used.")
-	fs.StringVar(&controlPlaneTopology, "control-plane-topology-mode", "", "Defines the topology mode of the control/infra nodes (External | HighlyAvailable | SingleReplica)")
 	fs.StringVar(&customLogoFile, "custom-logo-file", "", "Custom product image for console branding.")
 	fs.StringVar(&customProductName, "custom-product-name", "", "Custom product name for console branding.")
 	fs.StringVar(&devCatalogCategories, "developer-catalog-categories", "", "Allow catalog categories customization. (JSON as string)")
@@ -121,6 +120,7 @@ func initFlags(fs *flag.FlagSet) {
 	// Unique string flags
 	fs.Var(&basePath, "base-path", "")
 	fs.Var(&branding, "branding", "Console branding for the masthead logo and title. One of okd, openshift, ocp, online, dedicated, azure, or rosa. Defaults to okd.")
+	fs.Var(&controlPlaneTopology, "control-plane-topology-mode", "Defines the topology mode of the control/infra nodes (External | HighlyAvailable | SingleReplica)")
 
 	// URL flags
 	fs.Var(&alermanagerPublicURL, "alermanager-public-url", "Public URL of the cluster's AlertManager server.")
