@@ -7,14 +7,15 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/openshift/console/pkg/api"
 	"github.com/openshift/console/pkg/metrics"
 	"github.com/stretchr/testify/assert"
 	authv1 "k8s.io/api/authorization/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func createPluginConfiguration(pluginNames []string) *Config {
-	config := &Config{}
+func createPluginConfiguration(pluginNames []string) *api.Config {
+	config := &api.Config{}
 	if pluginNames != nil {
 		config.Plugins = map[string]string{}
 		for _, pluginName := range pluginNames {
@@ -291,7 +292,7 @@ func TestPluginMetricsRunningTwice(t *testing.T) {
 func TestPerspectiveMetrics(t *testing.T) {
 	testcases := []struct {
 		name            string
-		perspectives    []Perspective
+		perspectives    []api.Perspective
 		expectedMetrics string
 	}{
 		{
@@ -302,20 +303,20 @@ func TestPerspectiveMetrics(t *testing.T) {
 
 		{
 			name:            "empty-perspective",
-			perspectives:    []Perspective{},
+			perspectives:    []api.Perspective{},
 			expectedMetrics: "",
 		},
 
 		{
 			name: "ignore-enabled-default-perspective",
-			perspectives: []Perspective{
+			perspectives: []api.Perspective{
 				{
 					ID: "admin",
 				},
 				{
 					ID: "dev",
-					Visibility: PerspectiveVisibility{
-						State: PerspectiveEnabled,
+					Visibility: api.PerspectiveVisibility{
+						State: api.PerspectiveEnabled,
 					},
 				},
 			},
@@ -324,11 +325,11 @@ func TestPerspectiveMetrics(t *testing.T) {
 
 		{
 			name: "perspective-enabled",
-			perspectives: []Perspective{
+			perspectives: []api.Perspective{
 				{
 					ID: "enabled-perspective",
-					Visibility: PerspectiveVisibility{
-						State: PerspectiveEnabled,
+					Visibility: api.PerspectiveVisibility{
+						State: api.PerspectiveEnabled,
 					},
 				},
 				{
@@ -336,7 +337,7 @@ func TestPerspectiveMetrics(t *testing.T) {
 				},
 				{
 					ID:         "enabled-perspective-without-state",
-					Visibility: PerspectiveVisibility{},
+					Visibility: api.PerspectiveVisibility{},
 				},
 			},
 			expectedMetrics: `
@@ -346,17 +347,17 @@ func TestPerspectiveMetrics(t *testing.T) {
 
 		{
 			name: "perspective-disabled",
-			perspectives: []Perspective{
+			perspectives: []api.Perspective{
 				{
 					ID: "disabled-perspective",
-					Visibility: PerspectiveVisibility{
-						State: PerspectiveDisabled,
+					Visibility: api.PerspectiveVisibility{
+						State: api.PerspectiveDisabled,
 					},
 				},
 				{
 					ID: "another-disabled-perspective",
-					Visibility: PerspectiveVisibility{
-						State: PerspectiveDisabled,
+					Visibility: api.PerspectiveVisibility{
+						State: api.PerspectiveDisabled,
 					},
 				},
 			},
@@ -367,12 +368,12 @@ func TestPerspectiveMetrics(t *testing.T) {
 
 		{
 			name: "perspective-only-visible-for-cluster-admins",
-			perspectives: []Perspective{
+			perspectives: []api.Perspective{
 				{
 					ID: "admin",
-					Visibility: PerspectiveVisibility{
-						State: PerspectiveAccessReview,
-						AccessReview: &ResourceAttributesAccessReview{
+					Visibility: api.PerspectiveVisibility{
+						State: api.PerspectiveAccessReview,
+						AccessReview: &api.ResourceAttributesAccessReview{
 							Required: []authv1.ResourceAttributes{
 								{
 									Resource: "namespaces",
@@ -384,9 +385,9 @@ func TestPerspectiveMetrics(t *testing.T) {
 				},
 				{
 					ID: "another-admin-perspective",
-					Visibility: PerspectiveVisibility{
-						State: PerspectiveAccessReview,
-						AccessReview: &ResourceAttributesAccessReview{
+					Visibility: api.PerspectiveVisibility{
+						State: api.PerspectiveAccessReview,
+						AccessReview: &api.ResourceAttributesAccessReview{
 							Required: []authv1.ResourceAttributes{
 								{
 									Resource: "namespaces",
@@ -405,12 +406,12 @@ func TestPerspectiveMetrics(t *testing.T) {
 
 		{
 			name: "perspective-only-visible-for-developers",
-			perspectives: []Perspective{
+			perspectives: []api.Perspective{
 				{
 					ID: "dev",
-					Visibility: PerspectiveVisibility{
-						State: PerspectiveAccessReview,
-						AccessReview: &ResourceAttributesAccessReview{
+					Visibility: api.PerspectiveVisibility{
+						State: api.PerspectiveAccessReview,
+						AccessReview: &api.ResourceAttributesAccessReview{
 							Missing: []authv1.ResourceAttributes{
 								{
 									Resource: "namespaces",
@@ -422,9 +423,9 @@ func TestPerspectiveMetrics(t *testing.T) {
 				},
 				{
 					ID: "another-dev-perspective",
-					Visibility: PerspectiveVisibility{
-						State: PerspectiveAccessReview,
-						AccessReview: &ResourceAttributesAccessReview{
+					Visibility: api.PerspectiveVisibility{
+						State: api.PerspectiveAccessReview,
+						AccessReview: &api.ResourceAttributesAccessReview{
 							Missing: []authv1.ResourceAttributes{
 								{
 									Resource: "namespaces",
@@ -443,12 +444,12 @@ func TestPerspectiveMetrics(t *testing.T) {
 
 		{
 			name: "perspective-with-custom-permissions",
-			perspectives: []Perspective{
+			perspectives: []api.Perspective{
 				{
 					ID: "custom-permission-perspective",
-					Visibility: PerspectiveVisibility{
-						State: PerspectiveAccessReview,
-						AccessReview: &ResourceAttributesAccessReview{
+					Visibility: api.PerspectiveVisibility{
+						State: api.PerspectiveAccessReview,
+						AccessReview: &api.ResourceAttributesAccessReview{
 							Required: []authv1.ResourceAttributes{
 								{
 									Resource: "configmaps",
@@ -460,9 +461,9 @@ func TestPerspectiveMetrics(t *testing.T) {
 				},
 				{
 					ID: "another-custom-permission-perspective",
-					Visibility: PerspectiveVisibility{
-						State: PerspectiveAccessReview,
-						AccessReview: &ResourceAttributesAccessReview{
+					Visibility: api.PerspectiveVisibility{
+						State: api.PerspectiveAccessReview,
+						AccessReview: &api.ResourceAttributesAccessReview{
 							Required: []authv1.ResourceAttributes{
 								{
 									Resource: "configmaps",
@@ -481,8 +482,8 @@ func TestPerspectiveMetrics(t *testing.T) {
 
 	for _, testcase := range testcases {
 		t.Run(testcase.name, func(t *testing.T) {
-			config := &Config{
-				Customization: Customization{
+			config := &api.Config{
+				Customization: api.Customization{
 					Perspectives: testcase.perspectives,
 				},
 			}

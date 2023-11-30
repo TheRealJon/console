@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/openshift/console/pkg/api"
 	v1 "k8s.io/api/authorization/v1"
 )
 
@@ -137,7 +138,7 @@ func TestValidAddPage(t *testing.T) {
 	tests := []struct {
 		testcase      string
 		input         string
-		expectedData  *AddPage
+		expectedData  *api.AddPage
 		expectedError error
 	}{
 		{
@@ -155,7 +156,7 @@ func TestValidAddPage(t *testing.T) {
 		{
 			testcase: "two valid disabled actions",
 			input:    "{ \"disabledActions\": [ \"action1\", \"action2\" ] }",
-			expectedData: &AddPage{
+			expectedData: &api.AddPage{
 				DisabledActions: []string{
 					"action1",
 					"action2",
@@ -209,12 +210,12 @@ func TestValidEmptyPerspectives(t *testing.T) {
 
 func TestValidEntriesForPerspectives(t *testing.T) {
 	actualPerspectives, err := validatePerspectives("[{ \"id\": \"perspective1\", \"visibility\": { \"state\" : \"AccessReview\", \"accessReview\": { \"required\": [{ \"resource\": \"namespaces\", \"verb\": \"list\" }] , \"missing\": [{ \"resource\": \"clusterroles\", \"verb\": \"list\" }]}}} , { \"id\": \"perspective2\", \"visibility\": { \"state\" : \"Disabled\"}}]")
-	exectedPerspectives := []Perspective{
+	exectedPerspectives := []api.Perspective{
 		{
 			ID: "perspective1",
-			Visibility: PerspectiveVisibility{
-				State: PerspectiveAccessReview,
-				AccessReview: &ResourceAttributesAccessReview{
+			Visibility: api.PerspectiveVisibility{
+				State: api.PerspectiveAccessReview,
+				AccessReview: &api.ResourceAttributesAccessReview{
 					Required: []v1.ResourceAttributes{
 						{
 							Resource: "namespaces",
@@ -232,8 +233,8 @@ func TestValidEntriesForPerspectives(t *testing.T) {
 		},
 		{
 			ID: "perspective2",
-			Visibility: PerspectiveVisibility{
-				State: PerspectiveDisabled,
+			Visibility: api.PerspectiveVisibility{
+				State: api.PerspectiveDisabled,
 			},
 		},
 	}

@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/coreos/pkg/flagutil"
+	"github.com/openshift/console/pkg/api"
 	"gopkg.in/yaml.v2"
 	"k8s.io/klog"
 )
@@ -22,7 +23,7 @@ import (
 // Because the config filename could be defined as commandline argument or
 // environment variable, we need to parse these inputs before reading the
 // config file and need to override the config values after this again.
-func Parse(fs *flag.FlagSet, args []string, envPrefix string) (*Config, error) {
+func Parse(fs *flag.FlagSet, args []string, envPrefix string) (*api.Config, error) {
 	if err := flagutil.SetFlagsFromEnv(fs, envPrefix); err != nil {
 		return nil, err
 	}
@@ -30,7 +31,7 @@ func Parse(fs *flag.FlagSet, args []string, envPrefix string) (*Config, error) {
 		return nil, err
 	}
 
-	cfg := &Config{}
+	cfg := &api.Config{}
 	configFile := fs.Lookup("config").Value.String()
 	if configFile != "" {
 		var err error
@@ -51,13 +52,13 @@ func Parse(fs *flag.FlagSet, args []string, envPrefix string) (*Config, error) {
 }
 
 // SetFlagsFromConfigFile sets flag values based on a YAML config file.
-func SetFlagsFromConfigFile(fs *flag.FlagSet, filename string) (*Config, error) {
+func SetFlagsFromConfigFile(fs *flag.FlagSet, filename string) (*api.Config, error) {
 	content, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
 
-	config := &Config{}
+	config := &api.Config{}
 	err = yaml.Unmarshal(content, config)
 	if err != nil {
 		return nil, err
@@ -71,7 +72,7 @@ func SetFlagsFromConfigFile(fs *flag.FlagSet, filename string) (*Config, error) 
 }
 
 // SetFlagsFromConfig sets flag values based on a YAML config.
-func SetFlagsFromConfig(fs *flag.FlagSet, config *Config) (err error) {
+func SetFlagsFromConfig(fs *flag.FlagSet, config *api.Config) (err error) {
 	if !(config.APIVersion == "console.openshift.io/v1beta1" || config.APIVersion == "console.openshift.io/v1") || config.Kind != "ConsoleConfig" {
 		return fmt.Errorf("unsupported version (apiVersion: %s, kind: %s), only console.openshift.io/v1 ConsoleConfig is supported", config.APIVersion, config.Kind)
 	}
@@ -98,7 +99,7 @@ func SetFlagsFromConfig(fs *flag.FlagSet, config *Config) (err error) {
 	return nil
 }
 
-func addProxy(fs *flag.FlagSet, proxyConfig *Proxy) error {
+func addProxy(fs *flag.FlagSet, proxyConfig *api.Proxy) error {
 	if proxyConfig != nil {
 		marshaledProxyConfig, err := json.Marshal(proxyConfig)
 		if err != nil {
@@ -110,7 +111,7 @@ func addProxy(fs *flag.FlagSet, proxyConfig *Proxy) error {
 	return nil
 }
 
-func addHelmConfig(fs *flag.FlagSet, helmConfig *Helm) (err error) {
+func addHelmConfig(fs *flag.FlagSet, helmConfig *api.Helm) (err error) {
 	if helmConfig.ChartRepo.URL != "" {
 		fs.Set("helm-chart-repo-url", helmConfig.ChartRepo.URL)
 	}
@@ -120,7 +121,7 @@ func addHelmConfig(fs *flag.FlagSet, helmConfig *Helm) (err error) {
 	return nil
 }
 
-func addServingInfo(fs *flag.FlagSet, servingInfo *ServingInfo) (err error) {
+func addServingInfo(fs *flag.FlagSet, servingInfo *api.ServingInfo) (err error) {
 	if servingInfo.BindAddress != "" {
 		fs.Set("listen", servingInfo.BindAddress)
 	}
@@ -169,7 +170,7 @@ func addServingInfo(fs *flag.FlagSet, servingInfo *ServingInfo) (err error) {
 	return nil
 }
 
-func addClusterInfo(fs *flag.FlagSet, clusterInfo *ClusterInfo) {
+func addClusterInfo(fs *flag.FlagSet, clusterInfo *api.ClusterInfo) {
 	if clusterInfo.ConsoleBaseAddress != "" {
 		fs.Set("base-address", clusterInfo.ConsoleBaseAddress)
 	}
@@ -211,13 +212,13 @@ func defaultK8SAuth(fs *flag.FlagSet) {
 	}
 }
 
-func addProviders(fs *flag.FlagSet, providers *Providers) {
+func addProviders(fs *flag.FlagSet, providers *api.Providers) {
 	if providers.StatuspageID != "" {
 		fs.Set("statuspage-id", providers.StatuspageID)
 	}
 }
 
-func addMonitoringInfo(fs *flag.FlagSet, monitoring *MonitoringInfo) {
+func addMonitoringInfo(fs *flag.FlagSet, monitoring *api.MonitoringInfo) {
 	if monitoring.AlertmanagerPublicURL != "" {
 		fs.Set("alermanager-public-url", monitoring.AlertmanagerPublicURL)
 	}
@@ -238,7 +239,7 @@ func addMonitoringInfo(fs *flag.FlagSet, monitoring *MonitoringInfo) {
 	}
 }
 
-func addCustomization(fs *flag.FlagSet, customization *Customization) {
+func addCustomization(fs *flag.FlagSet, customization *api.Customization) {
 	if customization.Branding != "" {
 		fs.Set("branding", customization.Branding)
 	}
@@ -264,7 +265,7 @@ func addCustomization(fs *flag.FlagSet, customization *Customization) {
 		}
 	}
 
-	if (customization.DeveloperCatalog.Types != DeveloperConsoleCatalogTypesState{}) {
+	if (customization.DeveloperCatalog.Types != api.DeveloperConsoleCatalogTypesState{}) {
 		types, err := json.Marshal(customization.DeveloperCatalog.Types)
 		if err == nil {
 			fs.Set("developer-catalog-types", string(types))

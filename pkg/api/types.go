@@ -1,4 +1,4 @@
-package serverconfig
+package api
 
 import (
 	configv1 "github.com/openshift/api/config/v1"

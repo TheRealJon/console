@@ -12,11 +12,11 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/klog"
 
+	"github.com/openshift/console/pkg/api"
 	"github.com/openshift/console/pkg/auth"
 	"github.com/openshift/console/pkg/flags"
 	"github.com/openshift/console/pkg/proxy"
 	"github.com/openshift/console/pkg/server"
-	"github.com/openshift/console/pkg/serverconfig"
 )
 
 type AuthOptions struct {
@@ -45,7 +45,7 @@ func (c *AuthOptions) AddFlags(fs *flag.FlagSet) {
 	fs.Var(&c.LogoutRedirect, "user-auth-logout-redirect", "Optional redirect URL on logout needed for some single sign-on identity providers.")
 }
 
-func (c *AuthOptions) ApplyConfig(config *serverconfig.Auth) {
+func (c *AuthOptions) ApplyConfig(config *api.Auth) {
 	setIfUnset(&c.ClientID, config.ClientID)
 	flags.SetFlagIfEmpty(&c.ClientSecretFile, config.ClientSecretFile)
 	flags.SetFlagIfEmpty(&c.CAFile, config.OAuthEndpointCAFile)

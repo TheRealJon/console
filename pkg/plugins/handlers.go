@@ -13,8 +13,8 @@ import (
 
 	"k8s.io/klog"
 
+	"github.com/openshift/console/pkg/api"
 	"github.com/openshift/console/pkg/proxy"
-	"github.com/openshift/console/pkg/serverconfig"
 	"github.com/openshift/console/pkg/serverutils"
 	oscrypto "github.com/openshift/library-go/pkg/crypto"
 )
@@ -50,8 +50,8 @@ func NewPluginsHandler(client *http.Client, pluginsEndpointMap map[string]string
 	}
 }
 
-func ParsePluginProxyConfig(proxyConfig string) (*serverconfig.Proxy, error) {
-	pluginProxy := &serverconfig.Proxy{}
+func ParsePluginProxyConfig(proxyConfig string) (*api.Proxy, error) {
+	pluginProxy := &api.Proxy{}
 	err := json.Unmarshal([]byte(proxyConfig), pluginProxy)
 	if err != nil {
 		errMsg := fmt.Sprintf("Error unmarshaling ConsoleConfig proxy field: %v", err)
@@ -61,7 +61,7 @@ func ParsePluginProxyConfig(proxyConfig string) (*serverconfig.Proxy, error) {
 	return pluginProxy, nil
 }
 
-func GetPluginProxyServiceHandlers(proxyConfig *serverconfig.Proxy, defaultTLSConfig *tls.Config, pluginProxyEndpoint string) ([]*PluginsProxyServiceHandler, error) {
+func GetPluginProxyServiceHandlers(proxyConfig *api.Proxy, defaultTLSConfig *tls.Config, pluginProxyEndpoint string) ([]*PluginsProxyServiceHandler, error) {
 	var proxyServiceHandlers []*PluginsProxyServiceHandler
 	for _, service := range proxyConfig.Services {
 		pluginProxyTLS := defaultTLSConfig.Clone()

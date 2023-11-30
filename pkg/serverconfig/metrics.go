@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/openshift/console/pkg/api"
 	"github.com/prometheus/client_golang/prometheus"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -24,7 +25,7 @@ var consolePluginResource = schema.GroupVersionResource{
 }
 
 type Metrics struct {
-	config           *Config
+	config           *api.Config
 	perspectivesInfo *prometheus.GaugeVec
 	pluginsInfo      *prometheus.GaugeVec
 	// Keep the last info so that it is possible to report zero for removed ConsolePlugins.
@@ -251,7 +252,7 @@ func (m *Metrics) increasePerspectiveInfo(perspectiveGroup PerspectiveGroup, sta
 	m.perspectivesInfo.WithLabelValues(string(perspectiveGroup), string(state)).Inc()
 }
 
-func NewMetrics(config *Config) *Metrics {
+func NewMetrics(config *api.Config) *Metrics {
 	m := new(Metrics)
 	m.config = config
 
@@ -276,9 +277,9 @@ func NewMetrics(config *Config) *Metrics {
 			}
 
 			switch perspective.Visibility.State {
-			case PerspectiveDisabled:
+			case api.PerspectiveDisabled:
 				m.increasePerspectiveInfo(perspectiveGroup, PerspectiveMetricStateDisabled)
-			case PerspectiveAccessReview:
+			case api.PerspectiveAccessReview:
 				if perspective.Visibility.AccessReview != nil {
 					required := perspective.Visibility.AccessReview.Required
 					missing := perspective.Visibility.AccessReview.Missing

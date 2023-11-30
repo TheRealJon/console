@@ -22,6 +22,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"k8s.io/klog"
 
+	"github.com/openshift/console/pkg/api"
 	"github.com/openshift/console/pkg/auth"
 	devconsoleProxy "github.com/openshift/console/pkg/devconsole/proxy"
 	"github.com/openshift/console/pkg/devfile"
@@ -559,10 +560,10 @@ func (s *Server) HTTPHandler() http.Handler {
 	}))
 
 	// Metrics
-	config := &serverconfig.Config{
+	config := &api.Config{
 		Plugins: s.EnabledConsolePlugins,
-		Customization: serverconfig.Customization{
-			Perspectives: []serverconfig.Perspective{},
+		Customization: api.Customization{
+			Perspectives: []api.Perspective{},
 		},
 	}
 	if len(s.Perspectives) > 0 {

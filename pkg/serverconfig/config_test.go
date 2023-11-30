@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/openshift/console/pkg/api"
 	"github.com/openshift/console/pkg/flags"
 )
 
@@ -168,19 +169,19 @@ func TestCliArgumentsOverridesEnvVariablesAndParsedConfig(t *testing.T) {
 func TestSetFlagsFromConfig(t *testing.T) {
 	tests := []struct {
 		name               string
-		config             Config
+		config             api.Config
 		expectedFlagValues map[string]string
 		expectedError      error
 	}{
 		{
 			name:               "Should fail for unsupported config files",
-			config:             Config{},
+			config:             api.Config{},
 			expectedFlagValues: map[string]string{},
 			expectedError:      errors.New("unsupported version (apiVersion: , kind: ), only console.openshift.io/v1 ConsoleConfig is supported"),
 		},
 		{
 			name: "Should consume an empty ConsoleConfig",
-			config: Config{
+			config: api.Config{
 				APIVersion: "console.openshift.io/v1",
 				Kind:       "ConsoleConfig",
 			},
@@ -189,10 +190,10 @@ func TestSetFlagsFromConfig(t *testing.T) {
 		},
 		{
 			name: "Should apply plugins",
-			config: Config{
+			config: api.Config{
 				APIVersion: "console.openshift.io/v1",
 				Kind:       "ConsoleConfig",
-				Plugins: flags.Map{
+				Plugins: map[string]string{
 					"plugin-a": "ServiceA",
 					"plugin-b": "ServiceB",
 				},
@@ -204,10 +205,10 @@ func TestSetFlagsFromConfig(t *testing.T) {
 		},
 		{
 			name: "Should apply telemetry configuration",
-			config: Config{
+			config: api.Config{
 				APIVersion: "console.openshift.io/v1",
 				Kind:       "ConsoleConfig",
-				Telemetry: flags.Map{
+				Telemetry: map[string]string{
 					"A_CONFIG_KEY":       "value1",
 					"ANOTHER_CONFIG_KEY": "value2",
 					"disabled":           "true",

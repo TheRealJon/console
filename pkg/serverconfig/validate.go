@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/openshift/console/pkg/api"
 	"github.com/openshift/console/pkg/flags"
 )
 
@@ -39,11 +40,11 @@ func Validate(fs *flag.FlagSet) error {
 	return nil
 }
 
-func validateDeveloperCatalogCategories(value string) ([]DeveloperConsoleCatalogCategory, error) {
+func validateDeveloperCatalogCategories(value string) ([]api.DeveloperConsoleCatalogCategory, error) {
 	if value == "" {
 		return nil, nil
 	}
-	var categories []DeveloperConsoleCatalogCategory
+	var categories []api.DeveloperConsoleCatalogCategory
 
 	decoder := json.NewDecoder(strings.NewReader(value))
 	decoder.DisallowUnknownFields()
@@ -65,41 +66,41 @@ func validateDeveloperCatalogCategories(value string) ([]DeveloperConsoleCatalog
 	return categories, nil
 }
 
-func validateDeveloperCatalogTypes(value string) (DeveloperConsoleCatalogTypesState, error) {
+func validateDeveloperCatalogTypes(value string) (api.DeveloperConsoleCatalogTypesState, error) {
 	if value == "" {
-		return DeveloperConsoleCatalogTypesState{}, nil
+		return api.DeveloperConsoleCatalogTypesState{}, nil
 	}
-	var developerCatalogTypesState DeveloperConsoleCatalogTypesState
+	var developerCatalogTypesState api.DeveloperConsoleCatalogTypesState
 	decoder := json.NewDecoder(strings.NewReader(value))
 	decoder.DisallowUnknownFields()
 
 	if err := decoder.Decode(&developerCatalogTypesState); err != nil {
-		return DeveloperConsoleCatalogTypesState{}, err
+		return api.DeveloperConsoleCatalogTypesState{}, err
 	}
 
 	return developerCatalogTypesState, nil
 }
 
-func validateQuickStarts(value string) (QuickStarts, error) {
+func validateQuickStarts(value string) (api.QuickStarts, error) {
 	if value == "" {
-		return QuickStarts{}, nil
+		return api.QuickStarts{}, nil
 	}
-	var quickStarts QuickStarts
+	var quickStarts api.QuickStarts
 
 	decoder := json.NewDecoder(strings.NewReader(value))
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(&quickStarts); err != nil {
-		return QuickStarts{}, err
+		return api.QuickStarts{}, err
 	}
 
 	return quickStarts, nil
 }
 
-func validateAddPage(value string) (*AddPage, error) {
+func validateAddPage(value string) (*api.AddPage, error) {
 	if value == "" {
 		return nil, nil
 	}
-	var addPage AddPage
+	var addPage api.AddPage
 
 	decoder := json.NewDecoder(strings.NewReader(value))
 	decoder.DisallowUnknownFields()
@@ -131,11 +132,11 @@ func validateProjectAccessClusterRolesJSON(value string) ([]string, error) {
 	return projectAccessOptions, nil
 }
 
-func validatePerspectives(value string) ([]Perspective, error) {
+func validatePerspectives(value string) ([]api.Perspective, error) {
 	if value == "" {
 		return nil, nil
 	}
-	var perspectives []Perspective
+	var perspectives []api.Perspective
 
 	decoder := json.NewDecoder(strings.NewReader(value))
 	decoder.DisallowUnknownFields()
@@ -150,7 +151,7 @@ func validatePerspectives(value string) ([]Perspective, error) {
 		if perspective.Visibility.State == "" {
 			return perspectives, fmt.Errorf("Perspective id %s must have visibility property.", perspective.ID)
 		}
-		if perspective.Visibility.State != PerspectiveDisabled && perspective.Visibility.State != PerspectiveEnabled && perspective.Visibility.State != PerspectiveAccessReview {
+		if perspective.Visibility.State != api.PerspectiveDisabled && perspective.Visibility.State != api.PerspectiveEnabled && perspective.Visibility.State != api.PerspectiveAccessReview {
 			return perspectives, fmt.Errorf("Perspective state for id %s must have value \"Enabled\" or \"Disabled\" or \"AccessReview\".", perspective.ID)
 		}
 		if perspective.Visibility.State == "AccessReview" && perspective.Visibility.AccessReview == nil {
