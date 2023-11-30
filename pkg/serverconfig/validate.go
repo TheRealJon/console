@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/openshift/console/pkg/api"
-	"github.com/openshift/console/pkg/flags"
 )
 
 func Validate(fs *flag.FlagSet) error {
@@ -19,13 +18,7 @@ func Validate(fs *flag.FlagSet) error {
 		return err
 	}
 
-	flags.FatalIfFailed(flags.ValidateFlagIs("user-settings-location", fs.Lookup("user-settings-location").Value.String(), "configmap", "localstorage"))
-
 	if _, err := validateQuickStarts(fs.Lookup("quick-starts").Value.String()); err != nil {
-		return err
-	}
-
-	if _, err := validateAddPage(fs.Lookup("add-page").Value.String()); err != nil {
 		return err
 	}
 
@@ -96,27 +89,6 @@ func validateQuickStarts(value string) (api.QuickStarts, error) {
 	return quickStarts, nil
 }
 
-func validateAddPage(value string) (*api.AddPage, error) {
-	if value == "" {
-		return nil, nil
-	}
-	var addPage api.AddPage
-
-	decoder := json.NewDecoder(strings.NewReader(value))
-	decoder.DisallowUnknownFields()
-	if err := decoder.Decode(&addPage); err != nil {
-		return nil, err
-	}
-
-	for index, action := range addPage.DisabledActions {
-		if action == "" {
-			return &addPage, fmt.Errorf("Add page disabled action at index %d must not be empty.", index)
-		}
-	}
-
-	return &addPage, nil
-}
-
 func validateProjectAccessClusterRolesJSON(value string) ([]string, error) {
 	if value == "" {
 		return nil, nil
@@ -151,7 +123,7 @@ func validatePerspectives(value string) ([]api.Perspective, error) {
 		if perspective.Visibility.State == "" {
 			return perspectives, fmt.Errorf("Perspective id %s must have visibility property.", perspective.ID)
 		}
-		if perspective.Visibility.State != api.PerspectiveDisabled && perspective.Visibility.State != api.PerspectiveEnabled && perspective.Visibility.State != api.PerspectiveAccessReview {
+		if perspective.Visibility.State != api.PerspectiveDisabled && perspective.Visibility.State != api.PerspectiveEnabled && perspective.Visibility.State != PerspectiveAccessReview {
 			return perspectives, fmt.Errorf("Perspective state for id %s must have value \"Enabled\" or \"Disabled\" or \"AccessReview\".", perspective.ID)
 		}
 		if perspective.Visibility.State == "AccessReview" && perspective.Visibility.AccessReview == nil {

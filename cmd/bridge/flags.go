@@ -30,7 +30,6 @@ var (
 	redirectPort   int
 
 	// String flags
-	addPage                      string
 	alertmanagerTenancyHost      string
 	alertmanagerUserWorkloadHost string
 	customProductName            string
@@ -43,6 +42,9 @@ var (
 	quickStarts                  string
 	releaseVersion               string
 	statuspageID                 string
+
+	// JSON flags
+	addPage flags.AddPage
 
 	// File flags
 	caFile         flags.File
@@ -96,7 +98,6 @@ func InitFlags() *flag.FlagSet {
 
 	// String flags
 	fs.String("config", "", "The YAML config file.")
-	fs.StringVar(&addPage, "add-page", "", "DEV ONLY. Allow add page customization. (JSON as string)")
 	fs.StringVar(&alertmanagerTenancyHost, "alermanager-tenancy-host", openshiftAlertManagerTenancyHost, "Location of the tenant-aware Alertmanager service.")
 	fs.StringVar(&alertmanagerUserWorkloadHost, "alermanager-user-workload-host", openshiftAlertManagerHost, "Location of the Alertmanager service for user-defined alerts.")
 	fs.StringVar(&customProductName, "custom-product-name", "", "Custom product name for console branding.")
@@ -109,6 +110,9 @@ func InitFlags() *flag.FlagSet {
 	fs.StringVar(&quickStarts, "quick-starts", "", "Allow customization of available ConsoleQuickStart resources in console. (JSON as string)")
 	fs.StringVar(&releaseVersion, "release-version", "", "Defines the release version of the cluster")
 	fs.StringVar(&statuspageID, "statuspage-id", "", "Unique ID assigned by statuspage.io page that provides status info.")
+
+	// JSON Flags
+	fs.Var(&addPage, "add-page", "DEV ONLY. Allow add page customization. (JSON as string)")
 
 	// File flags
 	fs.Var(&caFile, "ca-file", "PEM File containing trusted certificates of trusted CAs. If not present, the system's Root CAs will be used.")

@@ -7,7 +7,7 @@ import (
 
 func initServer(authOptions *authopts.AuthOptions) *server.Server {
 	srv := &server.Server{
-		AddPage:                      addPage,
+		AddPage:                      addPage.String(),
 		AlertManagerPublicURL:        alermanagerPublicURL.Get(),
 		AlertManagerTenancyHost:      alertmanagerTenancyHost,
 		AlertManagerUserWorkloadHost: alertmanagerUserWorkloadHost,

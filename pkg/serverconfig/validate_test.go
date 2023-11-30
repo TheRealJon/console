@@ -1,7 +1,6 @@
 package serverconfig
 
 import (
-	"errors"
 	"reflect"
 	"testing"
 
@@ -131,53 +130,6 @@ func TestValidObjectForQuickStarts(t *testing.T) {
 	}
 	if len(quickStarts.Disabled) != 3 {
 		t.Errorf("Unexpected value: actual %v, expected %v", len(quickStarts.Disabled), 3)
-	}
-}
-
-func TestValidAddPage(t *testing.T) {
-	tests := []struct {
-		testcase      string
-		input         string
-		expectedData  *api.AddPage
-		expectedError error
-	}{
-		{
-			testcase:      "empty data",
-			input:         "",
-			expectedData:  nil,
-			expectedError: nil,
-		},
-		{
-			testcase:      "invalid json",
-			input:         "invalid json",
-			expectedData:  nil,
-			expectedError: errors.New("invalid character 'i' looking for beginning of value"),
-		},
-		{
-			testcase: "two valid disabled actions",
-			input:    "{ \"disabledActions\": [ \"action1\", \"action2\" ] }",
-			expectedData: &api.AddPage{
-				DisabledActions: []string{
-					"action1",
-					"action2",
-				},
-			},
-			expectedError: nil,
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.testcase, func(t *testing.T) {
-			actualData, actualError := validateAddPage(test.input)
-			if !reflect.DeepEqual(test.expectedData, actualData) {
-				t.Errorf("Data does not match expectation:\n%v\nbut got\n%v", test.expectedData, actualData)
-			}
-			if test.expectedError == nil && actualError != nil {
-				t.Errorf("Error does not match expectation:\n%v\nbut got\n%v", test.expectedError, actualError)
-			} else if test.expectedError != nil && (actualError == nil || test.expectedError.Error() != actualError.Error()) {
-				t.Errorf("Error does not match expectation:\n%v\nbut got\n%v", test.expectedError, actualError)
-			}
-		})
 	}
 }
 
