@@ -19,7 +19,7 @@ func (b *Bridge) applyAuth() {
 		caCertFilePath = k8sInClusterCA
 	}
 
-	if err := b.AuthOptions.ApplyTo(b.Server, caCertFilePath.String()); err != nil {
+	if err := b.AuthOptions.ApplyTo(b.Handler, caCertFilePath.String()); err != nil {
 		klog.Fatalf("failed to apply configuration to server: %v", err)
 		os.Exit(1)
 	}

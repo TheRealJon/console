@@ -51,7 +51,7 @@ func (b *Bridge) getProxyEndpoint(inClusterEndpoint *url.URL, offClusterEndpoint
 }
 
 func (b *Bridge) applyK8sProxyConfig() {
-	b.Server.K8sProxyConfig = &proxy.Config{
+	b.Handler.K8sProxyConfig = &proxy.Config{
 		TLSClientConfig:         b.getTLSConfig(k8sInClusterCA),
 		Endpoint:                b.getProxyEndpoint(inClusterK8sEndpoint, b.K8sModeOffClusterEndpoint.Get()),
 		UseProxyFromEnvironment: b.K8sMode == flags.K8sModeOffCluster,
@@ -60,15 +60,15 @@ func (b *Bridge) applyK8sProxyConfig() {
 
 func (b *Bridge) applyThanosProxyConfigs(tlsConfig *tls.Config) {
 	offClusterThanosEndpoint := withAPIPath(b.K8sModeOffClusterThanos.Get())
-	b.Server.ThanosProxyConfig = &proxy.Config{
+	b.Handler.ThanosProxyConfig = &proxy.Config{
 		TLSClientConfig: tlsConfig,
 		Endpoint:        b.getProxyEndpoint(inClusterThanosEndpoint, offClusterThanosEndpoint),
 	}
-	b.Server.ThanosTenancyProxyConfig = &proxy.Config{
+	b.Handler.ThanosTenancyProxyConfig = &proxy.Config{
 		TLSClientConfig: tlsConfig,
 		Endpoint:        b.getProxyEndpoint(inClusterThanosTenancyEndpoint, offClusterThanosEndpoint),
 	}
-	b.Server.ThanosTenancyProxyForRulesConfig = &proxy.Config{
+	b.Handler.ThanosTenancyProxyForRulesConfig = &proxy.Config{
 		TLSClientConfig: tlsConfig,
 		Endpoint:        b.getProxyEndpoint(inClusterThanosTenancyForRulesEndpoint, offClusterThanosEndpoint),
 	}
@@ -78,15 +78,15 @@ func (b *Bridge) applyAlertManagerProxyConfigs(tlsConfig *tls.Config) {
 	var inClusterAlertManagerUserWorkloadEndpoint = &url.URL{Scheme: "https", Host: b.AlertmanagerUserWorkloadHost, Path: "/api"}
 	var inClusterAlertManagerTenancyEndpoint = &url.URL{Scheme: "https", Host: b.AlertmanagerTenancyHost, Path: "/api"}
 	offClusterAlertManagerEndpoint := withAPIPath(b.K8sModeOffClusterAlertmanager.Get())
-	b.Server.AlertManagerProxyConfig = &proxy.Config{
+	b.Handler.AlertManagerProxyConfig = &proxy.Config{
 		TLSClientConfig: tlsConfig,
 		Endpoint:        b.getProxyEndpoint(inClusterAlertManagerEndpoint, offClusterAlertManagerEndpoint),
 	}
-	b.Server.AlertManagerUserWorkloadProxyConfig = &proxy.Config{
+	b.Handler.AlertManagerUserWorkloadProxyConfig = &proxy.Config{
 		TLSClientConfig: tlsConfig,
 		Endpoint:        b.getProxyEndpoint(inClusterAlertManagerUserWorkloadEndpoint, offClusterAlertManagerEndpoint),
 	}
-	b.Server.AlertManagerTenancyProxyConfig = &proxy.Config{
+	b.Handler.AlertManagerTenancyProxyConfig = &proxy.Config{
 		TLSClientConfig: tlsConfig,
 		Endpoint:        b.getProxyEndpoint(inClusterAlertManagerTenancyEndpoint, offClusterAlertManagerEndpoint),
 	}
@@ -94,7 +94,7 @@ func (b *Bridge) applyAlertManagerProxyConfigs(tlsConfig *tls.Config) {
 
 func (b *Bridge) applyGitOpsProxyConfig(tlsConfig *tls.Config) {
 	offClusterGitOpsEndpoint := b.K8sModeOffClusterGitOps.Get()
-	b.Server.GitOpsProxyConfig = &proxy.Config{
+	b.Handler.GitOpsProxyConfig = &proxy.Config{
 		TLSClientConfig: tlsConfig,
 		Endpoint:        b.getProxyEndpoint(inClusterGitOpsEndpoint, offClusterGitOpsEndpoint),
 	}
@@ -103,7 +103,7 @@ func (b *Bridge) applyGitOpsProxyConfig(tlsConfig *tls.Config) {
 func (b *Bridge) applyServiceProxyConfigs() {
 	serviceProxyTLSConfig := b.getTLSConfig(b.ServiceCAFile.String())
 	if serviceProxyTLSConfig != nil {
-		b.Server.ServiceClient = &http.Client{
+		b.Handler.ServiceClient = &http.Client{
 			Transport: &http.Transport{
 				TLSClientConfig: serviceProxyTLSConfig,
 			},
@@ -111,29 +111,29 @@ func (b *Bridge) applyServiceProxyConfigs() {
 		b.applyThanosProxyConfigs(serviceProxyTLSConfig)
 		b.applyAlertManagerProxyConfigs(serviceProxyTLSConfig)
 		b.applyGitOpsProxyConfig(serviceProxyTLSConfig)
-		b.Server.TerminalProxyTLSConfig = serviceProxyTLSConfig
-		b.Server.PluginsProxyTLSConfig = serviceProxyTLSConfig
+		b.Handler.TerminalProxyTLSConfig = serviceProxyTLSConfig
+		b.Handler.PluginsProxyTLSConfig = serviceProxyTLSConfig
 	}
 }
 
 func (b *Bridge) applyKubeAPIServerURL() {
 	apiServerEndpoint := b.K8sPublicEndpoint.String()
 	if apiServerEndpoint == "" {
-		apiServerEndpoint = b.Server.K8sProxyConfig.Endpoint.String()
+		apiServerEndpoint = b.Handler.K8sProxyConfig.Endpoint.String()
 	}
-	b.Server.KubeAPIServerURL = apiServerEndpoint
+	b.Handler.KubeAPIServerURL = apiServerEndpoint
 }
 
 func (b *Bridge) applyK8sClient() {
-	b.Server.K8sClient = &http.Client{
+	b.Handler.K8sClient = &http.Client{
 		Transport: &http.Transport{
-			TLSClientConfig: b.Server.K8sProxyConfig.TLSClientConfig,
+			TLSClientConfig: b.Handler.K8sProxyConfig.TLSClientConfig,
 		},
 	}
 }
 
 func (b *Bridge) applyClusterManagementProxyConfig() {
-	b.Server.ClusterManagementProxyConfig = &proxy.Config{
+	b.Handler.ClusterManagementProxyConfig = &proxy.Config{
 		TLSClientConfig: oscrypto.SecureTLSConfig(&tls.Config{}),
 		Endpoint: &url.URL{
 			Scheme: "https",

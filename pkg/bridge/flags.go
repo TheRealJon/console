@@ -18,18 +18,20 @@ func (b *Bridge) addFlags(fs *flag.FlagSet) {
 	fs.StringVar(&b.AlertmanagerTenancyHost, "alermanager-tenancy-host", openshiftAlertManagerTenancyHost, "Location of the tenant-aware Alertmanager service.")
 	fs.StringVar(&b.AlertmanagerUserWorkloadHost, "alermanager-user-workload-host", openshiftAlertManagerHost, "Location of the Alertmanager service for user-defined alerts.")
 	fs.StringVar(&b.CustomProductName, "custom-product-name", "", "Custom product name for console branding.")
-	fs.StringVar(&b.DevCatalogTypes, "developer-catalog-types", "", "Allow enabling/disabling of sub-catalog types from the developer catalog. (JSON as string)")
 	fs.StringVar(&b.K8sAuthBearerToken, "k8s-auth-bearer-token", "", "Authorization token to send with proxied Kubernetes API requests.")
-	fs.StringVar(&b.Perspectives, "perspectives", "", "Allow enabling/disabling of perspectives in the console. (JSON as string)")
-	fs.StringVar(&b.PluginProxy, "plugin-proxy", "", "Defines various service types to which will console proxy plugins requests. (JSON as string)")
-	fs.StringVar(&b.ProjectAccessClusterRoles, "project-access-cluster-roles", "", "The list of Cluster Roles assignable for the project access page. (JSON as string)")
-	fs.StringVar(&b.QuickStarts, "quick-starts", "", "Allow customization of available ConsoleQuickStart resources in console. (JSON as string)")
 	fs.StringVar(&b.ReleaseVersion, "release-version", "", "Defines the release version of the cluster")
 	fs.StringVar(&b.StatuspageID, "statuspage-id", "", "Unique ID assigned by statuspage.io page that provides status info.")
 
 	// JSON Flags
 	fs.Var(&b.AddPage, "add-page", "DEV ONLY. Allow add page customization. (JSON as string)")
 	fs.Var(&b.DevCatalogCategories, "developer-catalog-categories", "Allow catalog categories customization. (JSON as string)")
+
+	// TODO Create custom flag values for these JSON flags
+	fs.StringVar(&b.DevCatalogTypes, "developer-catalog-types", "", "Allow enabling/disabling of sub-catalog types from the developer catalog. (JSON as string)")
+	fs.StringVar(&b.Perspectives, "perspectives", "", "Allow enabling/disabling of perspectives in the console. (JSON as string)")
+	fs.StringVar(&b.PluginProxy, "plugin-proxy", "", "Defines various service types to which will console proxy plugins requests. (JSON as string)")
+	fs.StringVar(&b.ProjectAccessClusterRoles, "project-access-cluster-roles", "", "The list of Cluster Roles assignable for the project access page. (JSON as string)")
+	fs.StringVar(&b.QuickStarts, "quick-starts", "", "Allow customization of available ConsoleQuickStart resources in console. (JSON as string)")
 
 	// File flags
 	fs.Var(&b.CaFile, "ca-file", "PEM File containing trusted certificates of trusted CAs. If not present, the system's Root CAs will be used.")

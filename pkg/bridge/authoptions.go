@@ -15,8 +15,8 @@ import (
 	"github.com/openshift/console/pkg/api"
 	"github.com/openshift/console/pkg/auth"
 	"github.com/openshift/console/pkg/flags"
+	"github.com/openshift/console/pkg/handler"
 	"github.com/openshift/console/pkg/proxy"
-	"github.com/openshift/console/pkg/server"
 )
 
 func NewAuthOptions() *AuthOptions {
@@ -117,19 +117,19 @@ func (c *AuthOptions) Validate(k8sAuthType flags.K8sAuth) []error {
 }
 
 func (c *AuthOptions) ApplyTo(
-	srv *server.Server,
+	h *handler.Handler,
 	caCertFilePath string,
 ) error {
-	srv.InactivityTimeout = c.InactivityTimeoutSeconds
-	srv.LogoutRedirect = c.LogoutRedirect.Get()
+	h.InactivityTimeout = c.InactivityTimeoutSeconds
+	h.LogoutRedirect = c.LogoutRedirect.Get()
 
 	var err error
-	srv.Authenticator, err = c.getAuthenticator(
-		srv.BaseURL,
-		srv.K8sProxyConfig.Endpoint,
-		srv.KubeAPIServerURL,
+	h.Authenticator, err = c.getAuthenticator(
+		h.BaseURL,
+		h.K8sProxyConfig.Endpoint,
+		h.KubeAPIServerURL,
 		caCertFilePath,
-		srv.K8sClient.Transport,
+		h.K8sClient.Transport,
 	)
 
 	return err
@@ -153,8 +153,8 @@ func (c *AuthOptions) getAuthenticator(
 	var (
 		err                      error
 		userAuthOIDCIssuerURL    *url.URL
-		authLoginErrorEndpoint   = proxy.SingleJoiningSlash(baseURL.String(), server.AuthLoginErrorEndpoint)
-		authLoginSuccessEndpoint = proxy.SingleJoiningSlash(baseURL.String(), server.AuthLoginSuccessEndpoint)
+		authLoginErrorEndpoint   = proxy.SingleJoiningSlash(baseURL.String(), handler.AuthLoginErrorEndpoint)
+		authLoginSuccessEndpoint = proxy.SingleJoiningSlash(baseURL.String(), handler.AuthLoginSuccessEndpoint)
 		oidcClientSecret         = c.ClientSecret
 		// Abstraction leak required by NewAuthenticator. We only want the browser to send the auth token for paths starting with basePath/api.
 		cookiePath       = proxy.SingleJoiningSlash(baseURL.Path, "/api/")
@@ -188,7 +188,7 @@ func (c *AuthOptions) getAuthenticator(
 		IssuerCA:     c.CAFile.String(),
 		ClientID:     c.ClientID,
 		ClientSecret: oidcClientSecret,
-		RedirectURL:  proxy.SingleJoiningSlash(baseURL.String(), server.AuthLoginCallbackEndpoint),
+		RedirectURL:  proxy.SingleJoiningSlash(baseURL.String(), handler.AuthLoginCallbackEndpoint),
 		Scope:        scopes,
 
 		// Use the k8s CA file for OpenShift OAuth metadata discovery.

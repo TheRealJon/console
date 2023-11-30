@@ -1,4 +1,4 @@
-package server
+package handler
 
 import (
 	"errors"
@@ -8,13 +8,13 @@ import (
 	"k8s.io/klog"
 )
 
-func (s *Server) GetKubeVersion() string {
-	if s.KubeVersion != "" {
-		return s.KubeVersion
+func (h *Handler) GetKubeVersion() string {
+	if h.KubeVersion != "" {
+		return h.KubeVersion
 	}
 	config := &rest.Config{
-		Host:      s.K8sProxyConfig.Endpoint.String(),
-		Transport: s.K8sClient.Transport,
+		Host:      h.K8sProxyConfig.Endpoint.String(),
+		Transport: h.K8sClient.Transport,
 	}
 
 	kubeVersion, err := kubeVersion(config)
@@ -22,8 +22,8 @@ func (s *Server) GetKubeVersion() string {
 		kubeVersion = ""
 		klog.Warningf("Failed to get cluster k8s version from api server %s", err.Error())
 	}
-	s.KubeVersion = kubeVersion
-	return s.KubeVersion
+	h.KubeVersion = kubeVersion
+	return h.KubeVersion
 }
 
 func kubeVersion(config *rest.Config) (string, error) {

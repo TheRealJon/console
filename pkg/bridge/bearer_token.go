@@ -24,19 +24,19 @@ func (b *Bridge) applyBearerToken() {
 	switch b.K8sAuth {
 	case flags.K8sAuthServiceAccount:
 		flags.FatalIfFailed(flags.ValidateFlagIs("k8s-mode", b.K8sMode.String(), "in-cluster"))
-		b.Server.StaticUser = &auth.User{
+		b.Handler.StaticUser = &auth.User{
 			Token: k8sAuthServiceAccountBearerToken,
 		}
-		b.Server.ServiceAccountToken = k8sAuthServiceAccountBearerToken
+		b.Handler.ServiceAccountToken = k8sAuthServiceAccountBearerToken
 	case flags.K8sAuthBearerToken:
 		flags.FatalIfFailed(flags.ValidateFlagNotEmpty("k8s-auth-bearer-token", b.K8sAuthBearerToken))
 
-		b.Server.StaticUser = &auth.User{
+		b.Handler.StaticUser = &auth.User{
 			Token: b.K8sAuthBearerToken,
 		}
-		b.Server.ServiceAccountToken = b.K8sAuthBearerToken
+		b.Handler.ServiceAccountToken = b.K8sAuthBearerToken
 	case flags.K8sAuthOIDC, flags.K8sAuthOpenShift:
 		flags.FatalIfFailed(flags.ValidateFlagIs("user-auth", b.AuthOptions.AuthType.String(), "oidc", "openshift"))
-		b.Server.ServiceAccountToken = k8sAuthServiceAccountBearerToken
+		b.Handler.ServiceAccountToken = k8sAuthServiceAccountBearerToken
 	}
 }

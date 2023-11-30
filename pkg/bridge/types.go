@@ -1,8 +1,10 @@
 package bridge
 
 import (
+	"net/http"
+
 	"github.com/openshift/console/pkg/flags"
-	"github.com/openshift/console/pkg/server"
+	"github.com/openshift/console/pkg/handler"
 )
 
 type Bridge struct {
@@ -71,7 +73,8 @@ type Bridge struct {
 	TelemetryFlags      flags.Map
 
 	AuthOptions *AuthOptions
-	Server      *server.Server
+	Handler     *handler.Handler
+	Server      *http.Server
 }
 
 type AuthOptions struct {
