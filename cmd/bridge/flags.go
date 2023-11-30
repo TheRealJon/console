@@ -165,7 +165,7 @@ func InitFlags() *flag.FlagSet {
 	listen.Set(defaultListen)
 	k8sAuth.Set(defaultK8sAuth)
 	k8sMode.Set(defaultK8sMode)
-	userSettingsLocation.Set(defaultUserSettingsLocation)
 	publicDir.Set(defaultPublicDir)
+	userSettingsLocation.Set(defaultUserSettingsLocation)
 	return fs
 }
