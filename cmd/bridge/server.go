@@ -16,7 +16,7 @@ func initServer(authOptions *authopts.AuthOptions) *server.Server {
 		CopiedCSVsDisabled:           copiedCSVsDisabled,
 		CustomLogoFile:               customLogoFile.String(),
 		CustomProductName:            customProductName,
-		DevCatalogCategories:         devCatalogCategories,
+		DevCatalogCategories:         devCatalogCategories.String(),
 		DevCatalogTypes:              devCatalogTypes,
 		DocumentationBaseURL:         documentationBaseURL.Get(),
 		EnabledConsolePlugins:        consolePluginsFlags,

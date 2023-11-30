@@ -33,7 +33,6 @@ var (
 	alertmanagerTenancyHost      string
 	alertmanagerUserWorkloadHost string
 	customProductName            string
-	devCatalogCategories         string
 	devCatalogTypes              string
 	k8sAuthBearerToken           string
 	perspectives                 string
@@ -44,7 +43,8 @@ var (
 	statuspageID                 string
 
 	// JSON flags
-	addPage flags.AddPage
+	addPage              flags.AddPage
+	devCatalogCategories flags.DeveloperCatalogCategories
 
 	// File flags
 	caFile         flags.File
@@ -101,7 +101,6 @@ func InitFlags() *flag.FlagSet {
 	fs.StringVar(&alertmanagerTenancyHost, "alermanager-tenancy-host", openshiftAlertManagerTenancyHost, "Location of the tenant-aware Alertmanager service.")
 	fs.StringVar(&alertmanagerUserWorkloadHost, "alermanager-user-workload-host", openshiftAlertManagerHost, "Location of the Alertmanager service for user-defined alerts.")
 	fs.StringVar(&customProductName, "custom-product-name", "", "Custom product name for console branding.")
-	fs.StringVar(&devCatalogCategories, "developer-catalog-categories", "", "Allow catalog categories customization. (JSON as string)")
 	fs.StringVar(&devCatalogTypes, "developer-catalog-types", "", "Allow enabling/disabling of sub-catalog types from the developer catalog. (JSON as string)")
 	fs.StringVar(&k8sAuthBearerToken, "k8s-auth-bearer-token", "", "Authorization token to send with proxied Kubernetes API requests.")
 	fs.StringVar(&perspectives, "perspectives", "", "Allow enabling/disabling of perspectives in the console. (JSON as string)")
@@ -113,6 +112,7 @@ func InitFlags() *flag.FlagSet {
 
 	// JSON Flags
 	fs.Var(&addPage, "add-page", "DEV ONLY. Allow add page customization. (JSON as string)")
+	fs.Var(&devCatalogCategories, "developer-catalog-categories", "Allow catalog categories customization. (JSON as string)")
 
 	// File flags
 	fs.Var(&caFile, "ca-file", "PEM File containing trusted certificates of trusted CAs. If not present, the system's Root CAs will be used.")
