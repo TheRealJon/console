@@ -1,4 +1,6 @@
-package main
+package bridge
+
+import "net/url"
 
 const (
 	k8sInClusterCA          = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
@@ -28,4 +30,25 @@ const (
 
 	// Well-known location of the cluster proxy service. This is only accessible in-cluster
 	openshiftClusterProxyHost = "cluster-proxy-addon-user.multicluster-engine.svc:9092"
+
+	defaultBasePath                       = "/"
+	defaultBranding                       = "okd"
+	defaultCopyCSVsDisabled               = false
+	defaultK8sAuth                        = "service-account"
+	defaultK8sMode                        = "in-cluster"
+	defaultK8sModeOffClusterSkipVerifyTLS = false
+	defaultListen                         = "http://0.0.0.0:9000"
+	defaultLoadTestFactor                 = 0
+	defaultPublicDir                      = "./frontend/public/dist"
+	defaultRedirectPort                   = 0
+	defaultUserSettingsLocation           = "configmap"
+)
+
+var (
+	inClusterK8sEndpoint                   = &url.URL{Scheme: "https", Host: "kubernetes.default.svc"}
+	inClusterThanosEndpoint                = &url.URL{Scheme: "https", Host: openshiftThanosHost, Path: "/api"}
+	inClusterThanosTenancyEndpoint         = &url.URL{Scheme: "https", Host: openshiftThanosTenancyHost, Path: "/api"}
+	inClusterThanosTenancyForRulesEndpoint = &url.URL{Scheme: "https", Host: openshiftThanosTenancyForRulesHost, Path: "/api"}
+	inClusterAlertManagerEndpoint          = &url.URL{Scheme: "https", Host: openshiftAlertManagerHost, Path: "/api"}
+	inClusterGitOpsEndpoint                = &url.URL{Scheme: "https", Host: openshiftGitOpsHost}
 )

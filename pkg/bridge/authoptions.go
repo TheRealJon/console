@@ -1,4 +1,4 @@
-package auth
+package bridge
 
 import (
 	"context"
@@ -18,17 +18,6 @@ import (
 	"github.com/openshift/console/pkg/proxy"
 	"github.com/openshift/console/pkg/server"
 )
-
-type AuthOptions struct {
-	AuthType                 flags.AuthType
-	CAFile                   flags.File
-	ClientID                 string
-	ClientSecret             string
-	ClientSecretFile         flags.File
-	InactivityTimeoutSeconds int
-	IssuerURL                flags.URL
-	LogoutRedirect           flags.URL
-}
 
 func NewAuthOptions() *AuthOptions {
 	return &AuthOptions{}
