@@ -21,7 +21,6 @@ export const coreReducer = (state: CoreState = { user: {} }, action: CoreAction)
           subprotocols: action.payload.subprotocols,
         },
       };
-
     case ActionType.EndImpersonate: {
       const stateKeys = Object.keys(state);
       return stateKeys.reduce((acc, key) => {
@@ -41,6 +40,20 @@ export const coreReducer = (state: CoreState = { user: {} }, action: CoreAction)
         user: action.payload.userInfo,
       };
 
+    case ActionType.SetAdmissionWebhookWarning:
+      return {
+        ...state,
+        admissionWebhookWarning: {
+          warning: action.payload.warning,
+          kind: action.payload.kind,
+          name: action.payload.name,
+        },
+      };
+    case ActionType.ClearAdmissionWebhookWarning:
+      return {
+        ...state,
+        admissionWebhookWarning: null,
+      };
     default:
       return state;
   }

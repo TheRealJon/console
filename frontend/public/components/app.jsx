@@ -4,7 +4,7 @@ import * as React from 'react';
 import { render } from 'react-dom';
 import { Helmet } from 'react-helmet';
 import { linkify } from 'react-linkify';
-import { Provider, useSelector } from 'react-redux';
+import { Provider, useSelector, useDispatch } from 'react-redux';
 import { Router } from 'react-router-dom';
 import { useParams, useLocation, CompatRouter, Routes, Route } from 'react-router-dom-v5-compat';
 // AbortController is not supported in some older browser versions
@@ -40,6 +40,8 @@ import {
   AppInitSDK,
   getUser,
   useActivePerspective,
+  getAdmissionWebhookWarning,
+  clearAdmissionWebhookWarning,
 } from '@console/dynamic-plugin-sdk';
 import { initConsolePlugins } from '@console/dynamic-plugin-sdk/src/runtime/plugin-init';
 import { GuidedTour } from '@console/app/src/components/tour';
@@ -48,6 +50,7 @@ import { ModalProvider } from '@console/dynamic-plugin-sdk/src/app/modal-support
 import { settleAllPromises } from '@console/dynamic-plugin-sdk/src/utils/promise';
 import ToastProvider from '@console/shared/src/components/toast/ToastProvider';
 import { useToast } from '@console/shared/src/components/toast';
+import { documentationURLs, getDocumentationURL } from '@console/internal/components/utils';
 import { useTelemetry } from '@console/shared/src/hooks/useTelemetry';
 import { useDebounceCallback } from '@console/shared/src/hooks/debounce';
 import { LOGIN_ERROR_PATH } from '@console/internal/module/auth';
@@ -337,6 +340,43 @@ const CaptureTelemetry = React.memo(function CaptureTelemetry() {
   return null;
 });
 
+function AdmissionWebhookWarningNotifications() {
+  const { t } = useTranslation();
+  const toastContext = useToast();
+  const admissionWebhookWarning = useSelector(getAdmissionWebhookWarning);
+  const dispatch = useDispatch();
+
+  React.useEffect(() => {
+    if (admissionWebhookWarning?.warning) {
+      const docURL = getDocumentationURL(documentationURLs.admissionWebhookWarning);
+      toastContext.addToast({
+        variant: AlertVariant.warning,
+        title: t('public~Warning Policy'),
+        content: t(`The {{kind}} {{ name }} violates policy {{warning}}`, {
+          kind: admissionWebhookWarning?.kind,
+          name: admissionWebhookWarning?.name,
+          warning: admissionWebhookWarning?.warning,
+        }),
+        actions: [
+          {
+            dismiss: true,
+            label: t('public~Learn more'),
+            callback: () => {
+              window.open(docURL, '_blank');
+            },
+            component: 'a',
+          },
+        ],
+        timeout: true,
+        dismissible: true,
+      });
+      dispatch(clearAdmissionWebhookWarning());
+    }
+  }, [dispatch, admissionWebhookWarning, t, toastContext]);
+
+  return null;
+}
+
 const PollConsoleUpdates = React.memo(function PollConsoleUpdates() {
   const toastContext = useToast();
   const { t } = useTranslation();
@@ -597,6 +637,7 @@ graphQLReady.onReady(() => {
           >
             <ToastProvider>
               <PollConsoleUpdates />
+              <AdmissionWebhookWarningNotifications />
               <AppRouter />
             </ToastProvider>
           </AppInitSDK>
