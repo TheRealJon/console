@@ -17,7 +17,7 @@ export type ImpersonateKind = {
 export type CoreState = {
   user?: UserInfo;
   impersonate?: ImpersonateKind;
-  admissionWebhookWarning?: AdmissionWebhookWarning;
+  admissionWebhookWarnings: ImmutableMap<string, AdmissionWebhookWarning>;
 };
 
 export type SDKStoreState = {

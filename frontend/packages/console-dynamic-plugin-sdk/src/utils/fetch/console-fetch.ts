@@ -38,13 +38,11 @@ const parseData = async (response) => {
   return isPlainText || !response.ok ? text : JSON.parse(text);
 };
 
-const handleAdmissionWebhookWarning = async (response) => {
-  const warning = response.headers.get('Warning');
-  // Read the response object the second time to get the entire response.
-  const res = await response.clone();
-  const data = await parseData(res);
+const handleAdmissionWebhookWarning = (warning: string, kind?: string, name?: string) => {
   const store = storeHandler.getStore();
-  store.dispatch(setAdmissionWebhookWarning(warning, data?.kind, data?.metadata?.name));
+  const id = `${kind || '#'}~${name || '#'}~${warning}`;
+  const warningData = { kind, name, warning };
+  store.dispatch(setAdmissionWebhookWarning(id, warningData));
 };
 
 const consoleFetchCommon = async (
@@ -57,13 +55,18 @@ const consoleFetchCommon = async (
   // Pass headers last to let callers to override Accept.
   const allOptions = _.defaultsDeep({ method }, options, { headers });
   const response = await consoleFetch(url, allOptions, timeout);
+  const dataPromise = parseData(response);
+  const warning = response.headers.get('Warning');
 
   // If the response has a warning header, store it in the redux store.
-  if (response.ok && response.headers.has('Warning')) {
-    await handleAdmissionWebhookWarning(response);
+  if (response.ok && warning) {
+    // Do nothing on error since this is a side-effect. Caller will handle the error.
+    dataPromise
+      .then((data) => handleAdmissionWebhookWarning(warning, data.kind, data.metadata?.name))
+      .catch(() => {});
   }
 
-  return parseData(response);
+  return dataPromise;
 };
 
 /**

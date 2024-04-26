@@ -1,4 +1,5 @@
-import { CoreState } from '../../redux-types';
+import { Map } from 'immutable';
+import { AdmissionWebhookWarning, CoreState } from '../../redux-types';
 import { ActionType, CoreAction } from '../actions/core';
 
 /**
@@ -10,7 +11,10 @@ import { ActionType, CoreAction } from '../actions/core';
  * @see CoreAction
  * @returns The the updated state.
  */
-export const coreReducer = (state: CoreState = { user: {} }, action: CoreAction): CoreState => {
+export const coreReducer = (
+  state: CoreState = { user: {}, admissionWebhookWarnings: Map<string, AdmissionWebhookWarning>() },
+  action: CoreAction,
+): CoreState => {
   switch (action.type) {
     case ActionType.BeginImpersonate:
       return {
@@ -43,16 +47,15 @@ export const coreReducer = (state: CoreState = { user: {} }, action: CoreAction)
     case ActionType.SetAdmissionWebhookWarning:
       return {
         ...state,
-        admissionWebhookWarning: {
-          warning: action.payload.warning,
-          kind: action.payload.kind,
-          name: action.payload.name,
-        },
+        admissionWebhookWarnings: state.admissionWebhookWarnings.set(
+          action.payload.id,
+          action.payload.warning,
+        ),
       };
-    case ActionType.ClearAdmissionWebhookWarning:
+    case ActionType.RemoveAdmissionWebhookWarning:
       return {
         ...state,
-        admissionWebhookWarning: null,
+        admissionWebhookWarnings: state.admissionWebhookWarnings.remove(action.payload.id),
       };
     default:
       return state;

@@ -1,5 +1,6 @@
 import { action, ActionType as Action } from 'typesafe-actions';
 import { UserInfo } from '../../../extensions';
+import { AdmissionWebhookWarning } from '../../redux-types';
 
 export enum ActionType {
   SetUser = 'setUser',
@@ -7,23 +8,23 @@ export enum ActionType {
   EndImpersonate = 'endImpersonate',
   SetActiveCluster = 'setActiveCluster',
   SetAdmissionWebhookWarning = 'setAdmissionWebhookWarning',
-  ClearAdmissionWebhookWarning = 'clearAdmissionWebhookWarning',
+  RemoveAdmissionWebhookWarning = 'removeAdmissionWebhookWarning',
 }
 
 export const setUser = (userInfo: UserInfo) => action(ActionType.SetUser, { userInfo });
 export const beginImpersonate = (kind: string, name: string, subprotocols: string[]) =>
   action(ActionType.BeginImpersonate, { kind, name, subprotocols });
 export const endImpersonate = () => action(ActionType.EndImpersonate);
-export const setAdmissionWebhookWarning = (warning: string, kind: string, name: string) =>
-  action(ActionType.SetAdmissionWebhookWarning, { warning, kind, name });
-export const clearAdmissionWebhookWarning = () =>
-  action(ActionType.ClearAdmissionWebhookWarning, null);
+export const setAdmissionWebhookWarning = (id: string, warning: AdmissionWebhookWarning) =>
+  action(ActionType.SetAdmissionWebhookWarning, { id, warning });
+export const removeAdmissionWebhookWarning = (id) =>
+  action(ActionType.RemoveAdmissionWebhookWarning, { id });
 const coreActions = {
   setUser,
   beginImpersonate,
   endImpersonate,
   setAdmissionWebhookWarning,
-  clearAdmissionWebhookWarning,
+  removeAdmissionWebhookWarning,
 };
 
 export type CoreAction = Action<typeof coreActions>;

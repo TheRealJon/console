@@ -1,9 +1,10 @@
+import { Map } from 'immutable';
 import { UserInfo } from '../../../extensions';
 import { ImpersonateKind, SDKStoreState, AdmissionWebhookWarning } from '../../redux-types';
 
 type GetImpersonate = (state: SDKStoreState) => ImpersonateKind;
 type GetUser = (state: SDKStoreState) => UserInfo;
-type GetAdmissionWebhookWarning = (state: SDKStoreState) => AdmissionWebhookWarning;
+type GetAdmissionWebhookWarnings = (state: SDKStoreState) => Map<string, AdmissionWebhookWarning>;
 
 /**
  * It provides impersonation details from the redux store.
@@ -29,9 +30,9 @@ export const impersonateStateToProps = (state: SDKStoreState) => {
 export const getUser: GetUser = (state) => state.sdkCore.user;
 
 /**
- * It provides warning policy data from the redux store.
+ * It provides admission webhook warning data from the redux store.
  * @param state the root state
  * @returns The the admissionWebhookWarning state.
  */
-export const getAdmissionWebhookWarning: GetAdmissionWebhookWarning = (state) =>
-  state.sdkCore.admissionWebhookWarning;
+export const getAdmissionWebhookWarnings: GetAdmissionWebhookWarnings = (state) =>
+  state.sdkCore.admissionWebhookWarnings;
