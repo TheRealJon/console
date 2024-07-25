@@ -29,12 +29,12 @@ type WithTypeAbstraction<T> = T & {
 };
 export type SecretSubFormProps = {
   onChange: (stringData: SecretChangeData) => void;
-  onError: (error: any) => void;
-  onFormDisable: (disable: boolean) => void;
+  onError?: (error: any) => void;
+  onFormDisable?: (disable: boolean) => void;
   stringData: SecretStringData;
-  secretType: SecretType;
-  isCreate: boolean;
+  secretType?: SecretType;
+  isCreate?: boolean;
 };
 
-type SecretChangeData = { stringData: SecretStringData; base64StringData: SecretStringData };
-type SecretStringData = { [key: string]: string };
+export type SecretChangeData = { stringData: SecretStringData; base64StringData: SecretStringData };
+export type SecretStringData = { [key: string]: string };
