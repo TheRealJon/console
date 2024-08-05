@@ -36,5 +36,8 @@ export type SecretSubFormProps = {
   isCreate?: boolean;
 };
 
-export type SecretChangeData = { stringData: SecretStringData; base64StringData: SecretStringData };
+export type SecretChangeData = {
+  stringData: SecretStringData;
+  base64StringData?: SecretStringData;
+};
 export type SecretStringData = { [key: string]: string };
