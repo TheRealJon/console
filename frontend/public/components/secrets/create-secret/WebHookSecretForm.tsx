@@ -1,17 +1,18 @@
 import * as React from 'react';
+import * as uuid from 'uuid';
 import { useTranslation } from 'react-i18next';
-import { generateSecret, SecretSubFormProps } from '.';
+import { SecretSubFormProps } from '.';
 
 export const WebHookSecretForm: React.FC<SecretSubFormProps> = ({ onChange, stringData }) => {
   const { t } = useTranslation();
   const changeWebHookSecretkey = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newSecret = event.target.value;
-    onChange({ stringData: { ...stringData, WebHookSecretKey: newSecret }, base64StringData: {} });
+    const WebHookSecretKey = event.target.value;
+    onChange({ stringData: { ...stringData, WebHookSecretKey } });
   };
 
   const generateWebHookSecret = () => {
-    const newSecret = generateSecret();
-    onChange({ stringData: { ...stringData, WebHookSecretKey: newSecret }, base64StringData: {} });
+    const WebHookSecretKey = uuid.v4();
+    onChange({ stringData: { ...stringData, WebHookSecretKey } });
   };
 
   return (
