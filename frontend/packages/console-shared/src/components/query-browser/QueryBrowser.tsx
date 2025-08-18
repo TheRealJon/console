@@ -57,7 +57,6 @@ import { PrometheusAPIError } from '@console/internal/components/monitoring/type
 import {
   humanizeNumberSI,
   LoadingInline,
-  usePoll,
   useRefWidth,
   useSafeFetch,
 } from '@console/internal/components/utils';
@@ -68,6 +67,7 @@ import {
   timeFormatterWithSeconds,
 } from '@console/internal/components/utils/datetime';
 import { RootState } from '@console/internal/redux';
+import { usePoll } from '../../hooks/usePoll';
 import withFallback from '../error/fallbacks/withFallback';
 import { queryBrowserTheme } from './theme';
 
