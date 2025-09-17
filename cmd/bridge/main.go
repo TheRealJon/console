@@ -574,6 +574,14 @@ func main() {
 
 	// TODO: add cluster catalog reconciler and use the new catalog service
 
+	// For development, update the catalog service with the default catalogs
+	if *fK8sMode == "off-cluster" && srv.CatalogdProxyConfig != nil {
+		catalogService.UpdateCatalog("openshift-certified-operators", srv.CatalogdProxyConfig.Endpoint.String()+"/catalogs/openshift-certified-operators/")
+		catalogService.UpdateCatalog("openshift-community-operators", srv.CatalogdProxyConfig.Endpoint.String()+"/catalogs/openshift-community-operators/")
+		catalogService.UpdateCatalog("openshift-redhat-marketplace", srv.CatalogdProxyConfig.Endpoint.String()+"/catalogs/openshift-redhat-marketplace/")
+		catalogService.UpdateCatalog("openshift-redhat-operators", srv.CatalogdProxyConfig.Endpoint.String()+"/catalogs/openshift-redhat-operators/")
+	}
+
 	apiServerEndpoint := *fK8sPublicEndpoint
 	if apiServerEndpoint == "" {
 		apiServerEndpoint = srv.K8sProxyConfig.Endpoint.String()
