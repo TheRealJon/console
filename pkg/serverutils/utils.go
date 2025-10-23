@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+	"time"
 
 	"k8s.io/klog/v2"
 )
@@ -50,6 +51,31 @@ The current Firefox ESR (Extended Support Release) is also supported. To see the
 	rw.Header().Set("Content-Type", "text/html")
 	rw.WriteHeader(http.StatusFailedDependency)
 	rw.Write([]byte(content))
+}
+
+// ModifiedSince checks if the last modified time is after the If-Modified-Since time in the request
+// header.
+// If the last modified time is nil, returns true.
+// If the If-Modified-Since header is not present, returns true.
+// If the If-Modified-Since header is present but not a valid time, returns an error.
+// If the last modified time is after the if modified since time, returns true.
+// If the last modified time is before the if modified since time, returns false.
+func ModifiedSince(r *http.Request, lastModified *time.Time) (bool, error) {
+	if lastModified == nil {
+		return true, nil
+	}
+
+	ifModifiedSinceHeader := r.Header.Get("If-Modified-Since")
+	if ifModifiedSinceHeader == "" {
+		return true, nil
+	}
+
+	ifModifiedSince, err := time.Parse(http.TimeFormat, ifModifiedSinceHeader)
+	if err != nil {
+		return true, err
+	}
+
+	return lastModified.After(ifModifiedSince), nil
 }
 
 type ApiError struct {
