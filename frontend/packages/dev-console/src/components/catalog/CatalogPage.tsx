@@ -21,9 +21,11 @@ const PageContents: FC = () => {
   const catalogType = queryParams.get(CatalogQueryParams.TYPE);
   const [activePerspective] = useActivePerspective();
   const [namespace] = useActiveNamespace();
+  const isAllNamespaces = !namespace || namespace === ALL_NAMESPACES_KEY;
+  const isDevPerspective = activePerspective === 'dev';
 
   // Maintain existing behavior of the +Add page in the dev perspective.
-  const showCreateProjectListPage = activePerspective === 'dev' && namespace === ALL_NAMESPACES_KEY;
+  const showCreateProjectListPage = isDevPerspective && isAllNamespaces;
 
   return showCreateProjectListPage ? (
     <CreateProjectListPage title={t('devconsole~Software Catalog')}>
