@@ -19,6 +19,7 @@ import (
 
 	"github.com/openshift/console/pkg/auth"
 	"github.com/openshift/console/pkg/auth/sessions"
+	"github.com/openshift/console/pkg/serverconfig"
 	oscrypto "github.com/openshift/library-go/pkg/crypto"
 
 	"k8s.io/client-go/rest"
@@ -123,6 +124,8 @@ type Config struct {
 	CookieEncryptionKey     []byte
 	CookieAuthenticationKey []byte
 
+	SessionStoreConfig *serverconfig.SessionStoreConfig
+
 	K8sConfig *rest.Config
 	Metrics   *auth.Metrics
 
@@ -205,6 +208,39 @@ func NewOAuth2Authenticator(ctx context.Context, config *Config) (*OAuth2Authent
 		constructOAuth2Config:  a.oauth2ConfigConstructor,
 	}
 
+	// Create session store from configuration
+	sessionStore, err := sessions.NewSessionStoreFromConfig(ctx, c.SessionStoreConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create session store: %w", err)
+	}
+
+	// Get cookie keys - for OpenShift auth with memory store, generate random keys if not provided
+	// For persistent stores (redis/cached-redis), keys MUST be provided via config to ensure
+	// cookies can be decrypted across restarts
+	cookieAuthnKey := c.CookieAuthenticationKey
+	cookieEncryptKey := c.CookieEncryptionKey
+
+	isPersistentStore := c.SessionStoreConfig != nil &&
+		(c.SessionStoreConfig.Type == "redis" || c.SessionStoreConfig.Type == "cached-redis")
+
+	if c.AuthSource == AuthSourceOpenShift && !isPersistentStore && (len(cookieAuthnKey) == 0 || len(cookieEncryptKey) == 0) {
+		// OpenShift auth with memory store generates ephemeral keys
+		// For persistent stores, keys must be provided via --cookie-*-key-file flags
+		authnKey := sessions.RandomString(64)
+		encryptionKey := sessions.RandomString(32)
+		cookieAuthnKey = []byte(authnKey)
+		cookieEncryptKey = []byte(encryptionKey)
+	}
+
+	// Create combined session store with cookie handling
+	combinedSessionStore := sessions.NewSessionStore(
+		cookieAuthnKey,
+		cookieEncryptKey,
+		c.SecureCookies,
+		c.CookiePath,
+		sessionStore,
+	)
+
 	var tokenHandler loginMethod
 	switch c.AuthSource {
 	case AuthSourceOpenShift:
@@ -218,18 +254,12 @@ func NewOAuth2Authenticator(ctx context.Context, config *Config) (*OAuth2Authent
 			return nil, errK8Client
 		}
 
-		tokenHandler, err = newOpenShiftAuth(ctx, k8sClient, authConfig)
+		tokenHandler, err = newOpenShiftAuth(ctx, k8sClient, authConfig, combinedSessionStore)
 		if err != nil {
 			return nil, err
 		}
 	case AuthSourceOIDC:
-		sessionStore := sessions.NewSessionStore(
-			c.CookieAuthenticationKey,
-			c.CookieEncryptionKey,
-			c.SecureCookies,
-			c.CookiePath,
-		)
-		tokenHandler, err = newOIDCAuth(ctx, sessionStore, authConfig, a.metrics)
+		tokenHandler, err = newOIDCAuth(ctx, combinedSessionStore, authConfig, a.metrics)
 		if err != nil {
 			return nil, err
 		}

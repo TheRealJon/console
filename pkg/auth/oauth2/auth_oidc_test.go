@@ -704,7 +704,7 @@ type testCookieFactory struct {
 	refreshToken   *string
 	refreshTokenID *string
 	customCookies  map[string]map[interface{}]interface{}
-	serverStore    *sessions.SessionStore // needed to set up refresh token ID mapping
+	serverStore    *sessions.MemorySessionStore // needed to set up refresh token ID mapping
 	tokenVerifier  sessions.IDTokenVerifier
 	signPayload    func(string) string // function to sign an ID token payload
 }
@@ -743,7 +743,7 @@ func (f *testCookieFactory) Complete(t testing.TB, req *http.Request) *http.Requ
 				&oauth2.Token{RefreshToken: *f.refreshToken},
 				f.signPayload(`{"sub":"testuser","exp":`+strconv.FormatInt(time.Now().Add(5*time.Minute).Unix(), 10)+`}`),
 			)
-			loginState, err := f.serverStore.AddSession(f.tokenVerifier, token)
+			loginState, err := f.serverStore.AddSession(context.Background(), f.tokenVerifier, token)
 			require.NoError(t, err)
 			id = loginState.RefreshTokenID()
 		} else {

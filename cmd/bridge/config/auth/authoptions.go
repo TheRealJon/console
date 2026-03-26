@@ -319,6 +319,8 @@ func (c *completedOptions) getAuthenticator(
 		CookieEncryptionKey:     sessionConfig.CookieEncryptionKey,
 		CookieAuthenticationKey: sessionConfig.CookieAuthenticationKey,
 
+		SessionStoreConfig: sessionConfig.SessionStoreConfig,
+
 		K8sConfig: k8sClientConfig,
 		Metrics:   authMetrics,
 	}

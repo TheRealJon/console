@@ -1,6 +1,7 @@
 package sessions
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -14,7 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 
-func checkSessions(t *testing.T, ss *SessionStore) {
+func checkSessions(t *testing.T, ss *MemorySessionStore) {
 	if len(ss.byAge) != len(ss.byToken) {
 		t.Fatalf("age: %v != token %v", len(ss.byAge), len(ss.byToken))
 	}
@@ -40,12 +41,14 @@ func TestSessions(t *testing.T) {
 		{"rando-token-string", fmt.Sprintf(`{"sub": "user-id-3", "email": "user-3@example.com", "exp": %d}`, expired.Unix())},
 	}
 
+	ctx := context.Background()
+
 	for _, ft := range fakeTokens {
 		rawToken := createTestIDToken(ft.claims)
 		tokenResp := &oauth2.Token{RefreshToken: rawToken}
 		tokenResp = tokenResp.WithExtra(map[string]interface{}{"id_token": rawToken})
 
-		_, err := ss.AddSession(newTestVerifier(ft.claims), tokenResp)
+		_, err := ss.AddSession(ctx, newTestVerifier(ft.claims), tokenResp)
 		if err != nil {
 			t.Fatalf("addSession error: %v", err)
 		}
@@ -65,7 +68,7 @@ func TestSessions(t *testing.T) {
 
 	checkSessions(t, ss)
 
-	err := ss.DeleteSession(ss.byAge[0].sessionToken)
+	err := ss.DeleteSession(ctx, ss.byAge[0].sessionToken)
 	if err != nil {
 		t.Fatalf("deleteSession error: %v", err)
 	}
@@ -125,7 +128,8 @@ func TestSessionStore_GetSession(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := testStore.GetSession(tt.sessionToken, tt.refreshToken); !reflect.DeepEqual(got, tt.want) {
+			got, _ := testStore.GetSession(context.Background(), tt.sessionToken, tt.refreshToken)
+			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("SessionStore.GetSession() = %v, want %v", got, tt.want)
 			}
 		})
@@ -135,7 +139,7 @@ func TestSessionStore_GetSession(t *testing.T) {
 func TestSessionStore_pruneSessions(t *testing.T) {
 	tests := []struct {
 		name                  string
-		modifyStorage         func(*SessionStore)
+		modifyStorage         func(*MemorySessionStore)
 		expectedSessionTokens sets.Set[string]
 		expectedRefreshTokens sets.Set[string]
 		expectedByAgeLen      int
@@ -302,13 +306,14 @@ func TestSessionStore_pruneSessions(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ss := &SessionStore{
-				byToken:        map[string]*LoginState{},
-				byRefreshToken: map[string]*LoginState{},
-				byAge:          []*LoginState{},
-				maxSessions:    3,
-				now:            time.Now,
-				mux:            sync.Mutex{},
+			ss := &MemorySessionStore{
+				byToken:          map[string]*LoginState{},
+				byRefreshToken:   map[string]*LoginState{},
+				byRefreshTokenID: map[string]string{},
+				byAge:            []*LoginState{},
+				maxSessions:      3,
+				now:              time.Now,
+				mux:              sync.Mutex{},
 			}
 			if tt.modifyStorage != nil {
 				tt.modifyStorage(ss)
@@ -330,8 +335,8 @@ func TestSessionStore_pruneSessions(t *testing.T) {
 	}
 }
 
-func withServerSessions(sessions ...*LoginState) func(ss *SessionStore) {
-	return func(ss *SessionStore) {
+func withServerSessions(sessions ...*LoginState) func(ss *MemorySessionStore) {
+	return func(ss *MemorySessionStore) {
 		for _, s := range sessions {
 			s := s
 			s.now = time.Now

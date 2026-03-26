@@ -24,7 +24,6 @@ import (
 	"github.com/openshift/console/pkg/auth/sessions"
 	"github.com/openshift/console/pkg/proxy"
 	"github.com/openshift/console/pkg/serverutils/asynccache"
-	"github.com/openshift/console/pkg/utils"
 )
 
 // openShiftAuth implements OpenShift Authentication as defined in:
@@ -58,10 +57,11 @@ func validateAbsURL(value string) error {
 	return nil
 }
 
-func newOpenShiftAuth(ctx context.Context, k8sClient *http.Client, c *oidcConfig) (loginMethod, error) {
+func newOpenShiftAuth(ctx context.Context, k8sClient *http.Client, c *oidcConfig, sessionStore *sessions.CombinedSessionStore) (loginMethod, error) {
 	o := &openShiftAuth{
 		oidcConfig: c,
 		k8sClient:  k8sClient,
+		sessions:   sessionStore,
 	}
 
 	var err error
@@ -71,23 +71,6 @@ func newOpenShiftAuth(ctx context.Context, k8sClient *http.Client, c *oidcConfig
 		return nil, fmt.Errorf("failed to construct OAuth endpoint cache: %w", err)
 	}
 	o.oauthEndpointCache.Run(ctx)
-
-	authnKey, err := utils.RandomString(64)
-	if err != nil {
-		return nil, err
-	}
-
-	encryptionKey, err := utils.RandomString(32)
-	if err != nil {
-		return nil, err
-	}
-
-	o.sessions = sessions.NewSessionStore(
-		[]byte(authnKey),
-		[]byte(encryptionKey),
-		c.secureCookies,
-		c.cookiePath,
-	)
 
 	return o, nil
 }

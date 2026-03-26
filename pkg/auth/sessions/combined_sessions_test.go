@@ -100,7 +100,7 @@ func TestCombinedSessionStore_AddSession(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			cs := NewSessionStore(authnKey, encryptionKey, true, "/")
+			cs := NewSessionStore(authnKey, encryptionKey, true, "/", NewServerSessionStore(32768))
 
 			testWriter := httptest.NewRecorder()
 
@@ -168,7 +168,8 @@ func TestCombinedSessionStore_AddSession(t *testing.T) {
 					require.NoError(t, securecookie.DecodeMulti(openshiftRefreshTokenCookieName, c.Value, &gotRefresh, cookieCodecs...))
 					// The cookie now contains an ID, not the actual refresh token
 					refreshTokenID := gotRefresh["refresh-token-id"].(string)
-					actualRefreshToken := cs.serverStore.byRefreshTokenID[refreshTokenID]
+					memStore := cs.serverStore.(*MemorySessionStore)
+					actualRefreshToken := memStore.byRefreshTokenID[refreshTokenID]
 					if actualRefreshToken != tt.wantRefreshToken {
 						t.Errorf("wanted refresh token to be %q, got %q (via ID %q)", tt.wantRefreshToken, actualRefreshToken, refreshTokenID)
 					}
@@ -236,12 +237,11 @@ func TestCombinedSessionStore_GetSession(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cs := NewSessionStore(authnKey, encryptionKey, true, "/")
-			cs.serverStore = testServerSessions
+			cs := NewSessionStore(authnKey, encryptionKey, true, "/", testServerSessions)
 
 			testCookies := &testCookieFactory{
 				cookieCodecs: cookieCodecs,
-				serverStore:  cs.serverStore,
+				serverStore:  testServerSessions,
 			}
 
 			req, err := http.NewRequest(http.MethodGet, "/", nil)
@@ -301,7 +301,7 @@ func TestCombinedSessionStore_UpdateTokens(t *testing.T) {
 		currentRefreshToken                string
 		token                              *oauth2.Token
 		verifier                           IDTokenVerifier
-		serverStore                        *SessionStore
+		serverStore                        *MemorySessionStore
 		wantRefreshToken                   string
 		wantIdToken                        string
 		wantSession                        bool
@@ -364,13 +364,12 @@ func TestCombinedSessionStore_UpdateTokens(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cs := NewSessionStore(authnKey, encryptionKey, true, "/")
-			cs.serverStore = tt.serverStore
+			cs := NewSessionStore(authnKey, encryptionKey, true, "/", tt.serverStore)
 
 			req, err := http.NewRequest(http.MethodGet, "/", nil)
 			require.NoError(t, err)
 
-			testCookieFactory := &testCookieFactory{cookieCodecs: cookieCodecs, serverStore: cs.serverStore}
+			testCookieFactory := &testCookieFactory{cookieCodecs: cookieCodecs, serverStore: tt.serverStore}
 			if len(tt.currentSessionToken) > 0 {
 				testCookieFactory.WithSessionToken(tt.currentSessionToken)
 			}
@@ -397,7 +396,8 @@ func TestCombinedSessionStore_UpdateTokens(t *testing.T) {
 				t.Errorf("CombinedSessionStore.UpdateTokens().rawToken = %v, want %v", got.rawToken, tt.wantIdToken)
 			}
 			if len(tt.wantServerSessionRefreshTokenIndex) > 0 {
-				require.NotNil(t, cs.serverStore.byRefreshToken[tt.wantServerSessionRefreshTokenIndex], "refreshToken index %s not found", tt.wantServerSessionRefreshTokenIndex)
+				memStore := cs.serverStore.(*MemorySessionStore)
+				require.NotNil(t, memStore.byRefreshToken[tt.wantServerSessionRefreshTokenIndex], "refreshToken index %s not found", tt.wantServerSessionRefreshTokenIndex)
 			}
 		})
 	}
@@ -409,7 +409,7 @@ func TestCombinedSessionStore_DeleteSession(t *testing.T) {
 	authnKey := []byte(randomString(64))
 	cookieCodecs := securecookie.CodecsFromPairs(authnKey, encryptionKey)
 
-	setupServerStore := func() *SessionStore {
+	setupServerStore := func() *MemorySessionStore {
 		testServerSessions := NewServerSessionStore(10)
 		// lock the sessions lock to prevent data race check being
 		// triggered in the test setup
@@ -432,7 +432,7 @@ func TestCombinedSessionStore_DeleteSession(t *testing.T) {
 
 	tests := []struct {
 		name                          string
-		serverStore                   *SessionStore
+		serverStore                   *MemorySessionStore
 		cookieStore                   *testCookieFactory
 		wantErr                       bool
 		wantCookieTimeouts            []string
@@ -552,15 +552,15 @@ func TestCombinedSessionStore_DeleteSession(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cs := NewSessionStore(authnKey, encryptionKey, true, "/")
-			cs.serverStore = setupServerStore()
+			serverStore := setupServerStore()
+			cs := NewSessionStore(authnKey, encryptionKey, true, "/", serverStore)
 
 			req, err := http.NewRequest(http.MethodGet, "/", nil)
 			require.NoError(t, err)
 
 			if tt.cookieStore != nil {
 				tt.cookieStore.cookieCodecs = cookieCodecs
-				tt.cookieStore.serverStore = cs.serverStore
+				tt.cookieStore.serverStore = serverStore
 				req = tt.cookieStore.Complete(t, req)
 			}
 
@@ -596,26 +596,28 @@ func TestCombinedSessionStore_DeleteSession(t *testing.T) {
 				t.Errorf("these cookies shouldn't have been affected: %#v", gotCookies)
 			}
 
-			if len(cs.serverStore.byToken) != tt.expectedSessionTokenIndices {
-				t.Errorf("CombinedSessionStore.DeleteSession() expected %d session token indices, %d remain", tt.expectedSessionTokenIndices, len(cs.serverStore.byToken))
+			memStore := cs.serverStore.(*MemorySessionStore)
+
+			if len(memStore.byToken) != tt.expectedSessionTokenIndices {
+				t.Errorf("CombinedSessionStore.DeleteSession() expected %d session token indices, %d remain", tt.expectedSessionTokenIndices, len(memStore.byToken))
 			}
 
-			if len(cs.serverStore.byAge) != tt.expectedSessionTokenIndices {
-				t.Errorf("CombinedSessionStore.DeleteSession() expected %d sessions in byAge, %d remain", tt.expectedSessionTokenIndices, len(cs.serverStore.byAge))
+			if len(memStore.byAge) != tt.expectedSessionTokenIndices {
+				t.Errorf("CombinedSessionStore.DeleteSession() expected %d sessions in byAge, %d remain", tt.expectedSessionTokenIndices, len(memStore.byAge))
 			}
 
-			if len(cs.serverStore.byRefreshToken) != tt.expectedRefreshTokenIndices {
-				t.Errorf("CombinedSessionStore.DeleteSession() expected %d refresh token indices, %d remain", tt.expectedRefreshTokenIndices, len(cs.serverStore.byRefreshToken))
+			if len(memStore.byRefreshToken) != tt.expectedRefreshTokenIndices {
+				t.Errorf("CombinedSessionStore.DeleteSession() expected %d refresh token indices, %d remain", tt.expectedRefreshTokenIndices, len(memStore.byRefreshToken))
 			}
 
 			for _, wantRemoved := range tt.wantServerSesionTokenRemoved {
-				if cs.serverStore.byToken[wantRemoved] != nil {
-					t.Errorf("CombinedSessionStore.DeleteSession() expected session token %q to be removed: %v", tt.wantServerSesionTokenRemoved, cs.serverStore.byToken[wantRemoved])
+				if memStore.byToken[wantRemoved] != nil {
+					t.Errorf("CombinedSessionStore.DeleteSession() expected session token %q to be removed: %v", tt.wantServerSesionTokenRemoved, memStore.byToken[wantRemoved])
 				}
 			}
 
-			if len(tt.wantServerRefreshTokenRemoved) > 0 && cs.serverStore.byRefreshToken[tt.wantServerRefreshTokenRemoved] != nil {
-				t.Errorf("CombinedSessionStore.DeleteSession() expected refresh token %q to be removed: %v", tt.wantServerRefreshTokenRemoved, cs.serverStore.byRefreshToken[tt.wantServerRefreshTokenRemoved])
+			if len(tt.wantServerRefreshTokenRemoved) > 0 && memStore.byRefreshToken[tt.wantServerRefreshTokenRemoved] != nil {
+				t.Errorf("CombinedSessionStore.DeleteSession() expected refresh token %q to be removed: %v", tt.wantServerRefreshTokenRemoved, memStore.byRefreshToken[tt.wantServerRefreshTokenRemoved])
 			}
 
 		})
@@ -628,7 +630,7 @@ type testCookieFactory struct {
 	refreshToken   *string
 	refreshTokenID *string
 	customCookies  map[string]map[interface{}]interface{}
-	serverStore    *SessionStore // needed to set up refresh token ID mapping
+	serverStore    *MemorySessionStore // needed to set up refresh token ID mapping
 }
 
 func (f *testCookieFactory) WithSessionToken(sessionToken string) *testCookieFactory {
@@ -685,12 +687,12 @@ func attachCookieOrDie(t *testing.T, req *http.Request, cookieName string, cooki
 	req.AddCookie(&http.Cookie{Name: cookieName, Value: encoded})
 }
 
-func addServerSession(serverStore *SessionStore, session *LoginState) *SessionStore {
+func addServerSession(serverStore *MemorySessionStore, session *LoginState) *MemorySessionStore {
 	serverStore.byToken[session.sessionToken] = session
 	return serverStore
 }
 
-func indexSessionByRefreshToken(serverStore *SessionStore, refreshToken string, session *LoginState) *SessionStore {
+func indexSessionByRefreshToken(serverStore *MemorySessionStore, refreshToken string, session *LoginState) *MemorySessionStore {
 	serverStore.byToken[session.sessionToken] = session
 	serverStore.byRefreshToken[refreshToken] = session
 	return serverStore
@@ -702,7 +704,7 @@ func TestCombinedSessionStore_AddSession_CleansUpOldPodCookies(t *testing.T) {
 
 	encryptionKey := []byte(randomString(32))
 	authnKey := []byte(randomString(64))
-	cs := NewSessionStore(authnKey, encryptionKey, true, "/")
+	cs := NewSessionStore(authnKey, encryptionKey, true, "/", NewServerSessionStore(32768))
 
 	token := addIDToken(
 		&oauth2.Token{
@@ -747,7 +749,7 @@ func TestCombinedSessionStore_AddSession_CleansUpOldPodCookies(t *testing.T) {
 func TestCombinedSessionStore_GetSession_CleansUpOldPodCookies(t *testing.T) {
 	encryptionKey := []byte(randomString(32))
 	authnKey := []byte(randomString(64))
-	cs := NewSessionStore(authnKey, encryptionKey, true, "/")
+	cs := NewSessionStore(authnKey, encryptionKey, true, "/", NewServerSessionStore(32768))
 
 	// Simulate request with old session cookies from different pods
 	// This is the primary cleanup path since GetSession is called on /api/* requests
@@ -784,7 +786,7 @@ func TestCombinedSessionStore_UpdateTokens_CleansUpOldPodCookies(t *testing.T) {
 
 	encryptionKey := []byte(randomString(32))
 	authnKey := []byte(randomString(64))
-	cs := NewSessionStore(authnKey, encryptionKey, true, "/")
+	cs := NewSessionStore(authnKey, encryptionKey, true, "/", NewServerSessionStore(32768))
 
 	token := addIDToken(
 		&oauth2.Token{

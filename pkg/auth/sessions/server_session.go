@@ -1,6 +1,7 @@
 package sessions
 
 import (
+	"context"
 	"fmt"
 	"slices"
 	"sort"
@@ -20,7 +21,7 @@ const (
 
 var sessionPruningPeriod = 5 * time.Minute
 
-type SessionStore struct {
+type MemorySessionStore struct {
 	byToken map[string]*LoginState
 	// TODO: implement delayed pruning (so that all clients with old refresh token can get the session correctly) when two instances are pointing to the same item (key != ls.refreshToken)
 	// TODO: maybe only store indexed by the old refresh tokens and have each item have lifespan of ~10s
@@ -32,8 +33,8 @@ type SessionStore struct {
 	mux              sync.Mutex
 }
 
-func NewServerSessionStore(maxSessions int) *SessionStore {
-	ss := &SessionStore{
+func NewServerSessionStore(maxSessions int) *MemorySessionStore {
+	ss := &MemorySessionStore{
 		byToken:          make(map[string]*LoginState),
 		byRefreshToken:   make(map[string]*LoginState),
 		byRefreshTokenID: make(map[string]string),
@@ -45,24 +46,25 @@ func NewServerSessionStore(maxSessions int) *SessionStore {
 	return ss
 }
 
-// addSession sets sessionToken to a random value and adds loginState to session data structures
-func (ss *SessionStore) AddSession(tokenVerifier IDTokenVerifier, token *oauth2.Token) (*LoginState, error) {
+// AddSession implements SessionStore interface - creates a new session from an OAuth2 token.
+func (ss *MemorySessionStore) AddSession(ctx context.Context, tokenVerifier IDTokenVerifier, token *oauth2.Token) (*LoginState, error) {
 	ls, err := newLoginState(tokenVerifier, token)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create new session: %w", err)
 	}
 
 	sessionToken := ls.sessionToken
-	if ss.byToken[sessionToken] != nil {
-		ss.DeleteSession(sessionToken)
-		return nil, fmt.Errorf("session token collision! THIS SHOULD NEVER HAPPEN! Token: %s", sessionToken)
-	}
-	ls.sessionToken = sessionToken
 
 	// Generate a small reference ID for the refresh token (stored in cookie instead of full token)
 	ls.refreshTokenID = RandomString(32)
 
 	ss.mux.Lock()
+	// Check for collision (should never happen with crypto random)
+	if ss.byToken[sessionToken] != nil {
+		ss.mux.Unlock()
+		return nil, fmt.Errorf("session token collision! THIS SHOULD NEVER HAPPEN! Token: %s", sessionToken)
+	}
+
 	ss.byToken[sessionToken] = ls
 	if ls.refreshToken != "" {
 		ss.byRefreshTokenID[ls.refreshTokenID] = ls.refreshToken
@@ -74,19 +76,29 @@ func (ss *SessionStore) AddSession(tokenVerifier IDTokenVerifier, token *oauth2.
 	return ls, nil
 }
 
-func (ss *SessionStore) GetSession(sessionToken, refreshToken string) *LoginState {
+// GetSession implements SessionStore interface - retrieves a session by session token or refresh token ID.
+func (ss *MemorySessionStore) GetSession(ctx context.Context, sessionToken, refreshTokenID string) (*LoginState, error) {
 	ss.mux.Lock()
 	defer ss.mux.Unlock()
 	if state, ok := ss.byToken[sessionToken]; ok {
-		return state
+		return state, nil
 	}
-	return ss.byRefreshToken[refreshToken]
+	// Look up refresh token from ID
+	if refreshToken, ok := ss.byRefreshTokenID[refreshTokenID]; ok {
+		return ss.byRefreshToken[refreshToken], nil
+	}
+	return nil, nil
 }
 
-func (ss *SessionStore) DeleteSession(sessionToken string) error {
+// DeleteSession implements SessionStore interface - removes a session by session token.
+func (ss *MemorySessionStore) DeleteSession(ctx context.Context, sessionToken string) error {
 	ss.mux.Lock()
 	defer ss.mux.Unlock()
+	return ss.deleteSessionInternal(sessionToken)
+}
 
+// deleteSessionInternal removes a session without locking (caller must hold lock)
+func (ss *MemorySessionStore) deleteSessionInternal(sessionToken string) error {
 	// not found - return fast
 	if _, ok := ss.byToken[sessionToken]; !ok {
 		return nil
@@ -104,7 +116,7 @@ func (ss *SessionStore) DeleteSession(sessionToken string) error {
 	return fmt.Errorf("ss.byAge did not contain session %v", sessionToken)
 }
 
-func (ss *SessionStore) DeleteByRefreshToken(refreshToken string) {
+func (ss *MemorySessionStore) DeleteByRefreshToken(refreshToken string) {
 	ss.mux.Lock()
 	defer ss.mux.Unlock()
 
@@ -120,7 +132,7 @@ func (ss *SessionStore) DeleteByRefreshToken(refreshToken string) {
 	ss.byAge = spliceOut(ss.byAge, session)
 }
 
-func (ss *SessionStore) DeleteBySessionToken(sessionToken string) {
+func (ss *MemorySessionStore) DeleteBySessionToken(sessionToken string) {
 	ss.mux.Lock()
 	defer ss.mux.Unlock()
 
@@ -139,7 +151,7 @@ func (ss *SessionStore) DeleteBySessionToken(sessionToken string) {
 // deleteRefreshTokenIDsForSession removes all refresh token IDs that point to the given session.
 // There can be multiple old IDs from previous token rotations.
 // Note: This method is not thread-safe and assumes the caller holds ss.mux.
-func (ss *SessionStore) deleteRefreshTokenIDsForSession(session *LoginState) {
+func (ss *MemorySessionStore) deleteRefreshTokenIDsForSession(session *LoginState) {
 	for refreshTokenID, actualRefreshToken := range ss.byRefreshTokenID {
 		if ss.byRefreshToken[actualRefreshToken] == session {
 			delete(ss.byRefreshTokenID, refreshTokenID)
@@ -150,7 +162,7 @@ func (ss *SessionStore) deleteRefreshTokenIDsForSession(session *LoginState) {
 // deleteRefreshTokensForSession removes all refresh tokens that point to the given session.
 // There can be multiple old tokens from previous token rotations.
 // Note: This method is not thread-safe and assumes the caller holds ss.mux.
-func (ss *SessionStore) deleteRefreshTokensForSession(session *LoginState) {
+func (ss *MemorySessionStore) deleteRefreshTokensForSession(session *LoginState) {
 	for refreshToken, loginState := range ss.byRefreshToken {
 		if loginState == session {
 			delete(ss.byRefreshToken, refreshToken)
@@ -161,7 +173,7 @@ func (ss *SessionStore) deleteRefreshTokensForSession(session *LoginState) {
 // deleteIDsForRefreshToken removes all refresh token IDs that point to the given refresh token.
 // There can be multiple old IDs from previous token rotations.
 // Note: This method is not thread-safe and assumes the caller holds ss.mux.
-func (ss *SessionStore) deleteIDsForRefreshToken(refreshToken string) {
+func (ss *MemorySessionStore) deleteIDsForRefreshToken(refreshToken string) {
 	for refreshTokenID, actualRefreshToken := range ss.byRefreshTokenID {
 		if actualRefreshToken == refreshToken {
 			delete(ss.byRefreshTokenID, refreshTokenID)
@@ -169,7 +181,7 @@ func (ss *SessionStore) deleteIDsForRefreshToken(refreshToken string) {
 	}
 }
 
-func (ss *SessionStore) pruneSessions() {
+func (ss *MemorySessionStore) pruneSessions() {
 	ss.mux.Lock()
 	defer ss.mux.Unlock()
 
@@ -227,4 +239,66 @@ func spliceOut(slice []*LoginState, toRemove *LoginState) []*LoginState {
 		}
 	}
 	return slice
+}
+
+// UpdateTokens implements SessionStore interface - updates the tokens for an existing session.
+func (ss *MemorySessionStore) UpdateTokens(ctx context.Context, ls *LoginState, verifier IDTokenVerifier, token *oauth2.Token) error {
+	return ls.UpdateTokens(verifier, token)
+}
+
+// DeleteByRefreshTokenID implements SessionStore interface - removes a session by refresh token ID.
+func (ss *MemorySessionStore) DeleteByRefreshTokenID(ctx context.Context, refreshTokenID string) error {
+	ss.mux.Lock()
+	defer ss.mux.Unlock()
+
+	// Look up the actual refresh token from the ID
+	refreshToken, ok := ss.byRefreshTokenID[refreshTokenID]
+	if !ok {
+		return nil
+	}
+
+	// Delete the session by refresh token
+	session, ok := ss.byRefreshToken[refreshToken]
+	if !ok {
+		return nil
+	}
+
+	delete(ss.byRefreshToken, refreshToken)
+	delete(ss.byToken, session.sessionToken)
+	delete(ss.byRefreshTokenID, refreshTokenID)
+	ss.byAge = spliceOut(ss.byAge, session)
+
+	return nil
+}
+
+// GetRefreshToken implements SessionStore interface - retrieves the actual refresh token from a refresh token ID.
+func (ss *MemorySessionStore) GetRefreshToken(ctx context.Context, refreshTokenID string) (string, error) {
+	ss.mux.Lock()
+	defer ss.mux.Unlock()
+
+	if refreshToken, ok := ss.byRefreshTokenID[refreshTokenID]; ok {
+		return refreshToken, nil
+	}
+	return "", nil
+}
+
+// SetRefreshToken implements SessionStore interface - stores a mapping from refresh token ID to actual refresh token.
+func (ss *MemorySessionStore) SetRefreshToken(ctx context.Context, refreshTokenID, refreshToken string, ttl time.Duration) error {
+	ss.mux.Lock()
+	defer ss.mux.Unlock()
+
+	ss.byRefreshTokenID[refreshTokenID] = refreshToken
+	return nil
+}
+
+// Close implements SessionStore interface - releases any resources held by the store.
+func (ss *MemorySessionStore) Close() error {
+	// Memory store has no resources to release
+	return nil
+}
+
+// HealthCheck implements SessionStore interface - returns an error if the store is unhealthy.
+func (ss *MemorySessionStore) HealthCheck(ctx context.Context) error {
+	// Memory store is always healthy
+	return nil
 }

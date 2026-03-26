@@ -99,9 +99,31 @@ type Auth struct {
 
 // Session holds configuration for web-session related configuration
 type Session struct {
-	CookieEncryptionKeyFile     string `yaml:"cookieEncryptionKeyFile,omitempty"`
-	CookieAuthenticationKeyFile string `yaml:"cookieAuthenticationKeyFile,omitempty"`
+	CookieEncryptionKeyFile     string             `yaml:"cookieEncryptionKeyFile,omitempty"`
+	CookieAuthenticationKeyFile string             `yaml:"cookieAuthenticationKeyFile,omitempty"`
+	Store                       SessionStoreConfig `yaml:"store,omitempty"`
 	// TODO: move InactivityTimeoutSeconds here
+}
+
+// SessionStoreConfig holds configuration for session storage backend.
+type SessionStoreConfig struct {
+	// Type specifies the session store implementation: "memory", "redis", or "cached-redis"
+	Type string `yaml:"type,omitempty"`
+
+	// Redis configuration
+	RedisAddrs      []string `yaml:"redisAddrs,omitempty"`       // Redis cluster/sentinel addresses
+	RedisPassword   string   `yaml:"redisPassword,omitempty"`    // Redis password (consider using a secret file)
+	RedisTLSEnabled bool     `yaml:"redisTLSEnabled,omitempty"`  // Enable TLS for Redis connections
+	RedisDB         int      `yaml:"redisDB,omitempty"`          // Redis database number
+	RedisPoolSize   int      `yaml:"redisPoolSize,omitempty"`    // Connection pool size
+
+	// Cache configuration (for cached-redis type)
+	EnableLocalCache bool `yaml:"enableLocalCache,omitempty"` // Enable local LRU cache
+	LocalCacheSize   int  `yaml:"localCacheSize,omitempty"`   // Number of sessions to cache locally
+
+	// Fallback configuration
+	EnableFallback bool `yaml:"enableFallback,omitempty"` // Fall back to memory store if Redis unavailable
+	MaxSessions    int  `yaml:"maxSessions,omitempty"`    // Maximum sessions for memory store
 }
 
 // Customization holds configuration such as what logo to use.
