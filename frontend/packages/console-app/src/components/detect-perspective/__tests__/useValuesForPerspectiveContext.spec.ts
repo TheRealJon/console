@@ -7,7 +7,6 @@ import {
   usePerspectives,
 } from '@console/shared/src/hooks/usePerspectives';
 import { renderHookWithProviders } from '@console/shared/src/test-utils/unit-test-utils';
-import { ACM_PERSPECTIVE_ID } from '../../../consts';
 import { usePreferredPerspective } from '../../user-preferences/perspective/usePreferredPerspective';
 import { useLastPerspective } from '../useLastPerspective';
 import { useValuesForPerspectiveContext } from '../useValuesForPerspectiveContext';
@@ -101,13 +100,14 @@ describe('useValuesForPerspectiveContext', () => {
     expect(perspective).toEqual('dev');
   });
 
-  it(`should return ${ACM_PERSPECTIVE_ID} perspective if it exists and last viewed or preferred perspectives do not exist`, () => {
+  it('should return empty string if last viewed or preferred perspectives do not exist', () => {
     usePerspectivesMock.mockReturnValue(mockPerspectiveExtensions);
     useLastPerspectiveMock.mockReturnValue([undefined, jest.fn(), true]);
     usePreferredPerspectiveMock.mockReturnValue([undefined, jest.fn(), true]);
     usePerspectiveExtensionMock.mockReturnValue(acmPerspectiveExtension);
     const { result } = renderHookWithProviders(() => useValuesForPerspectiveContext());
     const [perspective] = result.current;
-    expect(perspective).toEqual(ACM_PERSPECTIVE_ID);
+    // No hardcoded default - perspective will be determined by PerspectiveDetector
+    expect(perspective).toEqual('');
   });
 });

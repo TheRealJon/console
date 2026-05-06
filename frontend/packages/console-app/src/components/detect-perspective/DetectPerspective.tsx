@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 import { useEffect } from 'react';
-import { createPath, useLocation } from 'react-router';
+import { useLocation } from 'react-router';
 import type { Perspective } from '@console/dynamic-plugin-sdk';
 import { PerspectiveContext } from '@console/dynamic-plugin-sdk';
 import { LoadingBox } from '@console/shared/src/components/loading/LoadingBox';
@@ -29,9 +29,13 @@ const DetectPerspective: FC<DetectPerspectiveProps> = ({ children }) => {
   const location = useLocation();
   useEffect(() => {
     if (perspectiveParam && perspectiveParam !== activePerspective) {
-      setActivePerspective(perspectiveParam, createPath(location));
+      // Pass pathname without query params to avoid ?perspective= param loop
+      setActivePerspective(perspectiveParam, location.pathname);
     }
-  }, [perspectiveParam, activePerspective, setActivePerspective, location]);
+    // location is intentionally excluded from deps to prevent firing on every navigation
+    // The effect should only run when perspectiveParam changes (URL param added/changed)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [perspectiveParam, activePerspective, setActivePerspective]);
 
   return loaded ? (
     activePerspective ? (

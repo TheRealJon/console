@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 import { useEffect, useState } from 'react';
-import { useLocation, createPath } from 'react-router';
+import { useLocation } from 'react-router';
 import type { Perspective, ResolvedExtension } from '@console/dynamic-plugin-sdk';
 import { usePerspectives } from '@console/shared/src/hooks/usePerspectives';
 
@@ -41,17 +41,20 @@ const Detector: FC<DetectorProps> = ({
 
   useEffect(() => {
     if (detectedPerspective) {
-      setActivePerspective(detectedPerspective, createPath(location));
+      // Pass pathname without query params to avoid ?perspective= param loop
+      setActivePerspective(detectedPerspective, location.pathname);
     } else if (defaultPerspective && (detectors.length < 1 || detectionComplete)) {
       // set default perspective if there are no detectors or none of the detections were successful
-      setActivePerspective(defaultPerspective.properties.id, createPath(location));
+      setActivePerspective(defaultPerspective.properties.id, location.pathname);
     }
+    // location is intentionally excluded from deps to prevent firing on every navigation
+    // The effect should only run when detection completes or changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     defaultPerspective,
     detectedPerspective,
     detectionComplete,
     detectors.length,
-    location,
     setActivePerspective,
   ]);
 

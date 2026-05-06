@@ -1,12 +1,9 @@
 import { useCallback, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { useNavigate } from 'react-router';
 import type { PerspectiveType, UseActivePerspective } from '@console/dynamic-plugin-sdk';
-import {
-  usePerspectiveExtension,
-  usePerspectives,
-} from '@console/shared/src/hooks/usePerspectives';
+import { usePerspectives } from '@console/shared/src/hooks/usePerspectives';
 import { useTelemetry } from '@console/shared/src/hooks/useTelemetry';
-import { ACM_PERSPECTIVE_ID } from '../../consts';
 import { usePreferredPerspective } from '../user-preferences/perspective/usePreferredPerspective';
 import { useLastPerspective } from './useLastPerspective';
 
@@ -25,19 +22,19 @@ export const useValuesForPerspectiveContext = (): [
   const [activePerspective, setActivePerspective] = useState('');
   const loaded = lastPerspectiveLoaded && preferredPerspectiveLoaded;
   const latestPerspective = loaded && (preferredPerspective || lastPerspective);
-  const acmPerspectiveExtension = usePerspectiveExtension(ACM_PERSPECTIVE_ID);
   const existingPerspective = activePerspective || latestPerspective;
-  const perspective =
-    !!acmPerspectiveExtension && !existingPerspective
-      ? ACM_PERSPECTIVE_ID
-      : existingPerspective || '';
+  const perspective = existingPerspective || '';
   const isValidPerspective =
     loaded && perspectiveExtensions.some((p) => p.properties.id === perspective);
 
   const setPerspective = useCallback<SetActivePerspective>(
     (newPerspective, next) => {
-      setLastPerspective(newPerspective);
-      setActivePerspective(newPerspective);
+      // Use flushSync to ensure state updates commit before navigation
+      // This prevents split-render where plugins observe perspective change before pathname change
+      flushSync(() => {
+        setLastPerspective(newPerspective);
+        setActivePerspective(newPerspective);
+      });
       // Navigate to next or root and let the default page determine where to go to next
       navigate(next || '/');
       fireTelemetryEvent('Perspective Changed', { perspective: newPerspective });

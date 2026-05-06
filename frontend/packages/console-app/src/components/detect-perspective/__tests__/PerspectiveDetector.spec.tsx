@@ -141,7 +141,7 @@ describe('PerspectiveDetector', () => {
     });
   });
 
-  it('preserves query and hash when setting perspective', async () => {
+  it('uses pathname without query params when setting perspective', async () => {
     let promiseResolver: (value: () => [boolean, boolean]) => void;
     const testPromise = new Promise<() => [boolean, boolean]>(
       (resolver) => (promiseResolver = resolver),
@@ -160,7 +160,8 @@ describe('PerspectiveDetector', () => {
     promiseResolver(() => [true, false]);
 
     await waitFor(() => {
-      expect(setActivePerspective).toHaveBeenCalledWith('dev', '/some/path?query=param#some-hash');
+      // Pathname only - strips query params to avoid ?perspective= param loop
+      expect(setActivePerspective).toHaveBeenCalledWith('dev', '/some/path');
     });
   });
 });
