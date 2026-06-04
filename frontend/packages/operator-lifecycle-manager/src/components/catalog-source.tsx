@@ -7,7 +7,7 @@ import * as _ from 'lodash';
 import { useTranslation } from 'react-i18next';
 import { useParams, useLocation } from 'react-router';
 import type { K8sResourceKind, WatchK8sResultsObject } from '@console/dynamic-plugin-sdk';
-import { PopoverStatus, StatusIconAndText } from '@console/dynamic-plugin-sdk';
+import { PopoverStatus, StatusIconAndText, useAccessReview } from '@console/dynamic-plugin-sdk';
 import { CreateYAML } from '@console/internal/components/create-yaml';
 import type {
   TableProps,
@@ -411,6 +411,12 @@ const DisabledPopover: FC<DisabledPopoverProps> = ({ operatorHub, sourceName }) 
     [close, operatorHub, sourceName],
   );
   const { t } = useTranslation();
+  const [canPatchOperatorHub] = useAccessReview({
+    group: OperatorHubModel.apiGroup,
+    resource: OperatorHubModel.plural,
+    verb: 'patch',
+    name: operatorHub?.metadata?.name,
+  });
   return (
     <PopoverStatus
       title={t('olm~Disabled')}
@@ -423,9 +429,11 @@ const DisabledPopover: FC<DisabledPopoverProps> = ({ operatorHub, sourceName }) 
           'olm~Operators provided by this source will not appear in Software Catalog and any operators installed from this source will not receive updates until this source is re-enabled.',
         )}
       </p>
-      <Button isInline variant="link" onClick={onClickEnable}>
-        {t('olm~Enable source')}
-      </Button>
+      {canPatchOperatorHub && (
+        <Button isInline variant="link" onClick={onClickEnable}>
+          {t('olm~Enable source')}
+        </Button>
+      )}
     </PopoverStatus>
   );
 };
