@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import type { FC, ReactText, ReactNode, ComponentType } from 'react';
-import { memo, useMemo, useState, useCallback, useEffect } from 'react';
+import { forwardRef, memo, useMemo, useState, useCallback, useEffect } from 'react';
 import { useConsoleDispatch } from '@console/shared/src/hooks/useConsoleDispatch';
 import {
   TableGridBreakpoint,
@@ -112,20 +112,23 @@ export const sorts = {
 };
 
 // Common table row/columns helper SFCs for implementing accessible data grid
-export const TableRow: FC<TableRowProps> = ({ id, index, trKey, style, className, ...props }) => {
-  return (
-    <Tr
-      {...props}
-      data-id={id}
-      data-index={index}
-      data-test-rows="resource-row"
-      data-key={trKey}
-      style={style}
-      className={css('pf-v6-c-table__tr', className)}
-      role="row"
-    />
-  );
-};
+export const TableRow = forwardRef<HTMLTableRowElement, TableRowProps>(
+  ({ id, index, trKey, style, className, ...props }, ref) => {
+    return (
+      <Tr
+        {...props}
+        ref={ref}
+        data-id={id}
+        data-index={index}
+        data-test-rows="resource-row"
+        data-key={trKey}
+        style={style}
+        className={css('pf-v6-c-table__tr', className)}
+        role="row"
+      />
+    );
+  },
+);
 TableRow.displayName = 'TableRow';
 
 export type TableRowProps = {

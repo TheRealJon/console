@@ -4,7 +4,7 @@ import {
   getClusterCompatibility,
   getSupportPhase,
   ClusterCompatibilityStatus,
-  SupportPhaseStatus,
+  SupportPhaseBadge,
 } from '../operator-lifecycle-status';
 
 jest.mock('react-i18next', () => ({
@@ -132,9 +132,9 @@ describe('getSupportPhase', () => {
     });
   });
 
-  it('returns self-support when all phases have ended', () => {
+  it('returns self-support with phases when all phases have ended', () => {
     const result = getSupportPhase(lifecycle, '1.0', new Date('2026-01-01'));
-    expect(result).toBe('self-support');
+    expect(result).toEqual({ selfSupport: true, allPhases });
   });
 
   it('returns first phase when date is before all phases', () => {
@@ -243,7 +243,14 @@ describe('getSupportPhase', () => {
         },
       ],
     };
-    expect(getSupportPhase(unsortedLifecycle, '1.0', new Date('2026-01-01'))).toBe('self-support');
+    const result = getSupportPhase(unsortedLifecycle, '1.0', new Date('2026-01-01'));
+    expect(result).toEqual({
+      selfSupport: true,
+      allPhases: expect.arrayContaining([
+        expect.objectContaining({ name: 'Maintenance support' }),
+        expect.objectContaining({ name: 'Extended life cycle support' }),
+      ]),
+    });
   });
 });
 
@@ -260,42 +267,40 @@ describe('ClusterCompatibilityStatus', () => {
     expect(screen.getByTestId('cluster-compatibility-incompatible')).toBeInTheDocument();
   });
 
-  it('renders dash when no data', () => {
+  it('renders dash with aria-label when no data', () => {
     render(<ClusterCompatibilityStatus compatible="no-data" />);
     expect(screen.getByText('-')).toBeInTheDocument();
-    expect(screen.getByTestId('cluster-compatibility-no-data')).toBeInTheDocument();
+    const el = screen.getByTestId('cluster-compatibility-no-data');
+    expect(el).toBeInTheDocument();
+    expect(el).toHaveAttribute('aria-label', 'No data available');
   });
 });
 
-describe('SupportPhaseStatus', () => {
+describe('SupportPhaseBadge', () => {
   const phases = [
     { name: 'Maintenance support', startDate: '2024-01-01', endDate: '2024-06-30' },
     { name: 'Extended life cycle support', startDate: '2024-07-01', endDate: '2025-12-31' },
   ];
 
-  it('renders last phase end date with green check when >12 months remain', () => {
+  it('renders the current phase name and end date', () => {
     const phase = { currentPhase: phases[0], allPhases: phases };
-    render(<SupportPhaseStatus phase={phase} currentDate={new Date('2024-03-15')} />);
-    expect(screen.getByTestId('support-phase-long')).toBeInTheDocument();
-    expect(screen.getByText(/Dec 31, 2025/)).toBeInTheDocument();
-  });
-
-  it('renders last phase end date with yellow warning when <=12 months remain', () => {
-    const phase = { currentPhase: phases[1], allPhases: phases };
-    render(<SupportPhaseStatus phase={phase} currentDate={new Date('2025-06-01')} />);
-    expect(screen.getByTestId('support-phase-short')).toBeInTheDocument();
-    expect(screen.getByText(/Dec 31, 2025/)).toBeInTheDocument();
+    render(<SupportPhaseBadge phase={phase} />);
+    expect(screen.getByText('Maintenance support')).toBeInTheDocument();
+    expect(screen.getByText(/Jun 30, 2024/)).toBeInTheDocument();
+    expect(screen.getByTestId('support-phase-badge')).toBeInTheDocument();
   });
 
   it('renders Self-support when phase is self-support', () => {
-    render(<SupportPhaseStatus phase="self-support" />);
+    render(<SupportPhaseBadge phase={{ selfSupport: true, allPhases: phases }} />);
     expect(screen.getByText('Self-support')).toBeInTheDocument();
     expect(screen.getByTestId('support-phase-self-support')).toBeInTheDocument();
   });
 
-  it('renders dash when phase is no-data', () => {
-    render(<SupportPhaseStatus phase="no-data" />);
+  it('renders dash with aria-label when phase is no-data', () => {
+    render(<SupportPhaseBadge phase="no-data" />);
     expect(screen.getByText('-')).toBeInTheDocument();
-    expect(screen.getByTestId('support-phase-no-data')).toBeInTheDocument();
+    const el = screen.getByTestId('support-phase-no-data');
+    expect(el).toBeInTheDocument();
+    expect(el).toHaveAttribute('aria-label', 'No data available');
   });
 });
