@@ -5,6 +5,7 @@ import {
   getSupportPhase,
   ClusterCompatibilityStatus,
   SupportPhaseBadge,
+  SupportPhaseStatus,
 } from '../operator-lifecycle-status';
 
 jest.mock('react-i18next', () => ({
@@ -111,6 +112,7 @@ describe('getSupportPhase', () => {
   it('returns current phase and all phases when date falls within a phase', () => {
     const result = getSupportPhase(lifecycle, '1.0', new Date('2024-03-15'));
     expect(result).toEqual({
+      status: SupportPhaseStatus.Active,
       currentPhase: {
         name: 'Maintenance support',
         startDate: '2024-01-01',
@@ -123,6 +125,7 @@ describe('getSupportPhase', () => {
   it('returns the second phase when date falls within it', () => {
     const result = getSupportPhase(lifecycle, '1.0', new Date('2025-01-15'));
     expect(result).toEqual({
+      status: SupportPhaseStatus.Active,
       currentPhase: {
         name: 'Extended life cycle support',
         startDate: '2024-07-01',
@@ -134,12 +137,13 @@ describe('getSupportPhase', () => {
 
   it('returns self-support with phases when all phases have ended', () => {
     const result = getSupportPhase(lifecycle, '1.0', new Date('2026-01-01'));
-    expect(result).toEqual({ selfSupport: true, allPhases });
+    expect(result).toEqual({ status: SupportPhaseStatus.SelfSupport, allPhases });
   });
 
   it('returns first phase when date is before all phases', () => {
     const result = getSupportPhase(lifecycle, '1.0', new Date('2023-06-01'));
     expect(result).toEqual({
+      status: SupportPhaseStatus.Active,
       currentPhase: {
         name: 'Maintenance support',
         startDate: '2024-01-01',
@@ -150,7 +154,7 @@ describe('getSupportPhase', () => {
   });
 
   it('returns no-data when lifecycle data is undefined', () => {
-    expect(getSupportPhase(undefined, '1.0')).toBe('no-data');
+    expect(getSupportPhase(undefined, '1.0')).toEqual({ status: SupportPhaseStatus.NoData });
   });
 
   it('returns no-data when versions array is missing', () => {
@@ -182,6 +186,7 @@ describe('getSupportPhase', () => {
   it('matches operator version by minor version when exact match fails', () => {
     const result = getSupportPhase(lifecycle, '1.0.5', new Date('2024-03-15'));
     expect(result).toEqual({
+      status: SupportPhaseStatus.Active,
       currentPhase: {
         name: 'Maintenance support',
         startDate: '2024-01-01',
@@ -214,11 +219,8 @@ describe('getSupportPhase', () => {
       ],
     };
     const result = getSupportPhase(unsortedLifecycle, '1.0', new Date('2024-03-15'));
-    expect(result).not.toBe('no-data');
-    expect(result).not.toBe('self-support');
-    expect((result as { currentPhase: { name: string } }).currentPhase.name).toBe(
-      'Maintenance support',
-    );
+    expect(result.status).toBe(SupportPhaseStatus.Active);
+    expect(result.currentPhase?.name).toBe('Maintenance support');
   });
 
   it('returns self-support for unsorted phases when all have ended', () => {
@@ -245,7 +247,7 @@ describe('getSupportPhase', () => {
     };
     const result = getSupportPhase(unsortedLifecycle, '1.0', new Date('2026-01-01'));
     expect(result).toEqual({
-      selfSupport: true,
+      status: SupportPhaseStatus.SelfSupport,
       allPhases: expect.arrayContaining([
         expect.objectContaining({ name: 'Maintenance support' }),
         expect.objectContaining({ name: 'Extended life cycle support' }),
@@ -283,7 +285,7 @@ describe('SupportPhaseBadge', () => {
   ];
 
   it('renders the current phase name and end date', () => {
-    const phase = { currentPhase: phases[0], allPhases: phases };
+    const phase = { status: SupportPhaseStatus.Active, currentPhase: phases[0], allPhases: phases };
     render(<SupportPhaseBadge phase={phase} />);
     expect(screen.getByText('Maintenance support')).toBeInTheDocument();
     expect(screen.getByText(/Jun 30, 2024/)).toBeInTheDocument();
@@ -291,13 +293,15 @@ describe('SupportPhaseBadge', () => {
   });
 
   it('renders Self-support when phase is self-support', () => {
-    render(<SupportPhaseBadge phase={{ selfSupport: true, allPhases: phases }} />);
+    render(
+      <SupportPhaseBadge phase={{ status: SupportPhaseStatus.SelfSupport, allPhases: phases }} />,
+    );
     expect(screen.getByText('Self-support')).toBeInTheDocument();
     expect(screen.getByTestId('support-phase-self-support')).toBeInTheDocument();
   });
 
   it('renders dash with aria-label when phase is no-data', () => {
-    render(<SupportPhaseBadge phase="no-data" />);
+    render(<SupportPhaseBadge phase={{ status: SupportPhaseStatus.NoData }} />);
     expect(screen.getByText('-')).toBeInTheDocument();
     const el = screen.getByTestId('support-phase-no-data');
     expect(el).toBeInTheDocument();

@@ -98,17 +98,21 @@ const parseLocalEndOfDay = (dateStr: string): number => {
   return new Date(y, m - 1, d, 23, 59, 59, 999).getTime();
 };
 
-type SupportPhaseInfo = {
-  currentPhase: LifecyclePhase;
-  allPhases: LifecyclePhase[];
-};
+export const SUPPORT_PHASE_STATUS_ACTIVE = 'active';
+export const SUPPORT_PHASE_STATUS_SELF_SUPPORT = 'self-support';
+export const SUPPORT_PHASE_STATUS_NO_DATA = 'no-data';
 
-type SelfSupportInfo = {
-  selfSupport: true;
-  allPhases: LifecyclePhase[];
-};
+export enum SupportPhaseStatus {
+  Active = SUPPORT_PHASE_STATUS_ACTIVE,
+  SelfSupport = SUPPORT_PHASE_STATUS_SELF_SUPPORT,
+  NoData = SUPPORT_PHASE_STATUS_NO_DATA,
+}
 
-export type SupportPhaseResult = SupportPhaseInfo | SelfSupportInfo | 'no-data';
+export type SupportPhaseResult = {
+  status: SupportPhaseStatus;
+  currentPhase?: LifecyclePhase;
+  allPhases?: LifecyclePhase[];
+};
 
 export const getSupportPhase = (
   lifecycle: LifecycleData | undefined,
@@ -116,13 +120,13 @@ export const getSupportPhase = (
   currentDate: Date = new Date(),
 ): SupportPhaseResult => {
   if (!lifecycle?.versions) {
-    return 'no-data';
+    return { status: SupportPhaseStatus.NoData };
   }
 
   const versionEntry = findVersionEntry(lifecycle.versions, operatorVersion);
 
   if (!Array.isArray(versionEntry?.phases) || versionEntry.phases.length === 0) {
-    return 'no-data';
+    return { status: SupportPhaseStatus.NoData };
   }
 
   const now = currentDate.getTime();
@@ -134,16 +138,16 @@ export const getSupportPhase = (
     const begin = parseLocalStartOfDay(phase.startDate);
     const end = parseLocalEndOfDay(phase.endDate);
     if (now >= begin && now <= end) {
-      return { currentPhase: phase, allPhases };
+      return { status: SupportPhaseStatus.Active, currentPhase: phase, allPhases };
     }
   }
 
   const lastPhase = allPhases[allPhases.length - 1];
   if (now > parseLocalEndOfDay(lastPhase.endDate)) {
-    return { selfSupport: true, allPhases };
+    return { status: SupportPhaseStatus.SelfSupport, allPhases };
   }
 
-  return { currentPhase: allPhases[0], allPhases };
+  return { status: SupportPhaseStatus.Active, currentPhase: allPhases[0], allPhases };
 };
 
 export const ClusterCompatibilityStatus: FC<{ compatible: CompatibilityResult }> = ({
@@ -211,12 +215,6 @@ const LifecycleDatesFooter: FC = () => {
   );
 };
 
-const isSelfSupport = (phase: SupportPhaseResult): phase is SelfSupportInfo =>
-  typeof phase === 'object' && 'selfSupport' in phase;
-
-const isSupportPhaseInfo = (phase: SupportPhaseResult): phase is SupportPhaseInfo =>
-  typeof phase === 'object' && 'currentPhase' in phase;
-
 const LifecycleDatesPopover: FC<{
   phases: LifecyclePhase[];
   children: React.ReactElement;
@@ -254,7 +252,7 @@ const LifecycleDatesPopover: FC<{
 export const SupportPhaseBadge: FC<{ phase: SupportPhaseResult }> = ({ phase }) => {
   const { t } = useTranslation();
 
-  if (isSelfSupport(phase)) {
+  if (phase.status === SupportPhaseStatus.SelfSupport && phase.allPhases) {
     return (
       <LifecycleDatesPopover phases={phase.allPhases}>
         <Button
@@ -265,7 +263,7 @@ export const SupportPhaseBadge: FC<{ phase: SupportPhaseResult }> = ({ phase }) 
           aria-haspopup="dialog"
           isInline
         >
-          <Label variant="outline" icon={<BlueInfoCircleIcon />} textMaxWidth="100ch">
+          <Label variant="outline" icon={<BlueInfoCircleIcon />} textMaxWidth="100%">
             {t('olm~Self-support')}
           </Label>
         </Button>
@@ -273,7 +271,7 @@ export const SupportPhaseBadge: FC<{ phase: SupportPhaseResult }> = ({ phase }) 
     );
   }
 
-  if (!isSupportPhaseInfo(phase)) {
+  if (phase.status === SupportPhaseStatus.NoData) {
     return (
       <span data-test="support-phase-no-data" aria-label={t('olm~No data available')}>
         -
@@ -281,23 +279,38 @@ export const SupportPhaseBadge: FC<{ phase: SupportPhaseResult }> = ({ phase }) 
     );
   }
 
-  const endDate = formatDate(new Date(parseLocalEndOfDay(phase.currentPhase.endDate)));
+  if (phase.status === SupportPhaseStatus.Active && phase.currentPhase && phase.allPhases) {
+    const endDate = formatDate(new Date(parseLocalEndOfDay(phase.currentPhase.endDate)));
+
+    return (
+      <div className="pf-v6-u-display-flex pf-v6-u-flex-direction-column">
+        <LifecycleDatesPopover phases={phase.allPhases}>
+          <Button
+            variant="plain"
+            type="button"
+            data-test="support-phase-badge"
+            onClick={(e) => e.preventDefault()}
+            aria-haspopup="dialog"
+            isInline
+          >
+            <Label
+              variant="outline"
+              icon={<BlueInfoCircleIcon />}
+              textMaxWidth="100%"
+              className="pf-v6-u-text-wrap"
+            >
+              {phase.currentPhase.name}
+            </Label>
+          </Button>
+        </LifecycleDatesPopover>
+        <div>{endDate}</div>
+      </div>
+    );
+  }
 
   return (
-    <LifecycleDatesPopover phases={phase.allPhases}>
-      <Button
-        variant="plain"
-        type="button"
-        data-test="support-phase-badge"
-        onClick={(e) => e.preventDefault()}
-        aria-haspopup="dialog"
-        isInline
-      >
-        <Label variant="outline" icon={<BlueInfoCircleIcon />} textMaxWidth="100ch">
-          {phase.currentPhase.name}
-        </Label>{' '}
-        {endDate}
-      </Button>
-    </LifecycleDatesPopover>
+    <span data-test="support-phase-no-data" aria-label={t('olm~No data available')}>
+      -
+    </span>
   );
 };
