@@ -345,7 +345,7 @@ func TestUpdateCatalogStatusResponses(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 			}
-			item, err := service.GetCatalogItem("test-catalog", "test-package", "")
+			item, err := service.GetCatalogItem("test-catalog", "test-package")
 			require.NoError(t, err)
 			if tt.removed {
 				assert.Nil(t, item)
@@ -416,7 +416,7 @@ func TestUpdateCatalogInvalidVersions(t *testing.T) {
 				assert.Equal(t, "1.0.0", items[0].Version)
 				assert.Equal(t, "other-package", items[1].Name)
 				assert.Equal(t, "2.0.0", items[1].Version)
-				item, err := service.GetCatalogItem("test-catalog", "stale-package", "")
+				item, err := service.GetCatalogItem("test-catalog", "stale-package")
 				require.NoError(t, err)
 				assert.Nil(t, item)
 				baseURL, found := c.Get(getCatalogBaseURLKey("test-catalog"))
@@ -457,11 +457,11 @@ func TestUpdateCatalogLifecycleData(t *testing.T) {
 
 	for catalog, want := range map[string]json.RawMessage{"test-catalog": lifecycle, "other-catalog": otherLifecycle} {
 		t.Run(catalog, func(t *testing.T) {
-			item, err := service.GetCatalogItem(catalog, "test-package", "")
+			item, err := service.GetCatalogItem(catalog, "test-package")
 			require.NoError(t, err)
 			require.NotNil(t, item)
 			assert.JSONEq(t, string(want), string(item.LifecycleData))
-			item, err = service.GetCatalogItem(catalog, "without-lifecycle", "")
+			item, err = service.GetCatalogItem(catalog, "without-lifecycle")
 			require.NoError(t, err)
 			require.NotNil(t, item)
 			assert.Nil(t, item.LifecycleData)
@@ -473,14 +473,14 @@ func TestUpdateCatalogLifecycleData(t *testing.T) {
 
 	client.fetchCode = http.StatusNotModified
 	require.NoError(t, service.UpdateCatalog("test-catalog", ""))
-	item, err := service.GetCatalogItem("test-catalog", "test-package", "")
+	item, err := service.GetCatalogItem("test-catalog", "test-package")
 	require.NoError(t, err)
 	require.NotNil(t, item)
 	assert.JSONEq(t, string(lifecycle), string(item.LifecycleData))
 
 	client.fetchCode = 0
 	require.NoError(t, service.UpdateCatalog("test-catalog", ""))
-	updatedItem, err := service.GetCatalogItem("test-catalog", "test-package", "")
+	updatedItem, err := service.GetCatalogItem("test-catalog", "test-package")
 	require.NoError(t, err)
 	require.NotNil(t, updatedItem)
 	assert.JSONEq(t, string(otherLifecycle), string(updatedItem.LifecycleData))
@@ -488,7 +488,7 @@ func TestUpdateCatalogLifecycleData(t *testing.T) {
 
 	client.metas = nil
 	require.NoError(t, service.UpdateCatalog("test-catalog", ""))
-	updatedItem, err = service.GetCatalogItem("test-catalog", "test-package", "")
+	updatedItem, err = service.GetCatalogItem("test-catalog", "test-package")
 	require.NoError(t, err)
 	require.NotNil(t, updatedItem)
 	assert.Nil(t, updatedItem.LifecycleData)
@@ -536,7 +536,7 @@ func TestUpdateCatalogInvalidLifecycleData(t *testing.T) {
 				items, err := service.GetCatalogItems()
 				require.NoError(t, err)
 				require.Len(t, items, 2)
-				item, err := service.GetCatalogItem("test-catalog", "test-package", "")
+				item, err := service.GetCatalogItem("test-catalog", "test-package")
 				require.NoError(t, err)
 				require.NotNil(t, item)
 				assert.Equal(t, "2.0.0", item.Version)
@@ -545,7 +545,7 @@ func TestUpdateCatalogInvalidLifecycleData(t *testing.T) {
 				} else {
 					assert.JSONEq(t, string(tt.want), string(item.LifecycleData))
 				}
-				item, err = service.GetCatalogItem("test-catalog", "other-package", "")
+				item, err = service.GetCatalogItem("test-catalog", "other-package")
 				require.NoError(t, err)
 				require.NotNil(t, item)
 				assert.JSONEq(t, string(otherLifecycle), string(item.LifecycleData))
@@ -617,7 +617,7 @@ func TestGetCatalogItem(t *testing.T) {
 			c.Set(getCatalogItemsKey("malformed-catalog"), "invalid cache content", cache.NoExpiration)
 			service := NewCatalogService(&http.Client{}, nil, c)
 
-			item, err := service.GetCatalogItem(tt.catalogName, tt.packageName, "")
+			item, err := service.GetCatalogItem(tt.catalogName, tt.packageName)
 			if tt.wantError {
 				require.ErrorContains(t, err, "is not valid")
 			} else {
@@ -628,10 +628,44 @@ func TestGetCatalogItem(t *testing.T) {
 	}
 }
 
-func TestGetCatalogItemByVersion(t *testing.T) {
+func TestGetCatalogItemIncludesChannelsAndVersions(t *testing.T) {
 	client := &mockCatalogdClient{
-		packages: []declcfg.Package{{Name: "test-package"}},
+		packages: []declcfg.Package{{Name: "test-package"}, {Name: "other-package"}},
+		metas: []json.RawMessage{
+			json.RawMessage(`{"schema":"olm.channel","name":"stable","package":"test-package","entries":[{"name":"test-bundle.v1.0.0"},{"name":"duplicate-version"},{"name":"test-bundle.v0.5.0"},{"name":"test-bundle.v2.0.0"},{"name":"missing-bundle"},{"name":"invalid-bundle"}]}`),
+			json.RawMessage(`{"schema":"olm.channel","name":"fast","package":"test-package","entries":[{"name":"test-bundle.v2.0.0"}]}`),
+			json.RawMessage(`{"schema":"olm.channel","name":"empty","package":"test-package","entries":[]}`),
+			json.RawMessage(`{"schema":"olm.channel","name":"other","package":"other-package","entries":[{"name":"test-bundle.v1.0.0"}]}`),
+		},
 		bundles: []declcfg.Bundle{
+			{
+				Name:       "test-bundle.v0.5.0",
+				Package:    "test-package",
+				Properties: []property.Property{property.MustBuildPackage("test-package", "0.5.0")},
+			},
+			{
+				Name:       "test-bundle.v1.0.0-rc.1",
+				Package:    "test-package",
+				Properties: []property.Property{property.MustBuildPackage("test-package", "1.0.0-rc.1")},
+			},
+			{
+				Name:       "duplicate-version",
+				Package:    "test-package",
+				Properties: []property.Property{property.MustBuildPackage("test-package", "1.0.0")},
+			},
+			{
+				Name:       "invalid-bundle",
+				Package:    "test-package",
+				Properties: []property.Property{property.MustBuildPackage("test-package", "invalid")},
+			},
+			{
+				Name:    "test-bundle.v1.0.0",
+				Package: "other-package",
+				Properties: []property.Property{
+					property.MustBuildPackage("other-package", "3.0.0"),
+					{Type: property.TypeCSVMetadata, Value: json.RawMessage(`{"displayName":"other"}`)},
+				},
+			},
 			{
 				Name:    "test-bundle.v1.0.0",
 				Package: "test-package",
@@ -654,34 +688,37 @@ func TestGetCatalogItemByVersion(t *testing.T) {
 	service.client = client
 	require.NoError(t, service.UpdateCatalog("test-catalog", ""))
 
-	tests := []struct {
-		name    string
-		version string
-		want    string
-	}{
-		{name: "empty version returns the latest", version: "", want: "2.0.0"},
-		{name: "latest version", version: "2.0.0", want: "2.0.0"},
-		{name: "older version", version: "1.0.0", want: "1.0.0"},
-		{name: "unknown version", version: "9.9.9"},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			item, err := service.GetCatalogItem("test-catalog", "test-package", tt.version)
-			require.NoError(t, err)
-			if tt.want == "" {
-				assert.Nil(t, item)
-				return
-			}
-			require.NotNil(t, item)
-			assert.Equal(t, tt.want, item.Version)
-		})
-	}
+	item, err := service.GetCatalogItem("test-catalog", "test-package")
+	require.NoError(t, err)
+	require.NotNil(t, item)
+	assert.Equal(t, "2.0.0", item.Version)
+	assert.Equal(t, []string{"2.0.0", "1.0.0", "1.0.0-rc.1", "0.5.0"}, item.Versions)
+	assert.Equal(t, []ConsoleCatalogChannel{
+		{Name: "empty", Versions: []string{}},
+		{Name: "fast", Versions: []string{"2.0.0"}},
+		{Name: "stable", Versions: []string{"2.0.0", "1.0.0", "0.5.0"}},
+	}, item.Channels)
 
-	// The collection still serves only the latest version of each package.
+	// The collection serves the same package item as the single-item endpoint.
 	items, err := service.GetCatalogItems()
 	require.NoError(t, err)
-	require.Len(t, items, 1)
-	assert.Equal(t, "2.0.0", items[0].Version)
+	require.Len(t, items, 2)
+	assert.Equal(t, *item, items[0])
+	otherItem, err := service.GetCatalogItem("test-catalog", "other-package")
+	require.NoError(t, err)
+	require.NotNil(t, otherItem)
+	assert.Equal(t, []string{"3.0.0"}, otherItem.Versions)
+	assert.Equal(t, []ConsoleCatalogChannel{{Name: "other", Versions: []string{"3.0.0"}}}, otherItem.Channels)
+
+	// Refresh replaces channel membership and removes versions no longer present.
+	client.metas = nil
+	client.bundles = client.bundles[len(client.bundles)-1:]
+	require.NoError(t, service.UpdateCatalog("test-catalog", ""))
+	updatedItem, err := service.GetCatalogItem("test-catalog", "test-package")
+	require.NoError(t, err)
+	require.NotNil(t, updatedItem)
+	assert.Equal(t, []string{"2.0.0"}, updatedItem.Versions)
+	assert.Equal(t, []ConsoleCatalogChannel{}, updatedItem.Channels)
 }
 
 func TestGetCatalogItemsInvalidCache(t *testing.T) {
@@ -736,6 +773,7 @@ func TestProcessCatalogInvalidData(t *testing.T) {
 	}{
 		{name: "malformed JSON", data: `{"schema":`},
 		{name: "invalid package", data: `{"schema":"olm.package","name":"test","defaultChannel":42}`},
+		{name: "invalid channel", data: `{"schema":"olm.channel","name":"stable","package":"test","entries":42}`},
 		{name: "invalid bundle", data: `{"schema":"olm.bundle","name":"test.v1.0.0","package":"test","image":42}`},
 	}
 	for _, tt := range tests {
@@ -743,12 +781,9 @@ func TestProcessCatalogInvalidData(t *testing.T) {
 			service := &CatalogService{}
 			resp := &http.Response{Body: io.NopCloser(strings.NewReader(tt.data))}
 			t.Cleanup(func() { resp.Body.Close() })
-			packages, bundles, allBundles, lifecycleData, err := service.processCatalog(resp)
+			catalogData, err := service.processCatalog(resp)
 			require.Error(t, err)
-			assert.Nil(t, packages)
-			assert.Nil(t, bundles)
-			assert.Nil(t, allBundles)
-			assert.Nil(t, lifecycleData)
+			assert.Nil(t, catalogData)
 		})
 	}
 }
@@ -775,7 +810,7 @@ func TestUpdateCatalogRebuildsPackageIndex(t *testing.T) {
 
 	setPackages("1.0.0", "retained-package", "removed-package")
 	require.NoError(t, service.UpdateCatalog("test-catalog", ""))
-	originalItem, err := service.GetCatalogItem("test-catalog", "retained-package", "")
+	originalItem, err := service.GetCatalogItem("test-catalog", "retained-package")
 	require.NoError(t, err)
 	require.NotNil(t, originalItem)
 	assert.Equal(t, "1.0.0", originalItem.Version)
@@ -789,19 +824,19 @@ func TestUpdateCatalogRebuildsPackageIndex(t *testing.T) {
 	assert.Equal(t, "added-package", items[0].Name)
 	assert.Equal(t, "retained-package", items[1].Name)
 	for i := range items {
-		item, err := service.GetCatalogItem("test-catalog", items[i].Name, "")
+		item, err := service.GetCatalogItem("test-catalog", items[i].Name)
 		require.NoError(t, err)
 		require.NotNil(t, item)
 		assert.Equal(t, items[i], *item)
 		assert.Equal(t, "2.0.0", item.Version)
 	}
-	item, err := service.GetCatalogItem("test-catalog", "removed-package", "")
+	item, err := service.GetCatalogItem("test-catalog", "removed-package")
 	require.NoError(t, err)
 	assert.Nil(t, item)
 	assert.Equal(t, "1.0.0", originalItem.Version)
 
 	service.RemoveCatalog("test-catalog")
-	item, err = service.GetCatalogItem("test-catalog", "retained-package", "")
+	item, err = service.GetCatalogItem("test-catalog", "retained-package")
 	require.NoError(t, err)
 	assert.Nil(t, item)
 	items, err = service.GetCatalogItems()
