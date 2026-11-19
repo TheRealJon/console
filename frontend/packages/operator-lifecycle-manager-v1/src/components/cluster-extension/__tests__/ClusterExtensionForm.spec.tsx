@@ -1,7 +1,13 @@
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithProviders } from '@console/shared/src/test-utils/unit-test-utils';
+import { useOLMCatalogItems } from '../../../hooks/useCatalogItems';
+import type { OLMCatalogItem } from '../../../types';
 import { ClusterExtensionForm } from '../ClusterExtensionForm';
+
+jest.mock('../../../hooks/useCatalogItems', () => ({
+  useOLMCatalogItems: jest.fn(() => [[], true, '']),
+}));
 
 jest.mock('@console/dynamic-plugin-sdk/src/utils/k8s', () => ({
   ...jest.requireActual('@console/dynamic-plugin-sdk/src/utils/k8s'),
@@ -47,6 +53,10 @@ const NAME_DEBOUNCE_MS = 500;
 describe('ClusterExtensionForm', () => {
   const mockOnChange = jest.fn();
 
+  beforeEach(() => {
+    jest.mocked(useOLMCatalogItems).mockReturnValue([[], true, '']);
+  });
+
   afterEach(() => {
     jest.clearAllMocks();
   });
@@ -83,6 +93,51 @@ describe('ClusterExtensionForm', () => {
     expect(screen.getByLabelText('Name')).toHaveValue('test-extension');
     expect(screen.getByLabelText('Package name')).toHaveValue('test-package');
     expect(screen.getByLabelText('Version or version range')).toHaveValue('1.0.0');
+  });
+
+  it('populates available package channels into the create form', async () => {
+    jest.mocked(useOLMCatalogItems).mockReturnValue([
+      [
+        {
+          name: 'test-package',
+          catalog: 'redhat-operators',
+          channels: [
+            { name: 'stable', versions: ['1.0.0'] },
+            { name: 'beta', versions: ['2.0.0'] },
+          ],
+        } as OLMCatalogItem,
+      ],
+      true,
+      '',
+    ]);
+    const formData = {
+      metadata: { name: 'test-extension' },
+      spec: {
+        source: {
+          catalog: { packageName: 'test-package', channels: ['stable'], version: '1.0.0' },
+        },
+        namespace: 'test-namespace',
+        serviceAccount: { name: 'test-sa' },
+      },
+    };
+    const user = userEvent.setup();
+    renderWithProviders(<ClusterExtensionForm formData={formData} onChange={mockOnChange} />);
+    await user.click(screen.getByRole('button', { name: 'Channels' }));
+    expect(screen.getByRole('checkbox', { name: 'stable' })).toBeChecked();
+    await user.click(screen.getByRole('checkbox', { name: 'beta' }));
+    expect(mockOnChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        spec: expect.objectContaining({
+          source: {
+            catalog: {
+              packageName: 'test-package',
+              channels: ['stable', 'beta'],
+              version: '1.0.0',
+            },
+          },
+        }),
+      }),
+    );
   });
 
   it('should auto-generate namespace and service account names based on ClusterExtension name', async () => {
@@ -201,29 +256,9 @@ describe('ClusterExtensionForm', () => {
     });
   });
 
-  it('should add channel when tag input loses focus', async () => {
-    const user = userEvent.setup();
+  it('disables channel selection without package data', () => {
     renderWithProviders(<ClusterExtensionForm formData={{}} onChange={mockOnChange} />);
-
-    const channelInput = screen.getByLabelText('Channels');
-    await user.click(channelInput);
-    await user.clear(channelInput);
-    await user.type(channelInput, 'stable');
-    await user.tab();
-
-    await waitFor(() => {
-      expect(mockOnChange).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          spec: expect.objectContaining({
-            source: expect.objectContaining({
-              catalog: expect.objectContaining({
-                channels: ['stable'],
-              }),
-            }),
-          }),
-        }),
-      );
-    });
+    expect(screen.getByRole('button', { name: 'Channels' })).toBeDisabled();
   });
 
   it('should add catalog when tag input loses focus', async () => {
@@ -255,7 +290,7 @@ describe('ClusterExtensionForm', () => {
     });
   });
 
-  it('should render channel labels when channels are added', () => {
+  it('shows selected channels in the multi-select toggle', () => {
     const formData = {
       spec: {
         source: {
@@ -268,8 +303,9 @@ describe('ClusterExtensionForm', () => {
 
     renderWithProviders(<ClusterExtensionForm formData={formData} onChange={mockOnChange} />);
 
-    expect(screen.getByText('stable')).toBeInTheDocument();
-    expect(screen.getByText('beta')).toBeInTheDocument();
+    const toggle = within(screen.getByRole('button', { name: 'Channels' }));
+    expect(toggle.getByText('stable')).toBeVisible();
+    expect(toggle.getByText('beta')).toBeVisible();
   });
 
   it('should render catalog labels when catalogs are added', () => {

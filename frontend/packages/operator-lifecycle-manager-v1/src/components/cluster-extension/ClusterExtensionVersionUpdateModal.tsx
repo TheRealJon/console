@@ -9,6 +9,7 @@ import { ClusterExtensionModel } from '@console/internal/models';
 import { InlineEditButton } from '@console/shared/src/components/edit-button/InlineEditButton';
 import { ModalFooterWithAlerts } from '@console/shared/src/components/modals/ModalFooterWithAlerts';
 import { usePromiseHandler } from '@console/shared/src/hooks/usePromiseHandler';
+import { useClusterExtensionPackageOptions } from '../../hooks/useClusterExtensionPackageOptions';
 import type { ClusterExtensionKind } from '../../types';
 import { ClusterExtensionVersionField } from './ClusterExtensionVersionField';
 
@@ -18,6 +19,7 @@ const ClusterExtensionVersionUpdateModalContent: FC<
   const { t } = useTranslation('olm-v1');
   const [initialResource] = useState(obj);
   const source = initialResource.spec?.source?.catalog;
+  const { versions } = useClusterExtensionPackageOptions(source);
   const [version, setVersion] = useState(() => source?.version ?? '');
   const value = version || undefined;
   const [handlePromise, inProgress, errorMessage] = usePromiseHandler();
@@ -69,6 +71,7 @@ const ClusterExtensionVersionUpdateModalContent: FC<
         <Form id="cluster-extension-version-update-form" onSubmit={handleSubmit}>
           <ClusterExtensionVersionField
             fieldId="cluster-extension-version"
+            versions={versions}
             value={version}
             onChange={setVersion}
           />

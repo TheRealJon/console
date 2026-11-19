@@ -7,6 +7,7 @@
   "Any version": "Any version",
   "Automatically create a new Namespace: ": "Automatically create a new Namespace: ",
   "Automatically create a new ServiceAccount: ": "Automatically create a new ServiceAccount: ",
+  "Available channels": "Available channels",
   "By default, deleting this ClusterExtension also deletes the objects it manages.": "By default, deleting this ClusterExtension also deletes the objects it manages.",
   "Cancel": "Cancel",
   "Catalogs": "Catalogs",

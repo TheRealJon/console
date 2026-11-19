@@ -9,6 +9,7 @@ import { ClusterExtensionModel } from '@console/internal/models';
 import { InlineEditButton } from '@console/shared/src/components/edit-button/InlineEditButton';
 import { ModalFooterWithAlerts } from '@console/shared/src/components/modals/ModalFooterWithAlerts';
 import { usePromiseHandler } from '@console/shared/src/hooks/usePromiseHandler';
+import { useClusterExtensionPackageOptions } from '../../hooks/useClusterExtensionPackageOptions';
 import type { ClusterExtensionKind } from '../../types';
 import { ClusterExtensionChannelsField } from './ClusterExtensionChannelsField';
 
@@ -18,6 +19,7 @@ const ClusterExtensionChannelsUpdateModalContent: FC<
   const { t } = useTranslation('olm-v1');
   const [initialResource] = useState(obj);
   const source = initialResource.spec?.source?.catalog;
+  const { channels: availableChannels } = useClusterExtensionPackageOptions(source);
   const [channels, setChannels] = useState(() => [...new Set(source?.channels ?? [])]);
   const value = channels.length ? channels : undefined;
   const [handlePromise, inProgress, errorMessage] = usePromiseHandler();
@@ -69,6 +71,7 @@ const ClusterExtensionChannelsUpdateModalContent: FC<
         <Form id="cluster-extension-channels-update-form" onSubmit={handleSubmit}>
           <ClusterExtensionChannelsField
             fieldId="cluster-extension-channels"
+            availableChannels={availableChannels}
             values={channels}
             onChange={setChannels}
           />

@@ -6,10 +6,15 @@ import {
   renderWithProviders,
   verifyInputField,
 } from '@console/shared/src/test-utils/unit-test-utils';
-import type { ClusterExtensionKind } from '../../../types';
+import { useOLMCatalogItems } from '../../../hooks/useCatalogItems';
+import type { ClusterExtensionKind, OLMCatalogItem } from '../../../types';
 import { ClusterExtensionCatalogsUpdateModal } from '../ClusterExtensionCatalogsUpdateModal';
 import { ClusterExtensionChannelsUpdateModal } from '../ClusterExtensionChannelsUpdateModal';
 import { ClusterExtensionVersionUpdateModal } from '../ClusterExtensionVersionUpdateModal';
+
+jest.mock('../../../hooks/useCatalogItems', () => ({
+  useOLMCatalogItems: jest.fn(() => [[], true, '']),
+}));
 
 jest.mock('@console/dynamic-plugin-sdk/src/app/components/utils/rbac', () => ({
   useAccessReview: jest.fn(() => [true, false]),
@@ -81,6 +86,20 @@ const fields = [
 
 describe('ClusterExtension details fields', () => {
   beforeEach(() => {
+    jest.mocked(useOLMCatalogItems).mockReturnValue([
+      [
+        {
+          name: 'my-operator',
+          catalog: 'redhat-operators',
+          channels: [
+            { name: 'stable', versions: ['1.0.0'] },
+            { name: 'beta', versions: ['2.0.0'] },
+          ],
+        } as OLMCatalogItem,
+      ],
+      true,
+      '',
+    ]);
     (useAccessReview as jest.Mock).mockReturnValue([true, false]);
     (k8sPatchResource as jest.Mock).mockResolvedValue(clusterExtension);
   });
@@ -121,7 +140,8 @@ describe('ClusterExtension details fields', () => {
     };
     renderWithProviders(<ClusterExtensionChannelsUpdateModal obj={resource} />);
     await user.click(screen.getByRole('button', { name: 'stable, stable' }));
-    await user.click(screen.getByRole('button', { name: 'Close stable' }));
+    await user.click(screen.getByRole('button', { name: 'Channels' }));
+    await user.click(screen.getByRole('checkbox', { name: 'stable' }));
     await user.click(screen.getByRole('button', { name: 'Save' }));
     await waitFor(() => {
       expect(k8sPatchResource).toHaveBeenCalledWith(
@@ -130,6 +150,37 @@ describe('ClusterExtension details fields', () => {
         }),
       );
     });
+  });
+
+  it('selects available package channels and saves only the channel constraint', async () => {
+    jest.mocked(useOLMCatalogItems).mockReturnValue([
+      [
+        {
+          name: 'my-operator',
+          catalog: 'redhat-operators',
+          channels: [
+            { name: 'stable', versions: ['1.0.0'] },
+            { name: 'beta', versions: ['2.0.0'] },
+          ],
+        } as OLMCatalogItem,
+      ],
+      true,
+      '',
+    ]);
+    const user = userEvent.setup();
+    renderWithProviders(<ClusterExtensionChannelsUpdateModal obj={clusterExtension} />);
+    await user.click(screen.getByRole('button', { name: 'stable' }));
+    await user.click(screen.getByRole('button', { name: 'Channels' }));
+    expect(screen.getByRole('checkbox', { name: 'stable' })).toBeChecked();
+    await user.click(screen.getByRole('checkbox', { name: 'beta' }));
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() =>
+      expect(k8sPatchResource).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: [{ op: 'add', path: '/spec/source/catalog/channels', value: ['stable', 'beta'] }],
+        }),
+      ),
+    );
   });
 
   it.each(fields)(
@@ -150,8 +201,14 @@ describe('ClusterExtension details fields', () => {
       await user.click(screen.getByRole('button', { name: value }));
 
       expect(screen.getByRole('heading', { name: title })).toBeVisible();
-      expect(screen.getAllByRole('textbox')).toHaveLength(1);
-      await verifyInputField({ inputLabel: label, helpText, testValue: nextValue });
+      expect(screen.queryAllByRole('textbox')).toHaveLength(path === 'channels' ? 0 : 1);
+      expect(screen.getByText(helpText)).toBeVisible();
+      if (path === 'channels') {
+        await user.click(screen.getByRole('button', { name: 'Channels' }));
+        await user.click(screen.getByRole('checkbox', { name: nextValue }));
+      } else {
+        await verifyInputField({ inputLabel: label, helpText, testValue: nextValue });
+      }
       await user.tab();
       await user.click(screen.getByRole('button', { name: 'Save' }));
 
@@ -172,6 +229,9 @@ describe('ClusterExtension details fields', () => {
     await user.click(screen.getByRole('button', { name: value }));
     if (path === 'version') {
       await user.clear(screen.getByRole('textbox', { name: label }));
+    } else if (path === 'channels') {
+      await user.click(screen.getByRole('button', { name: 'Channels' }));
+      await user.click(screen.getByRole('checkbox', { name: value }));
     } else {
       await user.click(screen.getByRole('button', { name: `Close ${value}` }));
     }
@@ -272,7 +332,7 @@ describe('ClusterExtension details fields', () => {
     });
   });
 
-  it.each(fields)(
+  it.each(fields.filter(({ path }) => path !== 'channels'))(
     'cancels $path edits without patching',
     async ({ Component, path, value, label, title, nextValue }) => {
       const user = userEvent.setup();
@@ -288,6 +348,21 @@ describe('ClusterExtension details fields', () => {
       );
     },
   );
+
+  it('cancels channel selections without patching', async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<ClusterExtensionChannelsUpdateModal obj={clusterExtension} />);
+    await user.click(screen.getByRole('button', { name: 'stable' }));
+    await user.click(screen.getByRole('button', { name: 'Channels' }));
+    await user.click(screen.getByRole('checkbox', { name: 'beta' }));
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(k8sPatchResource).not.toHaveBeenCalled();
+    expect(screen.queryByRole('heading', { name: 'Edit channels' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'stable' }));
+    await user.click(screen.getByRole('button', { name: 'Channels' }));
+    expect(screen.getByRole('checkbox', { name: 'stable' })).toBeChecked();
+    expect(screen.getByRole('checkbox', { name: 'beta' })).not.toBeChecked();
+  });
 
   it.each([
     { catalog: undefined, patchPath: '/spec/source/catalog', expected: { version: '2.0.0' } },

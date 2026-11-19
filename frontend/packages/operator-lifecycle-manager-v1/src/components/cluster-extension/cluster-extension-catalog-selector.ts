@@ -8,7 +8,9 @@ type CatalogSelector = NonNullable<
 };
 
 export interface CatalogSource {
-  catalog: NonNullable<NonNullable<ClusterExtensionKind['spec']>['source']>['catalog'];
+  catalog: NonNullable<NonNullable<ClusterExtensionKind['spec']>['source']>['catalog'] & {
+    selector?: CatalogSelector;
+  };
   selector?: CatalogSelector;
 }
 

@@ -1,25 +1,22 @@
 import type { FC } from 'react';
-import {
-  FormGroup,
-  FormHelperText,
-  HelperText,
-  HelperTextItem,
-  TextInput,
-} from '@patternfly/react-core';
+import { FormGroup, FormHelperText, HelperText, HelperTextItem } from '@patternfly/react-core';
 import { useTranslation } from 'react-i18next';
 import { ClusterExtensionModel } from '@console/internal/models';
+import { SemverRangeInput } from '@console/shared/src/components/semver-range-input/SemverRangeInput';
 import { SchemaFieldHelp } from '@console/shared/src/components/utils/SchemaFieldHelp';
 
-type VersionFieldProps = {
+interface VersionFieldProps {
   fieldId: string;
   value: string;
   onChange: (value: string) => void;
-};
+  versions?: readonly string[];
+}
 
 export const ClusterExtensionVersionField: FC<VersionFieldProps> = ({
   fieldId,
   value,
   onChange,
+  versions = [],
 }) => {
   const { t } = useTranslation('olm-v1');
   return (
@@ -38,11 +35,12 @@ export const ClusterExtensionVersionField: FC<VersionFieldProps> = ({
         />
       }
     >
-      <TextInput
+      <SemverRangeInput
         id={fieldId}
-        aria-label={t('Version or version range')}
+        ariaLabel={t('Version or version range')}
+        versions={versions}
         value={value}
-        onChange={(_event, nextValue) => onChange(nextValue)}
+        onChange={onChange}
       />
       <FormHelperText>
         <HelperText>

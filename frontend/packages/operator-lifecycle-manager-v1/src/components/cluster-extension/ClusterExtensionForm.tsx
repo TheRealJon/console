@@ -29,6 +29,7 @@ import type { K8sResourceKind } from '@console/internal/module/k8s';
 import SwitchToYAMLAlert from '@console/shared/src/components/alerts/SwitchToYAMLAlert';
 import { SchemaFieldHelp } from '@console/shared/src/components/utils/SchemaFieldHelp';
 import { useTextInputModal } from '@console/shared/src/hooks/useTextInputModal';
+import { useClusterExtensionPackageOptions } from '../../hooks/useClusterExtensionPackageOptions';
 import { catalogNames, selectorForCatalogs } from './cluster-extension-catalog-selector';
 import { ClusterExtensionCatalogsField } from './ClusterExtensionCatalogsField';
 import { ClusterExtensionChannelsField } from './ClusterExtensionChannelsField';
@@ -57,6 +58,8 @@ export const ClusterExtensionForm: FC<ClusterExtensionFormProps> = ({
   const namespace = formData?.spec?.namespace || '';
   const serviceAccountName = formData?.spec?.serviceAccount?.name || '';
   const version = formData?.spec?.source?.catalog?.version || '';
+  const { channels: availableChannels, versions: availableVersions } =
+    useClusterExtensionPackageOptions(formData?.spec?.source?.catalog);
   const channels = useMemo(
     () => formData?.spec?.source?.catalog?.channels || [],
     [formData?.spec?.source?.catalog?.channels],
@@ -513,11 +516,13 @@ export const ClusterExtensionForm: FC<ClusterExtensionFormProps> = ({
 
         <ClusterExtensionVersionField
           fieldId="version"
+          versions={availableVersions}
           value={version}
           onChange={handleVersionChange}
         />
         <ClusterExtensionChannelsField
           fieldId="channel"
+          availableChannels={availableChannels}
           values={channels}
           onChange={handleChannelsChange}
         />

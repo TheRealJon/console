@@ -11,7 +11,8 @@ import {
 import type { OLMCatalogItem, OLMCatalogItemData } from '../types';
 import { normalizeCatalogItem } from '../utils/catalog-item';
 
-export const useCatalogItems: ExtensionHook<CatalogItem<OLMCatalogItemData>[], void> = () => {
+/** Catalog package data, before adapting it for the software catalog UI. */
+export const useOLMCatalogItems: ExtensionHook<OLMCatalogItem[], void> = () => {
   const [olmCatalogItems, setOLMCatalogItems] = useState<OLMCatalogItem[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState('');
@@ -67,6 +68,11 @@ export const useCatalogItems: ExtensionHook<CatalogItem<OLMCatalogItemData>[], v
 
   usePoll(fetchItems, 30 * ONE_SECOND);
 
+  return [olmCatalogItems, loaded, error];
+};
+
+export const useCatalogItems: ExtensionHook<CatalogItem<OLMCatalogItemData>[], void> = () => {
+  const [olmCatalogItems, loaded, error] = useOLMCatalogItems();
   const items = useMemo(() => olmCatalogItems.map(normalizeCatalogItem), [olmCatalogItems]);
 
   return [items, loaded, error];
